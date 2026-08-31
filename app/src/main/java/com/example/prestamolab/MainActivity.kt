@@ -3,45 +3,25 @@ package com.example.prestamolab
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.prestamolab.ui.theme.PrestamoLabTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import com.example.prestamolab.data.repository.InMemoryPrestamoRepository
+import com.example.prestamolab.navigation.AppNavigation
+import com.example.prestamolab.viewmodel.PrestamoViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        val repository = InMemoryPrestamoRepository()
+        val viewModel = PrestamoViewModel(repository)
+
         setContent {
-            PrestamoLabTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            MaterialTheme {
+                Surface {
+                    AppNavigation(viewModel = viewModel)
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PrestamoLabTheme {
-        Greeting("Android")
     }
 }
