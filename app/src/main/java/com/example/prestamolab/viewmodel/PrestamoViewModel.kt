@@ -46,9 +46,10 @@ class PrestamoViewModel(
         ambienteDestino: String,
         proposito: String,
         duracionHoras: Int
-    ) {
+    ): Boolean {
+
         if (_uiState.value.guardando) {
-            return
+            return false
         }
 
         _uiState.value = _uiState.value.copy(
@@ -68,18 +69,25 @@ class PrestamoViewModel(
         val resultado = repository.crearSolicitud(solicitud)
 
         if (resultado.isSuccess) {
+
             _uiState.value = _uiState.value.copy(
                 equipos = repository.obtenerEquipos(),
                 solicitudes = repository.obtenerSolicitudes(),
                 mensaje = "Solicitud creada correctamente",
                 guardando = false
             )
+
+            return true
+
         } else {
+
             _uiState.value = _uiState.value.copy(
                 mensaje = resultado.exceptionOrNull()?.message
                     ?: "No se pudo crear la solicitud",
                 guardando = false
             )
+
+            return false
         }
     }
 
