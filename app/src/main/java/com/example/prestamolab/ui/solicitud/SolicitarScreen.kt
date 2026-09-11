@@ -64,7 +64,7 @@ fun SolicitarScreen(
         return
     }
 
-    if (equipo.estado.toString() != "DISPONIBLE") {
+    if (equipo.estado.toString() != "DISPONIBLE" && uiState.mensaje == null) {
 
         Column(
             modifier = Modifier
