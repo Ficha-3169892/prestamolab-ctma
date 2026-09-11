@@ -68,12 +68,6 @@ class InMemoryPrestamoRepository : PrestamoRepository {
                 IllegalArgumentException("El equipo no existe")
             )
 
-        if (equipo.estado != EstadoEquipo.DISPONIBLE) {
-            return Result.failure(
-                IllegalStateException("El equipo no está disponible")
-            )
-        }
-
         val solicitudActiva = solicitudes.any {
             it.equipoId == solicitud.equipoId &&
                     it.estado == EstadoSolicitud.SOLICITADA
@@ -84,6 +78,12 @@ class InMemoryPrestamoRepository : PrestamoRepository {
                 IllegalStateException(
                     "Ya existe una solicitud activa para este equipo"
                 )
+            )
+        }
+
+        if (equipo.estado != EstadoEquipo.DISPONIBLE) {
+            return Result.failure(
+                IllegalStateException("El equipo no está disponible")
             )
         }
 
