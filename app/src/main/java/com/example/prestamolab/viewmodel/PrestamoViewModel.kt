@@ -45,12 +45,12 @@ class PrestamoViewModel(private val repository: PrestamoRepository) : ViewModel(
         ambiente: String,
         proposito: String,
         duracion: Int
-    ) {
-        if (_uiState.value.guardando) return
+    ): Boolean {
+        if (_uiState.value.guardando) return false
 
         if (!ambienteValido(ambiente) || !propositoValido(proposito) || !duracionValida(duracion)) {
-            _uiState.update { it.copy(mensajeError = "Datos de formulario no válidos") }
-            return
+            _uiState.update { it.copy(mensajeError = "Verifique los campos: Ambiente obligatorio, Propósito (10-180 caract.) y Duración (1-8 horas).") }
+            return false
         }
 
         _uiState.update { it.copy(guardando = true, mensajeError = null) }
@@ -66,12 +66,17 @@ class PrestamoViewModel(private val repository: PrestamoRepository) : ViewModel(
 
         val resultado = repository.crearSolicitud(nuevaSolicitud)
 
-        resultado.onSuccess {
-            cargarDatos()
-            _uiState.update { it.copy(guardando = false) }
-        }.onFailure { err ->
-            _uiState.update { it.copy(guardando = false, mensajeError = err.message) }
-        }
+        return resultado.fold(
+            onSuccess = {
+                cargarDatos()
+                _uiState.update { it.copy(guardando = false) }
+                true
+            },
+            onFailure = { err ->
+                _uiState.update { it.copy(guardando = false, mensajeError = err.message) }
+                false
+            }
+        )
     }
 
     fun cancelarSolicitud(solicitudId: Int) {

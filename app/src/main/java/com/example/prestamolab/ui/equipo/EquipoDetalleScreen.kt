@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
@@ -18,17 +19,28 @@ fun EquipoDetalleScreen(
     Scaffold(
         topBar = { TopAppBar(title = { Text("Detalle de Equipo") }) }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+        ) {
             if (equipo == null) {
                 Text("Equipo no encontrado o ID inexistente.")
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = onVolver) { Text("Volver") }
             } else {
+                val colorEstado = when (equipo.estado) {
+                    EstadoEquipo.DISPONIBLE -> Color(0xFF4CAF50)
+                    EstadoEquipo.RESERVADO -> Color(0xFFFF9800)
+                    EstadoEquipo.PRESTADO -> Color(0xFFF44336)
+                }
+
                 Text(text = equipo.nombre, style = MaterialTheme.typography.headlineMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = "Categoría: ${equipo.categoria}")
-                Text(text = "Estado actual: ${equipo.estado}")
-                Spacer(modifier = Modifier.height(24.dp))
+                Text(text = "Estado actual: ${equipo.estado}", color = colorEstado)
+                Spacer(modifier = Modifier.weight(1f))
 
                 if (equipo.estado == EstadoEquipo.DISPONIBLE) {
                     Button(

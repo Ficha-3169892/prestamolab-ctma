@@ -1,6 +1,8 @@
 package com.example.prestamolab.ui.solicitud
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -23,7 +25,13 @@ fun SolicitarEquipoScreen(
     Scaffold(
         topBar = { TopAppBar(title = { Text("Registrar Solicitud") }) }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
             if (equipo == null) {
                 Text("Equipo no válido")
                 Button(onClick = onVolver) { Text("Volver") }
@@ -59,6 +67,8 @@ fun SolicitarEquipoScreen(
                     Text(text = mensajeError, color = MaterialTheme.colorScheme.error)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
+
+                Spacer(modifier = Modifier.weight(1f, fill = false))
 
                 Button(
                     onClick = {
