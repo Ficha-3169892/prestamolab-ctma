@@ -48,8 +48,24 @@ class PrestamoViewModel(private val repository: PrestamoRepository) : ViewModel(
     ): Boolean {
         if (_uiState.value.guardando) return false
 
-        if (!ambienteValido(ambiente) || !propositoValido(proposito) || !duracionValida(duracion)) {
-            _uiState.update { it.copy(mensajeError = "Verifique los campos: Ambiente obligatorio, Propósito (10-180 caract.) y Duración (1-8 horas).") }
+        val errores = mutableListOf<String>()
+
+        if (!ambienteValido(ambiente)) {
+            errores.add("El ambiente o destino es obligatorio.")
+        }
+
+        if (!propositoValido(proposito)) {
+            errores.add("El propósito debe tener entre 10 y 180 caracteres.")
+        }
+
+        if (!duracionValida(duracion)) {
+            errores.add("La duración debe estar entre 1 y 8 horas.")
+        }
+
+        if (errores.isNotEmpty()) {
+            _uiState.update {
+                it.copy(mensajeError = errores.joinToString("\n"))
+            }
             return false
         }
 
