@@ -1,7 +1,6 @@
-
 # Suite de Pruebas y Trazabilidad - PréstamoLab CTMA
 
-## Casos de Prueba
+## Casos de Prueba Funcionales
 
 | ID | Escenario | Resultado esperado | Técnica |
 | --- | --- | --- | --- |
@@ -24,6 +23,8 @@
 | TC-17 | Volver desde detalle/formulario | Back stack correcto. | Navegación |
 | TC-18 | Fuente 1.5× y texto largo | Contenido y acción esenciales utilizables. | Accesibilidad |
 
+---
+
 ## Matriz de Trazabilidad
 
 | Historia | Criterio | Riesgo | Caso | Estado |
@@ -38,3 +39,14 @@
 
 ---
 
+## Casos de Prueba - Persistencia y Base de Datos (Room & DataStore)
+
+| ID | Caso de Prueba | Estado | Notas |
+|---|---|---|---|
+| PA-01 | Creación de base de datos y esquemas Room | PASSED | Mapeo de entidades `ActividadEntity`, `CompetenciaEntity` y `PrestamoEntity`. |
+| PA-02 | Migración de base de datos (`MIGRATION_1_2`) | PASSED | Adición de columna `completada` verificada sin pérdida de datos. |
+| PA-03 | Persistencia de solicitudes de préstamo | PASSED | Registro, lectura y actualización vinculados a `RoomPrestamoRepository`. |
+| PA-04 | Persistencia tras reinicio de la aplicación | PASSED | Las solicitudes perduran en SQLite al cerrar y reabrir la aplicación. |
+| PA-05 | Ejecución de suite instrumentada `FormacionDatabaseTest` | PASSED | Operaciones de base de datos validadas correctamente. |
+
+```
