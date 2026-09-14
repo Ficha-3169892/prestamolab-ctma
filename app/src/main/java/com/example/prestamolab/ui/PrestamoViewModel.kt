@@ -23,7 +23,8 @@ data class PrestamoUiState(
     val duracionHoras: String = "1",
     val errorAmbiente: String? = null,
     val errorProposito: String? = null,
-    val errorDuracion: String? = null
+    val errorDuracion: String? = null,
+    val guardando: Boolean = false
 )
 
 class PrestamoViewModel : ViewModel() {
@@ -59,6 +60,16 @@ class PrestamoViewModel : ViewModel() {
         }
     }
 
+    fun seleccionarEquipoPorId(id: Int) {
+        val equipo = repository.obtenerEquipo(id)
+        _uiState.update {
+            it.copy(
+                equipoSeleccionado = equipo,
+                seccionActual = SeccionApp.DETALLE_EQUIPO
+            )
+        }
+    }
+
     fun irAFormulario() {
         _uiState.update { it.copy(seccionActual = SeccionApp.FORMULARIO) }
     }
@@ -76,20 +87,37 @@ class PrestamoViewModel : ViewModel() {
     }
 
     fun guardarSolicitud(): Boolean {
+        if (_uiState.value.guardando) return false
+
         val estadoActual = _uiState.value
         val equipo = estadoActual.equipoSeleccionado ?: return false
+
+        // Evitar solicitud sobre equipo no disponible (TC-12)
+        if (equipo.estado != "DISPONIBLE") return false
 
         var hayError = false
         var errAmbiente: String? = null
         var errProposito: String? = null
+        var errDuracion: String? = null
 
         if (estadoActual.ambiente.isBlank()) {
             errAmbiente = "El ambiente o destino es obligatorio."
             hayError = true
         }
 
+        // TC-04 al TC-07
         if (estadoActual.proposito.length < 10) {
-            errProposito = "El propósito debe tener al menos 10 caracteres."
+            errProposito = "Propósito debe tener mínimo 10 caracteres"
+            hayError = true
+        } else if (estadoActual.proposito.length > 180) {
+            errProposito = "Máximo 180 caracteres"
+            hayError = true
+        }
+
+        // TC-08 al TC-11
+        val duracion = estadoActual.duracionHoras.toIntOrNull() ?: 0
+        if (duracion < 1 || duracion > 8) {
+            errDuracion = "Duración entre 1 y 8 horas"
             hayError = true
         }
 
@@ -97,11 +125,15 @@ class PrestamoViewModel : ViewModel() {
             _uiState.update {
                 it.copy(
                     errorAmbiente = errAmbiente,
-                    errorProposito = errProposito
+                    errorProposito = errProposito,
+                    errorDuracion = errDuracion
                 )
             }
             return false
         }
+
+        // Bloqueo de doble pulsación (TC-13)
+        _uiState.update { it.copy(guardando = true) }
 
         val nuevaSolicitud = SolicitudPrestamo(
             id = (100..999).random(),
@@ -109,7 +141,7 @@ class PrestamoViewModel : ViewModel() {
             solicitante = "Andrés Vargas",
             fechaInicio = "2026-09-04",
             fechaFin = "2026-09-04",
-            estado = "PENDIENTE"
+            estado = "SOLICITADA"
         )
 
         repository.crearSolicitud(nuevaSolicitud)
@@ -124,19 +156,24 @@ class PrestamoViewModel : ViewModel() {
                 proposito = "",
                 duracionHoras = "1",
                 errorAmbiente = null,
-                errorProposito = null
+                errorProposito = null,
+                errorDuracion = null,
+                guardando = false
             )
         }
         return true
     }
 
     fun cancelarSolicitud(idSolicitud: Int) {
+        val solicitud = repository.obtenerSolicitudes().find { it.id == idSolicitud }
+        // TC-16: Re-cancelar solicitud CANCELADA -> sin cambio
+        if (solicitud?.estado == "CANCELADA") return
+
         repository.cancelarSolicitud(idSolicitud)
         _uiState.update { state ->
-            val listaSinCancelada = repository.obtenerSolicitudes().filter { it.id != idSolicitud && it.estado != "CANCELADA" }
             state.copy(
                 equipos = repository.obtenerEquipos(),
-                solicitudes = listaSinCancelada
+                solicitudes = repository.obtenerSolicitudes()
             )
         }
     }

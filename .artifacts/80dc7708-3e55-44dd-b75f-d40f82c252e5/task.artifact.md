@@ -1,0 +1,17 @@
+- [x] Alineación de Código (Data & Logic)
+    - [x] Modificar `InMemoryPrestamoRepository.kt` (Estados y consistencia)
+    - [x] Modificar `PrestamoViewModel.kt` (Validaciones, Estado `guardando`)
+- [/] Implementar Pruebas Unitarias (Expandir a 18)
+    - [x] Crear `PrestamoViewModelTest.kt` (Versión inicial)
+    - [ ] Agregar TCs faltantes hasta completar 18 tests
+    - [ ] Verificar TCs de validación (TC-04 a TC-11)
+    - [ ] Verificar TCs de estados (TC-12 a TC-16)
+- [/] Implementar Pruebas Instrumentadas (UI) (Expandir a 18)
+    - [x] Crear `PrestamoUiTest.kt` (Versión inicial)
+    - [ ] Agregar TCs faltantes hasta completar 18 tests
+    - [ ] Verificar TCs de navegación y carga (TC-01, TC-02, TC-03, TC-17)
+    - [ ] Verificar TC-13 (Doble pulsación)
+    - [ ] Verificar TC-18 (Accesibilidad)
+- [ ] Verificación Final
+    - [ ] Ejecutar tests unitarios (18 passed)
+    - [ ] Ejecutar tests instrumentados (18 passed)

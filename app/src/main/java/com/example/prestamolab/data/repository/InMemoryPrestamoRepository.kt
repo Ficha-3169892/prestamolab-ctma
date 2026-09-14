@@ -13,7 +13,7 @@ class InMemoryPrestamoRepository : PrestamoRepository {
     )
 
     private val solicitudes = mutableListOf(
-        SolicitudPrestamo(1, 2, "Andrés Vargas", "2026-09-02", "2026-09-05", "PENDIENTE")
+        SolicitudPrestamo(1, 2, "Andrés Vargas", "2026-09-02", "2026-09-05", "SOLICITADA")
     )
 
     override fun obtenerEquipos(): List<Equipo> = equipos.toList()
@@ -25,10 +25,10 @@ class InMemoryPrestamoRepository : PrestamoRepository {
     override fun crearSolicitud(solicitud: SolicitudPrestamo): Result<Unit> {
         return try {
             solicitudes.add(solicitud)
-            // Cambiamos a EN_PRESTAMO (o el estado que prefieras según tu guía)
+            // Cambiamos a RESERVADO según TC-14
             val equipoIndex = equipos.indexOfFirst { it.id == solicitud.equipoId }
             if (equipoIndex != -1) {
-                equipos[equipoIndex] = equipos[equipoIndex].copy(estado = "EN_PRESTAMO")
+                equipos[equipoIndex] = equipos[equipoIndex].copy(estado = "RESERVADO")
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -42,7 +42,7 @@ class InMemoryPrestamoRepository : PrestamoRepository {
             val solicitudActual = solicitudes[index]
             solicitudes[index] = solicitudActual.copy(estado = "CANCELADA")
 
-            // Al cancelar, el equipo vuelve a estar disponible
+            // Al cancelar, el equipo vuelve a estar disponible (TC-15)
             val equipoIndex = equipos.indexOfFirst { it.id == solicitudActual.equipoId }
             if (equipoIndex != -1) {
                 equipos[equipoIndex] = equipos[equipoIndex].copy(estado = "DISPONIBLE")

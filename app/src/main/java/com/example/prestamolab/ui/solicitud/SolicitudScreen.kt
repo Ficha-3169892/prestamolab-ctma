@@ -117,14 +117,24 @@ fun SolicitudScreen(
             onValueChange = onDuracionChange,
             label = { Text("Duración estimada (1-8 horas)", fontFamily = FontFamily.SansSerif) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            isError = uiState.errorDuracion != null,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp)
         )
+        if (uiState.errorDuracion != null) {
+            Text(
+                text = uiState.errorDuracion,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                fontFamily = FontFamily.SansSerif
+            )
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
             onClick = onGuardarClick,
+            enabled = !uiState.guardando,
             colors = ButtonDefaults.buttonColors(containerColor = blueAccent),
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier
@@ -132,7 +142,7 @@ fun SolicitudScreen(
                 .height(52.dp)
         ) {
             Text(
-                text = "Solicitar",
+                text = if (uiState.guardando) "Procesando..." else "Solicitar",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.SansSerif,

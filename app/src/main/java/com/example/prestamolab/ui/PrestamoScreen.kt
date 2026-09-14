@@ -85,7 +85,20 @@ fun PrestamoScreen(
 
                 SeccionApp.DETALLE_EQUIPO -> {
                     val equipo = uiState.equipoSeleccionado
-                    if (equipo != null) {
+                    if (equipo == null) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Equipo no encontrado", style = MaterialTheme.typography.bodyLarge)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(onClick = { viewModel.navegarA(SeccionApp.CATALOGO) }) {
+                                    Text("Volver al Catálogo")
+                                }
+                            }
+                        }
+                    } else {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
