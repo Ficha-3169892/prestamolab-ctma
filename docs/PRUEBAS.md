@@ -50,3 +50,25 @@
 | PA-05 | Ejecución de suite instrumentada `FormacionDatabaseTest` | PASSED | Operaciones de base de datos validadas correctamente. |
 
 ```
+
+## Casos de Prueba - Pruebas Unitarias y de Lógica (JUnit)
+
+| ID | Caso de Prueba | Archivo de Prueba | Estado |
+|---|---|---|---|
+| PU-01 | Validaciones de entrada (ambiente, propósito, duración) | `ValidationUtilsTest.kt` | PASSED |
+| PU-02 | Manejo de errores y flujo en `registrarSolicitud` | `PrestamoViewModelTest.kt` | PASSED |
+| PU-03 | Cambio de estado en `cancelarSolicitud` | `PrestamoViewModelTest.kt` | PASSED |
+
+## Casos de Prueba - Persistencia e Integración (Room & androidTest)
+
+| ID | Caso de Prueba | Archivo de Prueba | Estado |
+|---|---|---|---|
+| PA-01 | Operaciones CRUD sobre `ActividadEntity` y `CompetenciaEntity` | `FormacionDatabaseTest.kt` | PASSED |
+| PA-02 | Operaciones CRUD sobre `PrestamoEntity` | `FormacionDatabaseTest.kt` | PASSED |
+| PA-03 | Validación estructural de esquema de base de datos | `FormacionDatabaseTest.kt` | PASSED |
+
+```
+
+
+
+```
