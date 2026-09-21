@@ -2,10 +2,11 @@ package com.example.prestamolab.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.prestamolab.model.CategoriaEquipo
 import com.example.prestamolab.model.Equipo
+import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.SolicitudPrestamo
-import com.example.prestamolab.repository.InMemoryPrestamoRepository
 import com.example.prestamolab.repository.PrestamoRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +24,7 @@ import kotlinx.coroutines.launch
 sealed class PrestamoEvent {
     data object SolicitudCreada : PrestamoEvent()
     data object DevolucionExitosa : PrestamoEvent()
+    data object EquipoGestionado : PrestamoEvent()
 }
 
 class PrestamoViewModel(
@@ -67,6 +69,49 @@ class PrestamoViewModel(
     suspend fun obtenerSolicitud(id: Int): SolicitudPrestamo? {
         return repository.obtenerSolicitud(id)
     }
+
+    // --- Gestión de Catálogo ---
+
+    fun crearEquipo(nombre: String, categoria: CategoriaEquipo) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(guardando = true) }
+            val equipos = _uiState.value.equipos
+            val nuevoId = if (equipos.isEmpty()) 1 else equipos.maxOf { it.id } + 1
+            val equipo = Equipo(nuevoId, nombre, categoria, EstadoEquipo.DISPONIBLE)
+            
+            val result = repository.crearEquipo(equipo)
+            if (result.isSuccess) {
+                _events.emit(PrestamoEvent.EquipoGestionado)
+            } else {
+                _uiState.update { it.copy(mensaje = "Error al crear equipo") }
+            }
+            _uiState.update { it.copy(guardando = false) }
+        }
+    }
+
+    fun actualizarEquipo(equipo: Equipo) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(guardando = true) }
+            val result = repository.actualizarEquipo(equipo)
+            if (result.isSuccess) {
+                _events.emit(PrestamoEvent.EquipoGestionado)
+            } else {
+                _uiState.update { it.copy(mensaje = "Error al actualizar equipo") }
+            }
+            _uiState.update { it.copy(guardando = false) }
+        }
+    }
+
+    fun eliminarEquipo(id: Int) {
+        viewModelScope.launch {
+            val result = repository.eliminarEquipo(id)
+            if (result.isFailure) {
+                _uiState.update { it.copy(mensaje = "Error al eliminar equipo") }
+            }
+        }
+    }
+
+    // --- Gestión de Solicitudes ---
 
     fun crearSolicitud(
         equipoId: Int,

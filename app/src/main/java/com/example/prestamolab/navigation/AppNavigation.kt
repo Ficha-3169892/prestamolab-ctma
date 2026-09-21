@@ -12,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.prestamolab.PrestamoApplication
 import com.example.prestamolab.ui.catalogo.CatalogoScreen
+import com.example.prestamolab.ui.catalogo.GestionCatalogoScreen
 import com.example.prestamolab.ui.devolucion.DevolucionScreen
 import com.example.prestamolab.ui.equipo.EquipoDetalleScreen
 import com.example.prestamolab.ui.misprestamos.MisSolicitudesScreen
@@ -26,6 +27,7 @@ sealed class AppRoute(val route: String) {
     data object MisSolicitudes : AppRoute("mis_solicitudes")
     data object SolicitudDetalle : AppRoute("solicitud_detalle/{solicitudId}")
     data object Devolucion : AppRoute("devolucion/{solicitudId}")
+    data object GestionCatalogo : AppRoute("gestion_catalogo")
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -54,6 +56,9 @@ fun AppNavigation() {
                 },
                 onMisSolicitudesClick = {
                     navController.navigate(AppRoute.MisSolicitudes.route)
+                },
+                onGestionCatalogoClick = {
+                    navController.navigate(AppRoute.GestionCatalogo.route)
                 }
             )
         }
@@ -134,6 +139,15 @@ fun AppNavigation() {
                 onDevolucionExitosa = {
                     navController.popBackStack()
                 },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(AppRoute.GestionCatalogo.route) {
+            GestionCatalogoScreen(
+                viewModel = viewModel,
                 onBackClick = {
                     navController.popBackStack()
                 }

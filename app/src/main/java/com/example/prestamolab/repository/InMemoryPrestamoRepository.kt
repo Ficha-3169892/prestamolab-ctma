@@ -27,6 +27,27 @@ class InMemoryPrestamoRepository : PrestamoRepository {
         return _equipos.value.find { it.id == id }
     }
 
+    override suspend fun crearEquipo(equipo: Equipo): Result<Unit> {
+        _equipos.value = _equipos.value + equipo
+        return Result.success(Unit)
+    }
+
+    override suspend fun actualizarEquipo(equipo: Equipo): Result<Unit> {
+        val current = _equipos.value.toMutableList()
+        val index = current.indexOfFirst { it.id == equipo.id }
+        if (index != -1) {
+            current[index] = equipo
+            _equipos.value = current
+            return Result.success(Unit)
+        }
+        return Result.failure(Exception("Equipo no encontrado"))
+    }
+
+    override suspend fun eliminarEquipo(id: Int): Result<Unit> {
+        _equipos.value = _equipos.value.filter { it.id != id }
+        return Result.success(Unit)
+    }
+
     override fun obtenerSolicitudes(): Flow<List<SolicitudPrestamo>> = _solicitudes
 
     override fun obtenerActiveSolicitudes(): Flow<List<SolicitudPrestamo>> {

@@ -35,6 +35,45 @@ class OfflineFirstPrestamoRepository(
         return equipoDao.getEquipoById(id)?.toDomain()
     }
 
+    override suspend fun crearEquipo(equipo: Equipo): Result<Unit> {
+        return try {
+            equipoDao.insertEquipos(listOf(equipo.toEntity()))
+            try {
+                apiService.createEquipo(equipo.toDto())
+            } catch (e: Exception) {
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun actualizarEquipo(equipo: Equipo): Result<Unit> {
+        return try {
+            equipoDao.insertEquipos(listOf(equipo.toEntity()))
+            try {
+                apiService.updateEquipo(equipo.id, equipo.toDto())
+            } catch (e: Exception) {
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun eliminarEquipo(id: Int): Result<Unit> {
+        return try {
+            equipoDao.deleteEquipoById(id)
+            try {
+                apiService.deleteEquipo(id)
+            } catch (e: Exception) {
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override fun obtenerSolicitudes(): Flow<List<SolicitudPrestamo>> {
         return solicitudDao.getAllSolicitudes()
             .map { entities -> entities.map { it.toDomain() } }
@@ -62,7 +101,6 @@ class OfflineFirstPrestamoRepository(
                     solicitudDao.updateSolicitud(entity.copy(estadoSincronizacion = "SINCRONIZADA"))
                 }
             } catch (e: Exception) {
-                // Falla red, queda local
             }
             
             Result.success(Unit)

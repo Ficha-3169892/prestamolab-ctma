@@ -26,6 +26,33 @@ class RoomPrestamoRepository(
         return equipoDao.getEquipoById(id)?.toDomain()
     }
 
+    override suspend fun crearEquipo(equipo: Equipo): Result<Unit> {
+        return try {
+            equipoDao.insertEquipos(listOf(equipo.toEntity()))
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun actualizarEquipo(equipo: Equipo): Result<Unit> {
+        return try {
+            equipoDao.insertEquipos(listOf(equipo.toEntity()))
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun eliminarEquipo(id: Int): Result<Unit> {
+        return try {
+            equipoDao.deleteEquipoById(id)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override fun obtenerSolicitudes(): Flow<List<SolicitudPrestamo>> {
         return solicitudDao.getAllSolicitudes().map { entities ->
             entities.map { it.toDomain() }

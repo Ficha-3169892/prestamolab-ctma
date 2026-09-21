@@ -18,6 +18,9 @@ interface EquipoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEquipos(equipos: List<EquipoEntity>)
 
+    @Query("DELETE FROM equipos WHERE id = :id")
+    suspend fun deleteEquipoById(id: Int)
+
     @Query("DELETE FROM equipos")
     suspend fun deleteAllEquipos()
 

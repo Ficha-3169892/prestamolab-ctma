@@ -17,6 +17,15 @@ fun EquipoDto.toDomain(): Equipo {
     )
 }
 
+fun Equipo.toDto(): EquipoDto {
+    return EquipoDto(
+        id = id,
+        nombre = nombre,
+        categoria = categoria.name,
+        estado = estado.name
+    )
+}
+
 fun SolicitudDto.toDomain(): SolicitudPrestamo {
     return SolicitudPrestamo(
         id = id,

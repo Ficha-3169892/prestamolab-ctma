@@ -7,6 +7,10 @@ import kotlinx.coroutines.flow.Flow
 interface PrestamoRepository {
     fun obtenerEquipos(): Flow<List<Equipo>>
     suspend fun obtenerEquipo(id: Int): Equipo?
+    suspend fun crearEquipo(equipo: Equipo): Result<Unit>
+    suspend fun actualizarEquipo(equipo: Equipo): Result<Unit>
+    suspend fun eliminarEquipo(id: Int): Result<Unit>
+    
     fun obtenerSolicitudes(): Flow<List<SolicitudPrestamo>>
     fun obtenerActiveSolicitudes(): Flow<List<SolicitudPrestamo>>
     suspend fun obtenerSolicitud(id: Int): SolicitudPrestamo?

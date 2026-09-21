@@ -1,11 +1,11 @@
 package com.example.prestamolab.ui.catalogo
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material3.*
@@ -15,11 +15,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.viewmodel.PrestamoViewModel
@@ -32,7 +30,8 @@ import com.example.prestamolab.ui.theme.RoseError
 fun CatalogoScreen(
     viewModel: PrestamoViewModel,
     onEquipoClick: (Int) -> Unit,
-    onMisSolicitudesClick: () -> Unit
+    onMisSolicitudesClick: () -> Unit,
+    onGestionCatalogoClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -51,6 +50,9 @@ fun CatalogoScreen(
                     titleContentColor = MaterialTheme.colorScheme.onBackground
                 ),
                 actions = {
+                    IconButton(onClick = onGestionCatalogoClick) {
+                        Icon(Icons.Default.AdminPanelSettings, contentDescription = "Gestión")
+                    }
                     IconButton(onClick = onMisSolicitudesClick) {
                         Icon(Icons.Default.ListAlt, contentDescription = "Mis Solicitudes")
                     }
@@ -155,7 +157,7 @@ private fun EquipoCard(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = equipo.categoria.toString(),
+                    text = equipo.categoria.name,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )
