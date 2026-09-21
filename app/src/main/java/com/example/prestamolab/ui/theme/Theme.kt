@@ -1,4 +1,5 @@
 package com.example.prestamolab.ui.theme
+
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -11,63 +12,43 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = BluePrimary,
+    primary = IndigoPrimary,
     onPrimary = WhiteText,
-
-    secondary = BlueLight,
+    secondary = TealSecondary,
     onSecondary = WhiteText,
-
-    tertiary = BlueDark,
-    onTertiary = WhiteText,
-
-    background = BlackBackground,
+    background = CharcoalBackground,
     onBackground = WhiteText,
-
-    surface = DarkSurface,
+    surface = SlateSurface,
     onSurface = WhiteText,
-
-    error = ErrorRed,
+    surfaceVariant = SlateSurfaceVariant,
+    onSurfaceVariant = GrayText,
+    error = RoseError,
     onError = WhiteText
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = BlueDark,
+    primary = IndigoPrimary,
     onPrimary = WhiteText,
-
-    secondary = BluePrimary,
+    secondary = TealSecondary,
     onSecondary = WhiteText,
-
-    tertiary = BlueLight,
-    onTertiary = BlackBackground,
-
-    background = Color.White,
-    onBackground = Color.Black,
-
+    background = Color(0xFFF8FAFC),
+    onBackground = CharcoalBackground,
     surface = Color.White,
-    onSurface = Color.Black,
-
-    error = ErrorRed,
-    onError = WhiteText
+    onSurface = CharcoalBackground,
+    error = Color(0xFFE11D48)
 )
 
 @Composable
 fun PrestamoLabTheme(
-    darkTheme: Boolean = true,
+    darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
-
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-
-            if (darkTheme) {
-                dynamicDarkColorScheme(context)
-            } else {
-                dynamicLightColorScheme(context)
-            }
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
@@ -75,6 +56,7 @@ fun PrestamoLabTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = Shapes, // I will define Shapes.kt next
         content = content
     )
 }

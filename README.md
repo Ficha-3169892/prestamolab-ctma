@@ -1,53 +1,39 @@
-# PréstamoLab
-Aplicación móvil Android para consultar equipos y herramientas de
-formación, registrar solicitudes de préstamo y consultar su estado.
+# PréstamoLab CTMA
+
+Aplicación móvil Android para la gestión de préstamos de equipos, adaptada según la guía integradora de Scrum, Desarrollo Móvil y Pruebas.
 
 ## Descripción
-PréstamoLab busca mejorar la trazabilidad y consulta de préstamos de
-equipos y herramientas mediante una aplicación móvil sencilla.
+PréstamoLab permite a los aprendices y facilitadores gestionar el préstamo de herramientas y equipos de formación. La aplicación implementa una estrategia **Local-first**, asegurando que los datos estén disponibles incluso sin conexión a internet, sincronizándose automáticamente con una API REST cuando la conectividad se restablece.
 
-La aplicación permite consultar la disponibilidad de los equipos,
-registrar solicitudes de préstamo válidas, consultar las solicitudes
-realizadas y cancelar aquellas que todavía se encuentran en estado
-`SOLICITADA`.
+## Características Principales
+- **Catálogo Offline:** Consulta de equipos persistida en Room.
+- **Gestión de Préstamos:** Creación, consulta y cancelación de solicitudes.
+- **Registro de Devoluciones:** Proceso formal de retorno con evidencia fotográfica.
+- **Capacidades de Dispositivo:** 
+    - **Cámara/Photo Picker:** Captura de evidencia para devoluciones.
+    - **GPS:** Registro de ubicación como metadato de la operación.
+- **Sincronización:** Uso de WorkManager para asegurar la integridad de los datos con el servidor.
 
-Los datos utilizados son sintéticos y se almacenan temporalmente
-mediante un repositorio en memoria.
+## Tecnologías y Arquitectura
+El proyecto sigue una arquitectura **Clean MVVM** con las siguientes capas:
+- **UI:** Jetpack Compose (Material 3) y Navigation Compose.
+- **ViewModel:** Gestión de estado reactivo (StateFlow/UiState) y eventos (SharedFlow).
+- **Data Layer:**
+    - **Room:** Fuente local canónica.
+    - **Retrofit & OkHttp:** Sincronización remota JSON.
+    - **WorkManager:** Sincronización en segundo plano.
+    - **Mappers:** Separación estricta entre DTOs, Entities y modelos de Dominio.
 
-## Objetivo
-Permitir que un solicitante pueda:
+## Pruebas y Calidad
+- **Unit Tests:** JUnit y Coroutines Test para lógica de negocio y mappers.
+- **Integration Tests:** MockWebServer para validación de red.
+- **CI/CD:** Pipeline de GitHub Actions para compilación, lint y tests unitarios automáticos.
 
-- Consultar el catálogo de equipos.
-- Conocer el estado y disponibilidad de cada equipo.
-- Consultar el detalle de un equipo.
-- Registrar una solicitud de préstamo.
-- Validar los datos antes de registrar una solicitud.
-- Consultar sus solicitudes.
-- Consultar el detalle de una solicitud.
-- Cancelar solicitudes que estén en estado `SOLICITADA`.
-- Mantener coherencia entre el estado de las solicitudes y la
-  disponibilidad de los equipos.
-- Evitar solicitudes duplicadas.
+## Documentación Técnica
+- [Gestión de Riesgos](docs/riesgos.md)
+- [Plan de Pruebas](docs/PLAN_PRUEBAS.md)
+- [Matriz de Trazabilidad](docs/MATRIZ_TRAZABILIDAD.md)
+- [Registro de Defectos](docs/defectos.md)
 
-## Tecnologías
-- Kotlin
-- Android
-- Jetpack Compose
-- Material 3
-- Navigation Compose
-- ViewModel
-- StateFlow
-- Repository Pattern
-- Repositorio en memoria
-
-## Arquitectura
-El proyecto utiliza una separación por responsabilidades:
-
-```text
-UI
- ↓
-ViewModel
- ↓
-Repository
- ↓
-Datos en memoria
+---
+*Proyecto adaptado siguiendo los lineamientos de la guía integradora PréstamoLab CTMA.*

@@ -2,14 +2,20 @@ package com.example.prestamolab.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val BluePrimary = Color(0xFF2196F3)
-val BlueLight = Color(0xFF64B5F6)
-val BlueDark = Color(0xFF1565C0)
+// Modern Dark Palette
+val IndigoPrimary = Color(0xFF6366F1)
+val TealSecondary = Color(0xFF14B8A6)
+val CharcoalBackground = Color(0xFF0F172A)
+val SlateSurface = Color(0xFF1E293B)
+val SlateSurfaceVariant = Color(0xFF334155)
 
-val BlackBackground = Color(0xFF0B0F14)
-val DarkSurface = Color(0xFF151C24)
+val WhiteText = Color(0xFFF8FAFC)
+val GrayText = Color(0xFF94A3B8)
 
-val WhiteText = Color(0xFFFFFFFF)
-val SecondaryText = Color(0xFFB0BEC5)
+val RoseError = Color(0xFFFB7185)
+val EmeraldSuccess = Color(0xFF34D399)
+val AmberWarning = Color(0xFFFBBF24)
 
-val ErrorRed = Color(0xFFEF5350)
+// Legacy compatibility if needed (checking usages first is better, but I'll update Theme.kt too)
+val BlackBackground = CharcoalBackground
+val DarkSurface = SlateSurface
