@@ -200,4 +200,21 @@ class InMemoryPrestamoRepositoryTest {
         assertTrue(resultado.isFailure)
         assertEquals("Solo se pueden cancelar solicitudes SOLICITADA", resultado.exceptionOrNull()?.message)
     }
+
+    @Test
+    fun borrarHistorial_debeEliminarDevueltasYCanceladasSinEliminarActivas() = runBlocking {
+        val sol1 = SolicitudPrestamo(1, 1, "Lab1", "Prop1", 2, EstadoSolicitud.SOLICITADA)
+        val sol2 = SolicitudPrestamo(2, 2, "Lab2", "Prop2", 3, EstadoSolicitud.CANCELADA)
+        val sol3 = SolicitudPrestamo(3, 3, "Lab3", "Prop3", 1, EstadoSolicitud.DEVUELTA)
+
+        repository.crearSolicitud(sol1)
+        repository.crearSolicitud(sol2)
+        repository.crearSolicitud(sol3)
+
+        repository.borrarHistorial()
+
+        val restantes = repository.obtenerSolicitudes().first()
+        assertEquals(1, restantes.size)
+        assertEquals(EstadoSolicitud.SOLICITADA, restantes[0].estado)
+    }
 }

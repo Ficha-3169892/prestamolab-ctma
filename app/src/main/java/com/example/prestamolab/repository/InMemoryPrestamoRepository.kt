@@ -111,6 +111,13 @@ class InMemoryPrestamoRepository : PrestamoRepository {
         return Result.success(Unit)
     }
 
+    override suspend fun borrarHistorial(): Result<Unit> {
+        _solicitudes.value = _solicitudes.value.filter {
+            it.estado in listOf(EstadoSolicitud.SOLICITADA, EstadoSolicitud.APROBADA, EstadoSolicitud.ENTREGADA)
+        }
+        return Result.success(Unit)
+    }
+
     private fun actualizarEstadoEquipo(equipoId: Int, nuevoEstado: EstadoEquipo) {
         val currentEquipos = _equipos.value.toMutableList()
         val indice = currentEquipos.indexOfFirst { it.id == equipoId }

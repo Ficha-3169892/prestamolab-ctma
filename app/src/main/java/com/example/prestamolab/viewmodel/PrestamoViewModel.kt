@@ -196,6 +196,19 @@ class PrestamoViewModel(
         _uiState.update { it.copy(isAdminLoggedIn = false) }
     }
 
+    fun borrarHistorial() {
+        viewModelScope.launch {
+            val resultado = repository.borrarHistorial()
+            if (resultado.isSuccess) {
+                _uiState.update { it.copy(mensaje = "Historial limpiado correctamente") }
+            } else {
+                _uiState.update { 
+                    it.copy(mensaje = resultado.exceptionOrNull()?.message ?: "No se pudo borrar el historial")
+                }
+            }
+        }
+    }
+
     fun limpiarMensaje() {
         _uiState.update { it.copy(mensaje = null) }
     }

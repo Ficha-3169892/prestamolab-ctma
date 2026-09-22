@@ -123,4 +123,19 @@ class PrestamoViewModelTest {
         viewModel.logoutAdmin()
         assertFalse(viewModel.uiState.value.isAdminLoggedIn)
     }
+
+    @Test
+    fun borrarHistorial_debeEliminarDevueltasYCanceladas() = runTest {
+        viewModel.crearSolicitud(1, "Lab", "Prop", 2)
+        advanceUntilIdle()
+
+        viewModel.registrarDevolucion(1, "uri")
+        advanceUntilIdle()
+
+        viewModel.borrarHistorial()
+        advanceUntilIdle()
+
+        val solicitudes = viewModel.uiState.value.solicitudes
+        assertTrue(solicitudes.isEmpty())
+    }
 }

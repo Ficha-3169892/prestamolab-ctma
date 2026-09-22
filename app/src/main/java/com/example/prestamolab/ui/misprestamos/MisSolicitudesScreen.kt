@@ -7,11 +7,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,8 +25,6 @@ import com.example.prestamolab.ui.theme.AmberWarning
 import com.example.prestamolab.ui.theme.RoseError
 import com.example.prestamolab.ui.theme.IndigoPrimary
 import com.example.prestamolab.ui.theme.TealSecondary
-import com.example.prestamolab.ui.theme.RoseError
-import com.example.prestamolab.ui.theme.IndigoPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +34,11 @@ fun MisSolicitudesScreen(
     onBackClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showConfirmDialog by remember { mutableStateOf(false) }
+
+    val tieneCompletados = uiState.solicitudes.any { 
+        it.estado in listOf(EstadoSolicitud.DEVUELTA, EstadoSolicitud.CANCELADA, EstadoSolicitud.RECHAZADA) 
+    }
 
     Scaffold(
         topBar = {
@@ -45,6 +47,17 @@ fun MisSolicitudesScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                },
+                actions = {
+                    if (tieneCompletados) {
+                        IconButton(onClick = { showConfirmDialog = true }) {
+                            Icon(
+                                Icons.Default.DeleteSweep,
+                                contentDescription = "Borrar historial",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -77,6 +90,49 @@ fun MisSolicitudesScreen(
                     }
                 }
             }
+        }
+
+        if (showConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { showConfirmDialog = false },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.DeleteSweep,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                },
+                title = {
+                    Text(
+                        text = "Borrar Historial",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text(
+                        text = "¿Deseas eliminar las solicitudes finalizadas de tu historial?\n\nNota: Solo se eliminarán las solicitudes devueltas y canceladas. Las solicitudes activas (no devueltas) permanecerán en la lista.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.borrarHistorial()
+                            showConfirmDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Eliminar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showConfirmDialog = false }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
         }
     }
 }

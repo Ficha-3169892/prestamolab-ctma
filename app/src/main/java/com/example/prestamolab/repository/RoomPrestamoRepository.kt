@@ -121,4 +121,13 @@ class RoomPrestamoRepository(
             Result.failure(e)
         }
     }
+
+    override suspend fun borrarHistorial(): Result<Unit> {
+        return try {
+            solicitudDao.deleteHistorialCompletado()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

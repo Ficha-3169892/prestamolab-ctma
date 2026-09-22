@@ -150,6 +150,15 @@ class OfflineFirstPrestamoRepository(
         }
     }
 
+    override suspend fun borrarHistorial(): Result<Unit> {
+        return try {
+            solicitudDao.deleteHistorialCompletado()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private suspend fun seedInitialData() {
         val currentEquipos = equipoDao.getAllEquipos().first()
         if (currentEquipos.isEmpty()) {

@@ -27,4 +27,7 @@ interface SolicitudDao {
 
     @Query("DELETE FROM solicitudes WHERE id = :id")
     suspend fun deleteSolicitudById(id: Int)
+
+    @Query("DELETE FROM solicitudes WHERE estado IN ('DEVUELTA', 'CANCELADA', 'RECHAZADA')")
+    suspend fun deleteHistorialCompletado()
 }
