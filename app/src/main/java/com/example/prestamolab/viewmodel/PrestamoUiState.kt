@@ -9,5 +9,6 @@ data class PrestamoUiState(
     val activeSolicitudes: List<SolicitudPrestamo> = emptyList(),
     val cargando: Boolean = false,
     val mensaje: String? = null,
-    val guardando: Boolean = false
+    val guardando: Boolean = false,
+    val isAdminLoggedIn: Boolean = false
 )

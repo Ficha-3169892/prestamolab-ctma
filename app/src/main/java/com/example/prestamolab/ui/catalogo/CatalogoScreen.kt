@@ -4,19 +4,26 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.ListAlt
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
@@ -31,9 +38,10 @@ fun CatalogoScreen(
     viewModel: PrestamoViewModel,
     onEquipoClick: (Int) -> Unit,
     onMisSolicitudesClick: () -> Unit,
-    onGestionCatalogoClick: () -> Unit
+    onGestionCatalogoClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showLoginDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -50,7 +58,15 @@ fun CatalogoScreen(
                     titleContentColor = MaterialTheme.colorScheme.onBackground
                 ),
                 actions = {
-                    IconButton(onClick = onGestionCatalogoClick) {
+                    IconButton(
+                        onClick = {
+                            if (uiState.isAdminLoggedIn) {
+                                onGestionCatalogoClick()
+                            } else {
+                                showLoginDialog = true
+                            }
+                        }
+                    ) {
                         Icon(Icons.Default.AdminPanelSettings, contentDescription = "Gestión")
                     }
                     IconButton(onClick = onMisSolicitudesClick) {
@@ -106,7 +122,137 @@ fun CatalogoScreen(
                 }
             }
         }
+
+        if (showLoginDialog) {
+            AdminLoginDialog(
+                onDismiss = { showLoginDialog = false },
+                onLoginSuccess = { email, password ->
+                    val exito = viewModel.loginAdmin(email, password)
+                    if (exito) {
+                        showLoginDialog = false
+                        onGestionCatalogoClick()
+                    }
+                    exito
+                }
+            )
+        }
     }
+}
+
+@Composable
+private fun AdminLoginDialog(
+    onDismiss: () -> Unit,
+    onLoginSuccess: (String, String) -> Boolean
+) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AdminPanelSettings,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Iniciar Sesión Admin",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Ingrese las credenciales de administrador para acceder a la gestión.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        email = it
+                        errorMessage = null
+                    },
+                    label = { Text("Correo electrónico") },
+                    placeholder = { Text("admin@gmail.com") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Email, contentDescription = null)
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = errorMessage != null
+                )
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        errorMessage = null
+                    },
+                    label = { Text("Contraseña") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Lock, contentDescription = null)
+                    },
+                    trailingIcon = {
+                        val image = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(imageVector = image, contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña")
+                        }
+                    },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = errorMessage != null
+                )
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val exito = onLoginSuccess(email, password)
+                    if (!exito) {
+                        errorMessage = "Correo o contraseña incorrectos"
+                    }
+                }
+            ) {
+                Text("Iniciar Sesión")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
 
 @Composable

@@ -165,7 +165,12 @@ class PrestamoViewModel(
         }
     }
 
-    fun registrarDevolucion(solicitudId: Int, fotoUri: String?, latitud: Double?, longitud: Double?) {
+    fun registrarDevolucion(
+        solicitudId: Int,
+        fotoUri: String?,
+        latitud: Double? = null,
+        longitud: Double? = null
+    ) {
         viewModelScope.launch {
             val resultado = repository.registrarDevolucion(solicitudId, fotoUri, latitud, longitud)
             if (resultado.isSuccess) {
@@ -177,6 +182,18 @@ class PrestamoViewModel(
                 }
             }
         }
+    }
+
+    fun loginAdmin(correo: String, contrasena: String): Boolean {
+        val esAdminValido = correo.trim().equals("admin@gmail.com", ignoreCase = true) && contrasena == "admin123"
+        if (esAdminValido) {
+            _uiState.update { it.copy(isAdminLoggedIn = true) }
+        }
+        return esAdminValido
+    }
+
+    fun logoutAdmin() {
+        _uiState.update { it.copy(isAdminLoggedIn = false) }
     }
 
     fun limpiarMensaje() {

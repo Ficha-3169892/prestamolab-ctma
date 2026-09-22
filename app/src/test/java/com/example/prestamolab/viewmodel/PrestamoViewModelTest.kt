@@ -100,4 +100,27 @@ class PrestamoViewModelTest {
         val solicitud = viewModel.obtenerSolicitud(1)
         assertEquals(EstadoSolicitud.DEVUELTA, solicitud?.estado)
     }
+
+    @Test
+    fun loginAdmin_conCredencialesCorrectas_debeIniciarSesion() = runTest {
+        val exito = viewModel.loginAdmin("admin@gmail.com", "admin123")
+        assertTrue(exito)
+        assertTrue(viewModel.uiState.value.isAdminLoggedIn)
+    }
+
+    @Test
+    fun loginAdmin_conCredencialesIncorrectas_debeFallar() = runTest {
+        val exito = viewModel.loginAdmin("usuario@gmail.com", "wrongpass")
+        assertFalse(exito)
+        assertFalse(viewModel.uiState.value.isAdminLoggedIn)
+    }
+
+    @Test
+    fun logoutAdmin_debeCerrarSesion() = runTest {
+        viewModel.loginAdmin("admin@gmail.com", "admin123")
+        assertTrue(viewModel.uiState.value.isAdminLoggedIn)
+
+        viewModel.logoutAdmin()
+        assertFalse(viewModel.uiState.value.isAdminLoggedIn)
+    }
 }

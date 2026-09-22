@@ -1,6 +1,7 @@
 package com.example.prestamolab.ui.devolucion
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PhotoCamera
@@ -24,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.example.prestamolab.util.LocationManager
@@ -50,26 +53,39 @@ fun DevolucionScreen(
     val equipo = uiState.equipos.find { it.id == solicitud?.equipoId }
 
     var fotoUri by remember { mutableStateOf<Uri?>(null) }
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     var ubicacion by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var cargandoUbicacion by remember { mutableStateOf(false) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? -> fotoUri = uri }
+    ) { uri: Uri? ->
+        if (uri != null) {
+            fotoUri = uri
+        }
+    }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
-    ) { success -> if (success) { /* URI already set */ } }
+    ) { success ->
+        if (success && tempCameraUri != null) {
+            fotoUri = tempCameraUri
+        }
+    }
+
+    fun tomarFoto() {
+        val file = File(context.cacheDir, "images/evidencia_${System.currentTimeMillis()}.jpg")
+        file.parentFile?.mkdirs()
+        val uri = FileProvider.getUriForFile(context, "com.example.prestamolab.fileprovider", file)
+        tempCameraUri = uri
+        cameraLauncher.launch(uri)
+    }
 
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            val file = File(context.cacheDir, "images/evidencia_${System.currentTimeMillis()}.jpg")
-            file.parentFile?.mkdirs()
-            val uri = FileProvider.getUriForFile(context, "com.example.prestamolab.fileprovider", file)
-            fotoUri = uri
-            cameraLauncher.launch(uri)
+            tomarFoto()
         }
     }
 
@@ -129,17 +145,44 @@ fun DevolucionScreen(
                 contentAlignment = Alignment.Center
             ) {
                 if (fotoUri != null) {
-                    AsyncImage(
-                        model = fotoUri,
-                        contentDescription = "Vista previa",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        AsyncImage(
+                            model = fotoUri,
+                            contentDescription = "Vista previa",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                        IconButton(
+                            onClick = { fotoUri = null },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                                    CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Eliminar foto",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                        Icon(
+                            Icons.Default.PhotoCamera,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                        )
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text("Adjunta una foto del equipo", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            "Adjunta una foto del equipo",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -147,7 +190,18 @@ fun DevolucionScreen(
             // Image Source Buttons
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(
-                    onClick = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
+                    onClick = {
+                        val hasPermission = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+
+                        if (hasPermission) {
+                            tomarFoto()
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    },
                     modifier = Modifier.weight(1f).height(50.dp),
                     shape = MaterialTheme.shapes.medium
                 ) {
