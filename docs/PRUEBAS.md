@@ -38,3 +38,15 @@
 
 ---
 
+## Casos de Aceptación - Semana 7 (Corrutinas, Flow & StateFlow)
+
+| ID | Acción / Escenario | Resultado Esperado | Estado |
+|---|---|---|---|
+| CA-01 | Abrir la app sin solicitudes | Muestra `Cargando` y luego pasa a `Vacio` (nunca lista nula). | PASSED |
+| CA-02 | Insertar una solicitud desde el formulario | Room emite el nuevo registro y la lista actualiza en tiempo real vía `Flow`. | PASSED |
+| CA-03 | Cambiar filtro / estado en DataStore | Se recalcula el resultado manteniendo la preferencia. | PASSED |
+| CA-04 | Escribir búsquedas rápidas en la barra | La consulta previa se cancela con `flatMapLatest` y prevalece la más reciente. | PASSED |
+| CA-05 | Forzar un error en el repositorio | Muestra estado `Error` con botón de *Reintentar*. | PASSED |
+| CA-06 | Cancelar o salir durante una operación | El `Job` se detiene correctamente al cancelarse el `viewModelScope`. | PASSED |
+| CA-07 | Girar / recrear la pantalla | No se duplican operaciones y `StateFlow` conserva el último estado. | PASSED |
+| CA-08 | Recolección en UI consciente del ciclo de vida | Se utiliza `collectAsStateWithLifecycle()` en todas las pantallas Compose. | PASSED |

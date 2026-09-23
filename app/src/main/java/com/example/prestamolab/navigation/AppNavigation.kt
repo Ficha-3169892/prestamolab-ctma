@@ -1,8 +1,8 @@
 package com.example.prestamolab.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,7 +18,7 @@ import com.example.prestamolab.viewmodel.PrestamoViewModel
 @Composable
 fun AppNavigation(viewModel: PrestamoViewModel) {
     val navController = rememberNavController()
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     NavHost(
         navController = navController,
@@ -62,16 +62,7 @@ fun AppNavigation(viewModel: PrestamoViewModel) {
 
             SolicitudFormScreen(
                 equipoId = equipoId,
-                guardando = uiState.guardando,
-                mensajeError = uiState.mensaje,
-                onGuardarClick = { id, ambiente, proposito, duracion ->
-                    viewModel.limpiarMensaje()
-                    viewModel.registrarSolicitud(id, ambiente, proposito, duracion) {
-                        navController.navigate("mis_solicitudes") {
-                            popUpTo("catalogo")
-                        }
-                    }
-                },
+                viewModel = viewModel,
                 onVolverClick = {
                     viewModel.limpiarMensaje()
                     navController.popBackStack()
@@ -81,7 +72,7 @@ fun AppNavigation(viewModel: PrestamoViewModel) {
 
         composable("mis_solicitudes") {
             MisSolicitudesScreen(
-                solicitudes = uiState.solicitudes,
+                viewModel = viewModel,
                 onSolicitudClick = { solicitudId ->
                     navController.navigate("solicitud_detalle/$solicitudId")
                 },

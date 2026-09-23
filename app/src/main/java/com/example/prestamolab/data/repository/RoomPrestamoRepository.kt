@@ -1,5 +1,8 @@
 package com.example.prestamolab.data.repository
 
+import com.example.prestamolab.data.local.PrestamoDao
+import com.example.prestamolab.data.local.toDomain
+import com.example.prestamolab.data.local.toEntity
 import com.example.prestamolab.model.CategoriaEquipo
 import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
@@ -8,12 +11,12 @@ import com.example.prestamolab.model.SolicitudPrestamo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class InMemoryPrestamoRepository : PrestamoRepository {
+class RoomPrestamoRepository(
+    private val prestamoDao: PrestamoDao
+) : PrestamoRepository {
 
     private val equipos = mutableListOf(
         Equipo(1, "Multímetro Digital", CategoriaEquipo.MEDICION, EstadoEquipo.DISPONIBLE),
@@ -22,31 +25,24 @@ class InMemoryPrestamoRepository : PrestamoRepository {
         Equipo(4, "Cautín Regulable", CategoriaEquipo.HERRAMIENTAS, EstadoEquipo.DISPONIBLE)
     )
 
-    private val _solicitudes = MutableStateFlow<List<SolicitudPrestamo>>(emptyList())
-
     override fun obtenerEquipos(): List<Equipo> = equipos.toList()
 
     override fun obtenerEquipo(id: Int): Equipo? = equipos.find { it.id == id }
 
     override fun obtenerSolicitudes(): Flow<List<SolicitudPrestamo>> {
-        return _solicitudes.asStateFlow()
+        return prestamoDao.obtenerTodos().map { entities ->
+            entities.map { it.toDomain() }
+        }
     }
 
     override fun buscarSolicitudes(query: String): Flow<List<SolicitudPrestamo>> {
-        return _solicitudes.map { list ->
-            if (query.isBlank()) {
-                list
-            } else {
-                list.filter {
-                    it.ambienteDestino.contains(query, ignoreCase = true) ||
-                            it.proposito.contains(query, ignoreCase = true)
-                }
-            }
+        return prestamoDao.buscarPorAmbienteOProposito(query).map { entities ->
+            entities.map { it.toDomain() }
         }
     }
 
     override fun obtenerSolicitud(id: Int): SolicitudPrestamo? {
-        return _solicitudes.value.find { it.id == id }
+        return null
     }
 
     override suspend fun crearSolicitud(solicitud: SolicitudPrestamo): Result<Unit> = withContext(Dispatchers.IO) {
@@ -62,8 +58,7 @@ class InMemoryPrestamoRepository : PrestamoRepository {
             }
 
             equipos[equipoIndex] = equipo.copy(estado = EstadoEquipo.RESERVADO)
-            val nuevaLista = _solicitudes.value.toMutableList().apply { add(solicitud) }
-            _solicitudes.value = nuevaLista
+            prestamoDao.insertar(solicitud.toEntity())
             Result.success(Unit)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
@@ -71,27 +66,23 @@ class InMemoryPrestamoRepository : PrestamoRepository {
         }
     }
 
-    override suspend fun cancelarSolicitud(id: Int): Result<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun cancelarSolicitud(id: Long): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val actualList = _solicitudes.value.toMutableList()
-            val solicitudIndex = actualList.indexOfFirst { it.id == id }
-            if (solicitudIndex == -1) {
-                return@withContext Result.failure(IllegalArgumentException("La solicitud no existe."))
-            }
+            val prestamoEntity = prestamoDao.obtenerPorId(id.toInt())
+                ?: return@withContext Result.failure(IllegalArgumentException("La solicitud no existe."))
 
-            val solicitud = actualList[solicitudIndex]
-            if (solicitud.estado != EstadoSolicitud.SOLICITADA) {
+            if (prestamoEntity.estado != EstadoSolicitud.SOLICITADA) {
                 return@withContext Result.failure(IllegalStateException("Solo se pueden cancelar solicitudes en estado SOLICITADA."))
             }
 
-            actualList[solicitudIndex] = solicitud.copy(estado = EstadoSolicitud.CANCELADA)
+            val entidadActualizada = prestamoEntity.copy(estado = EstadoSolicitud.CANCELADA)
+            prestamoDao.actualizar(entidadActualizada)
 
-            val equipoIndex = equipos.indexOfFirst { it.id == solicitud.equipoId }
+            val equipoIndex = equipos.indexOfFirst { it.id == prestamoEntity.equipoId }
             if (equipoIndex != -1) {
                 equipos[equipoIndex] = equipos[equipoIndex].copy(estado = EstadoEquipo.DISPONIBLE)
             }
 
-            _solicitudes.value = actualList
             Result.success(Unit)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
@@ -99,7 +90,7 @@ class InMemoryPrestamoRepository : PrestamoRepository {
         }
     }
 
-    override suspend fun cancelarSolicitud(id: Long): Result<Unit> {
-        return cancelarSolicitud(id.toInt())
+    override suspend fun cancelarSolicitud(id: Int): Result<Unit> {
+        return cancelarSolicitud(id.toLong())
     }
 }
