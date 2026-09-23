@@ -5,35 +5,43 @@ import com.example.prestamolab.data.remote.dto.SolicitudDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Headers
+import retrofit2.http.PATCH
 import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface PrestamoApiService {
-    @GET("equipos")
+    @GET("equipos?select=*")
     suspend fun getEquipos(): List<EquipoDto>
 
+    @Headers("Prefer: return=representation")
     @POST("equipos")
-    suspend fun createEquipo(@Body equipo: EquipoDto): EquipoDto
+    suspend fun createEquipo(@Body equipo: EquipoDto): List<EquipoDto>
 
-    @PUT("equipos/{id}")
-    suspend fun updateEquipo(@Path("id") id: Int, @Body equipo: EquipoDto): EquipoDto
+    @Headers("Prefer: return=representation")
+    @PATCH("equipos")
+    suspend fun updateEquipo(
+        @Query("id") idQuery: String,
+        @Body equipo: EquipoDto
+    ): List<EquipoDto>
 
-    @DELETE("equipos/{id}")
-    suspend fun deleteEquipo(@Path("id") id: Int)
+    @DELETE("equipos")
+    suspend fun deleteEquipo(@Query("id") idQuery: String)
 
-    @GET("solicitudes")
+    @GET("solicitudes?select=*")
     suspend fun getSolicitudes(): List<SolicitudDto>
 
+    @Headers("Prefer: return=representation")
     @POST("solicitudes")
-    suspend fun createSolicitud(@Body solicitud: SolicitudDto): SolicitudDto
+    suspend fun createSolicitud(@Body solicitud: SolicitudDto): List<SolicitudDto>
 
-    @POST("solicitudes/{id}/cancelar")
-    suspend fun cancelarSolicitud(@Path("id") id: Int): SolicitudDto
+    @Headers("Prefer: return=representation")
+    @PATCH("solicitudes")
+    suspend fun updateSolicitud(
+        @Query("id") idQuery: String,
+        @Body updates: Map<String, String?>
+    ): List<SolicitudDto>
 
-    @POST("solicitudes/{id}/devolucion")
-    suspend fun registrarDevolucion(
-        @Path("id") id: Int, 
-        @Body devolucion: Map<String, String?>
-    ): SolicitudDto
+    @DELETE("solicitudes")
+    suspend fun deleteSolicitudes(@Query("estado") estadoQuery: String)
 }

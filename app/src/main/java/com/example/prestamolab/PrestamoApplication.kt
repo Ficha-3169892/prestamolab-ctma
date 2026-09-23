@@ -6,10 +6,10 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.prestamolab.data.local.database.PrestamoDatabase
+import com.example.prestamolab.data.remote.SupabaseConfig
 import com.example.prestamolab.data.worker.SyncWorker
 import com.example.prestamolab.data.remote.api.PrestamoApiService
 import com.example.prestamolab.repository.PrestamoRepository
-import com.example.prestamolab.repository.RoomPrestamoRepository
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -42,15 +42,27 @@ class PrestamoApplication : Application() {
 
     val database by lazy { PrestamoDatabase.getDatabase(this) }
     
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json { 
+        ignoreUnknownKeys = true 
+        encodeDefaults = true
+    }
     
     private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor { chain ->
+            val original = chain.request()
+            val request = original.newBuilder()
+                .header("apikey", SupabaseConfig.ANON_KEY)
+                .header("Authorization", "Bearer ${SupabaseConfig.ANON_KEY}")
+                .header("Content-Type", "application/json")
+                .build()
+            chain.proceed(request)
+        }
         .addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY })
         .build()
 
     val apiService: PrestamoApiService by lazy {
         Retrofit.Builder()
-            .baseUrl("https://api.prestamolab.example.com/") // URL ficticia para la guía
+            .baseUrl(SupabaseConfig.REST_URL)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()

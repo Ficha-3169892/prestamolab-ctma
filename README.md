@@ -30,6 +30,7 @@ El proyecto sigue una arquitectura **Clean MVVM** con las siguientes capas:
 - **CI/CD:** Pipeline de GitHub Actions para compilación, lint y tests unitarios automáticos.
 
 ## Documentación Técnica
+- [Configuración y Conexión a Supabase](docs/SETUP_SUPABASE.md)
 - [Gestión de Riesgos](docs/riesgos.md)
 - [Plan de Pruebas](docs/PLAN_PRUEBAS.md)
 - [Matriz de Trazabilidad](docs/MATRIZ_TRAZABILIDAD.md)

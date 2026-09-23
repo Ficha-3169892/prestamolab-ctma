@@ -52,7 +52,7 @@ class OfflineFirstPrestamoRepository(
         return try {
             equipoDao.insertEquipos(listOf(equipo.toEntity()))
             try {
-                apiService.updateEquipo(equipo.id, equipo.toDto())
+                apiService.updateEquipo("eq.${equipo.id}", equipo.toDto())
             } catch (e: Exception) {
             }
             Result.success(Unit)
@@ -65,7 +65,7 @@ class OfflineFirstPrestamoRepository(
         return try {
             equipoDao.deleteEquipoById(id)
             try {
-                apiService.deleteEquipo(id)
+                apiService.deleteEquipo("eq.$id")
             } catch (e: Exception) {
             }
             Result.success(Unit)
@@ -116,7 +116,7 @@ class OfflineFirstPrestamoRepository(
             equipoDao.updateEstado(solicitud.equipoId, EstadoEquipo.DISPONIBLE)
 
             try {
-                apiService.cancelarSolicitud(id)
+                apiService.updateSolicitud("eq.$id", mapOf("estado" to EstadoSolicitud.CANCELADA.name))
             } catch (e: Exception) {
             }
             Result.success(Unit)
@@ -137,11 +137,14 @@ class OfflineFirstPrestamoRepository(
             equipoDao.updateEstado(solicitud.equipoId, EstadoEquipo.DISPONIBLE)
 
             try {
-                apiService.registrarDevolucion(solicitudId, mapOf(
-                    "fotoUri" to fotoUri,
-                    "latitud" to latitud?.toString(),
-                    "longitud" to longitud?.toString()
-                ))
+                val updates = mutableMapOf<String, String?>(
+                    "estado" to EstadoSolicitud.DEVUELTA.name,
+                    "foto_uri" to fotoUri
+                )
+                if (latitud != null) updates["latitud"] = latitud.toString()
+                if (longitud != null) updates["longitud"] = longitud.toString()
+
+                apiService.updateSolicitud("eq.$solicitudId", updates)
             } catch (e: Exception) {
             }
             Result.success(Unit)
@@ -153,6 +156,10 @@ class OfflineFirstPrestamoRepository(
     override suspend fun borrarHistorial(): Result<Unit> {
         return try {
             solicitudDao.deleteHistorialCompletado()
+            try {
+                apiService.deleteSolicitudes("in.(DEVUELTA,CANCELADA,RECHAZADA)")
+            } catch (e: Exception) {
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -176,7 +183,9 @@ class OfflineFirstPrestamoRepository(
     private suspend fun syncEquipos() {
         try {
             val remoteEquipos = apiService.getEquipos()
-            equipoDao.insertEquipos(remoteEquipos.map { it.toDomain().toEntity() })
+            if (remoteEquipos.isNotEmpty()) {
+                equipoDao.insertEquipos(remoteEquipos.map { it.toDomain().toEntity() })
+            }
         } catch (e: Exception) {
         }
     }
@@ -184,9 +193,11 @@ class OfflineFirstPrestamoRepository(
     private suspend fun syncSolicitudes() {
         try {
             val remoteSolicitudes = apiService.getSolicitudes()
-            remoteSolicitudes.forEach { dto ->
-                val domain = dto.toDomain()
-                solicitudDao.insertSolicitud(domain.toEntity().copy(estadoSincronizacion = "SINCRONIZADA"))
+            if (remoteSolicitudes.isNotEmpty()) {
+                remoteSolicitudes.forEach { dto ->
+                    val domain = dto.toDomain()
+                    solicitudDao.insertSolicitud(domain.toEntity().copy(estadoSincronizacion = "SINCRONIZADA"))
+                }
             }
         } catch (e: Exception) {
         }
