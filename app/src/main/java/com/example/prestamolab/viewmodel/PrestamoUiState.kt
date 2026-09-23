@@ -10,5 +10,7 @@ data class PrestamoUiState(
     val cargando: Boolean = false,
     val mensaje: String? = null,
     val guardando: Boolean = false,
-    val isAdminLoggedIn: Boolean = false
+    val isAdminLoggedIn: Boolean = false,
+    val isDarkTheme: Boolean = false,
+    val lastAdminEmail: String = ""
 )

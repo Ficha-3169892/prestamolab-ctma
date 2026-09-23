@@ -35,11 +35,14 @@ sealed class AppRoute(val route: String) {
 fun AppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current.applicationContext as PrestamoApplication
+    val userPreferencesRepository = androidx.compose.runtime.remember {
+        com.example.prestamolab.data.local.preferences.UserPreferencesRepository(context)
+    }
     
     val viewModel: PrestamoViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return PrestamoViewModel(context.repository) as T
+                return PrestamoViewModel(context.repository, userPreferencesRepository) as T
             }
         }
     )

@@ -2,6 +2,7 @@ package com.example.prestamolab.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.prestamolab.data.local.preferences.UserPreferencesRepository
 import com.example.prestamolab.model.CategoriaEquipo
 import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
@@ -28,7 +29,8 @@ sealed class PrestamoEvent {
 }
 
 class PrestamoViewModel(
-    private val repository: PrestamoRepository
+    private val repository: PrestamoRepository,
+    private val userPreferencesRepository: UserPreferencesRepository? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PrestamoUiState())
@@ -39,6 +41,22 @@ class PrestamoViewModel(
 
     init {
         observarDatos()
+        observarPreferencias()
+    }
+
+    private fun observarPreferencias() {
+        userPreferencesRepository?.let { prefs ->
+            viewModelScope.launch {
+                prefs.darkThemeEnabled.collect { isDark ->
+                    _uiState.update { it.copy(isDarkTheme = isDark) }
+                }
+            }
+            viewModelScope.launch {
+                prefs.lastAdminEmail.collect { email ->
+                    _uiState.update { it.copy(lastAdminEmail = email) }
+                }
+            }
+        }
     }
 
     private fun observarDatos() {
@@ -68,6 +86,14 @@ class PrestamoViewModel(
 
     suspend fun obtenerSolicitud(id: Int): SolicitudPrestamo? {
         return repository.obtenerSolicitud(id)
+    }
+
+    fun toggleTheme() {
+        val nuevoEstado = !_uiState.value.isDarkTheme
+        _uiState.update { it.copy(isDarkTheme = nuevoEstado) }
+        viewModelScope.launch {
+            userPreferencesRepository?.setDarkThemeEnabled(nuevoEstado)
+        }
     }
 
     // --- Gestión de Catálogo ---
@@ -187,7 +213,10 @@ class PrestamoViewModel(
     fun loginAdmin(correo: String, contrasena: String): Boolean {
         val esAdminValido = correo.trim().equals("admin@gmail.com", ignoreCase = true) && contrasena == "admin123"
         if (esAdminValido) {
-            _uiState.update { it.copy(isAdminLoggedIn = true) }
+            _uiState.update { it.copy(isAdminLoggedIn = true, lastAdminEmail = correo.trim()) }
+            viewModelScope.launch {
+                userPreferencesRepository?.saveLastAdminEmail(correo.trim())
+            }
         }
         return esAdminValido
     }

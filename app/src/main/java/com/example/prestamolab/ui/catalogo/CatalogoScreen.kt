@@ -125,6 +125,7 @@ fun CatalogoScreen(
 
         if (showLoginDialog) {
             AdminLoginDialog(
+                initialEmail = uiState.lastAdminEmail,
                 onDismiss = { showLoginDialog = false },
                 onLoginSuccess = { email, password ->
                     val exito = viewModel.loginAdmin(email, password)
@@ -141,10 +142,11 @@ fun CatalogoScreen(
 
 @Composable
 private fun AdminLoginDialog(
+    initialEmail: String = "",
     onDismiss: () -> Unit,
     onLoginSuccess: (String, String) -> Boolean
 ) {
-    var email by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf(initialEmail.ifBlank { "admin@gmail.com" }) }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
