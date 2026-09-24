@@ -7,13 +7,13 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 
 | Issue | Historia | Prioridad | Sprint | Criterios | Automatizados |
 |---|---|---|---|---|---|
-| [HU-10](HU10.md) | Iniciar sesión y control de acceso por rol | Alta | 5 | 7 | 0 |
+| [HU-10](HU10.md) | Iniciar sesión y control de acceso por rol | Alta | 5 | 7 | 7 |
 | [HU-01](HU01.md) | Consultar equipos disponibles | Alta | 6 | 5 | 1 |
 | [HU-02](HU02.md) | Consultar detalle de un equipo | Alta | 6 | 4 | 4 |
 | [HU-06](HU06.md) | Conservar datos localmente sin conexión | Alta | 6 | 5 | 0 |
 | [HU-11](HU11.md) | Gestionar actividades formativas (instructor) | Media | 6 | 5 | 0 |
 | [HU-12](HU12.md) | Gestionar inventario de equipos (instructor) | Media | 6 | 5 | 0 |
-| [HU-03](HU03.md) | Solicitar préstamo | Alta | 7 | 8 | 7 |
+| [HU-03](HU03.md) | Solicitar préstamo | Alta | 7 | 8 | 8 |
 | [HU-04](HU04.md) | Consultar mis préstamos activos | Alta | 7 | 6 | 3 |
 | [HU-05](HU05.md) | Registrar devolución | Alta | 7 | 5 | 0 |
 | [HU-13](HU13.md) | Registrar geolocalización de las operaciones | Media | 7 | 5 | 0 |
@@ -22,7 +22,7 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | [HU-08](HU08.md) | Adjuntar evidencia fotográfica | Media | 8 | 5 | 0 |
 | [HU-09](HU09.md) | Recibir recordatorio de devolución | Media | 9 | 4 | 0 |
 
-**Total:** 73 criterios, 73 casos de prueba, 15 ya automatizados.
+**Total:** 73 criterios, 73 casos de prueba, 23 ya automatizados.
 
 ## Matriz HU → CA → TC → prueba
 
@@ -44,7 +44,7 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU03 | CA-HU03-05 | TC-HU03-05 | Unitaria | `PrestamoViewModelTest.TC-13` |
 | HU03 | CA-HU03-06 | TC-HU03-06 | Unitaria + UI | `PrestamoViewModelTest.TC-14; PrestamoUiTest.TC14_FlujoCompleto_CrearSolicitud` |
 | HU03 | CA-HU03-07 | TC-HU03-07 | Unitaria | `PrestamoViewModelTest.Fallo del repositorio muestra mensaje de error` |
-| HU03 | CA-HU03-08 | TC-HU03-08 | UI | Pendiente |
+| HU03 | CA-HU03-08 | TC-HU03-08 | UI + Unitaria | `LoginUiTest.TC_HU03_08_Instructor_NoVeSolicitarPrestamo; PrestamoViewModelTest.TC-HU03-08` |
 | HU04 | CA-HU04-01 | TC-HU04-01 | Unitaria | Pendiente |
 | HU04 | CA-HU04-02 | TC-HU04-02 | UI | Pendiente |
 | HU04 | CA-HU04-03 | TC-HU04-03 | UI | `PrestamoUiTest.TC15_CancelarSolicitud_ActualizaLista` |
@@ -75,13 +75,13 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU09 | CA-HU09-02 | TC-HU09-02 | Instrumentada | Pendiente |
 | HU09 | CA-HU09-03 | TC-HU09-03 | Integración | Pendiente |
 | HU09 | CA-HU09-04 | TC-HU09-04 | Instrumentada | Pendiente |
-| HU10 | CA-HU10-01 | TC-HU10-01 | Unitaria | Pendiente |
-| HU10 | CA-HU10-02 | TC-HU10-02 | Unitaria | Pendiente |
-| HU10 | CA-HU10-03 | TC-HU10-03 | Unitaria | Pendiente |
-| HU10 | CA-HU10-04 | TC-HU10-04 | Instrumentada | Pendiente |
-| HU10 | CA-HU10-05 | TC-HU10-05 | Unitaria | Pendiente |
-| HU10 | CA-HU10-06 | TC-HU10-06 | UI | Pendiente |
-| HU10 | CA-HU10-07 | TC-HU10-07 | UI | Pendiente |
+| HU10 | CA-HU10-01 | TC-HU10-01 | Unitaria | `LoginViewModelTest.TC-HU10-01; LoginUiTest.TC_HU10_01_LoginValido_MuestraCatalogo` |
+| HU10 | CA-HU10-02 | TC-HU10-02 | Unitaria | `LoginViewModelTest.TC-HU10-02; LoginUiTest.TC_HU10_02_LoginInvalido_MuestraErrorYSigueEnLogin` |
+| HU10 | CA-HU10-03 | TC-HU10-03 | Unitaria | `LoginViewModelTest.TC-HU10-03; LoginUiTest.TC_HU10_03_CamposVacios_MuestranErrores` |
+| HU10 | CA-HU10-04 | TC-HU10-04 | Instrumentada | `DataStoreSessionStoreTest.TC_HU10_04_SesionPersisteAlReabrirElAlmacenamiento` |
+| HU10 | CA-HU10-05 | TC-HU10-05 | Unitaria | `SesionViewModelTest.TC-HU10-05; LoginUiTest.TC_HU10_05_CerrarSesion_VuelveAlLogin` |
+| HU10 | CA-HU10-06 | TC-HU10-06 | UI | `ControlAccesoTest.TC-HU10-06; LoginUiTest.TC_HU10_06_Estudiante_NoVeGestion` |
+| HU10 | CA-HU10-07 | TC-HU10-07 | UI | `ControlAccesoTest.TC-HU10-07; LoginUiTest.TC_HU10_07_Instructor_VeYAbreGestion` |
 | HU11 | CA-HU11-01 | TC-HU11-01 | Integración | Pendiente |
 | HU11 | CA-HU11-02 | TC-HU11-02 | Unitaria | Pendiente |
 | HU11 | CA-HU11-03 | TC-HU11-03 | Integración | Pendiente |

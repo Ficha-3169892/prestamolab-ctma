@@ -5,6 +5,7 @@ import com.example.prestamolab.data.repository.PrestamoRepository
 import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
+import com.example.prestamolab.model.Rol
 import com.example.prestamolab.testutil.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -307,5 +308,18 @@ class PrestamoViewModelTest {
         viewModel.cancelarSolicitud(1) // libera el equipo 2
 
         assertEquals(EstadoEquipo.DISPONIBLE, viewModel.uiState.value.equipoSeleccionado?.estado)
+    }
+
+    @Test
+    fun `TC-HU03-08 - El instructor no puede registrar solicitudes aunque llegue al formulario`() {
+        val vm = PrestamoViewModel(repository, "Instructor CTMA", Rol.INSTRUCTOR)
+        val antes = vm.uiState.value.solicitudes.size
+        vm.seleccionarEquipoParaDetalle(vm.uiState.value.equipos.first { it.estado == EstadoEquipo.DISPONIBLE })
+        vm.onAmbienteChanged("Lab 1")
+        vm.onPropositoChanged("Proposito valido")
+        vm.onDuracionChanged("2")
+
+        assertFalse(vm.guardarSolicitud())
+        assertEquals(antes, vm.uiState.value.solicitudes.size)
     }
 }

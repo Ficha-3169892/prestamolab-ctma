@@ -23,7 +23,10 @@ import com.example.prestamolab.ui.solicitud.SolicitudScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrestamoScreen(
-    viewModel: PrestamoViewModel
+    viewModel: PrestamoViewModel,
+    puedeSolicitar: Boolean = true,
+    onGestionClick: (() -> Unit)? = null,
+    onCerrarSesion: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -43,6 +46,11 @@ fun PrestamoScreen(
                         fontFamily = FontFamily.SansSerif
                     )
                 },
+                actions = {
+                    TextButton(onClick = onCerrarSesion) {
+                        Text("Salir", color = Color.White, fontFamily = FontFamily.SansSerif)
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = blueHeader,
                     titleContentColor = Color.White
@@ -57,12 +65,22 @@ fun PrestamoScreen(
                     label = { Text("Catálogo", fontFamily = FontFamily.SansSerif) },
                     icon = { Text("📦") }
                 )
-                NavigationBarItem(
-                    selected = uiState.seccionActual == SeccionApp.MIS_SOLICITUDES,
-                    onClick = { viewModel.navegarA(SeccionApp.MIS_SOLICITUDES) },
-                    label = { Text("Mis Solicitudes", fontFamily = FontFamily.SansSerif) },
-                    icon = { Text("📋") }
-                )
+                if (puedeSolicitar) {
+                    NavigationBarItem(
+                        selected = uiState.seccionActual == SeccionApp.MIS_SOLICITUDES,
+                        onClick = { viewModel.navegarA(SeccionApp.MIS_SOLICITUDES) },
+                        label = { Text("Mis Solicitudes", fontFamily = FontFamily.SansSerif) },
+                        icon = { Text("📋") }
+                    )
+                }
+                if (onGestionClick != null) {
+                    NavigationBarItem(
+                        selected = false,
+                        onClick = onGestionClick,
+                        label = { Text("Gestión", fontFamily = FontFamily.SansSerif) },
+                        icon = { Text("🛠") }
+                    )
+                }
             }
         }
     ) { paddingValues ->
@@ -80,9 +98,9 @@ fun PrestamoScreen(
                             viewModel.seleccionarEquipoParaDetalle(equipo)
                         }
                     },
-                    onNavigateToSolicitudes = {
-                        viewModel.navegarA(SeccionApp.MIS_SOLICITUDES)
-                    }
+                    onNavigateToSolicitudes = if (puedeSolicitar) {
+                        { viewModel.navegarA(SeccionApp.MIS_SOLICITUDES) }
+                    } else null
                 )
 
                 SeccionApp.DETALLE_EQUIPO -> {
@@ -173,7 +191,7 @@ fun PrestamoScreen(
 
                             Spacer(modifier = Modifier.weight(1f))
 
-                            Button(
+                            if (puedeSolicitar) Button(
                                 onClick = { viewModel.irAFormulario() },
                                 enabled = equipo.estado == EstadoEquipo.DISPONIBLE,
                                 colors = ButtonDefaults.buttonColors(containerColor = blueHeader),

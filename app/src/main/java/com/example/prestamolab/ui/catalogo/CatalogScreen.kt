@@ -16,15 +16,17 @@ import com.example.prestamolab.model.EstadoEquipo
 fun CatalogScreen(
     equipos: List<Equipo>,
     onEquipoClick: (Int) -> Unit,
-    onNavigateToSolicitudes: () -> Unit
+    onNavigateToSolicitudes: (() -> Unit)?
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Catálogo de Equipos - PréstamoLab") },
                 actions = {
-                    TextButton(onClick = onNavigateToSolicitudes) {
-                        Text("Mis Solicitudes")
+                    if (onNavigateToSolicitudes != null) {
+                        TextButton(onClick = onNavigateToSolicitudes) {
+                            Text("Mis Solicitudes")
+                        }
                     }
                 }
             )

@@ -10,7 +10,9 @@ import com.example.prestamolab.data.repository.PrestamoRepository
 import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.NuevaSolicitud
+import com.example.prestamolab.model.Rol
 import com.example.prestamolab.model.SolicitudPrestamo
+import com.example.prestamolab.model.Usuario
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,8 +40,8 @@ data class PrestamoUiState(
 
 class PrestamoViewModel(
     private val repository: PrestamoRepository,
-    // Temporal hasta implementar el inicio de sesión (HU-10)
-    private val solicitante: String = SOLICITANTE_DEMO
+    private val solicitante: String = SOLICITANTE_DEMO,
+    private val rol: Rol = Rol.ESTUDIANTE
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PrestamoUiState())
@@ -115,6 +117,8 @@ class PrestamoViewModel(
      */
     fun guardarSolicitud(): Boolean {
         if (_uiState.value.guardando) return false
+        // Solo el estudiante solicita préstamos (CA-HU03-08), aunque la UI oculte el botón
+        if (rol != Rol.ESTUDIANTE) return false
 
         val estadoActual = _uiState.value
         val equipo = estadoActual.equipoSeleccionado ?: return false
@@ -207,10 +211,10 @@ class PrestamoViewModel(
     companion object {
         const val SOLICITANTE_DEMO = "Andrés Vargas"
 
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
+        fun factory(usuario: Usuario): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PrestamoLabApp
-                PrestamoViewModel(app.container.prestamoRepository)
+                PrestamoViewModel(app.container.prestamoRepository, usuario.nombre, usuario.rol)
             }
         }
     }

@@ -3,10 +3,7 @@ package com.example.prestamolab.ui
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.core.app.ApplicationProvider
 import com.example.prestamolab.MainActivity
-import com.example.prestamolab.PrestamoLabApp
-import com.example.prestamolab.data.repository.InMemoryPrestamoRepository
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -19,11 +16,9 @@ class PrestamoUiTest {
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @Before
-    fun reiniciarDatos() {
-        // El repositorio vive en la Application y se comparte entre pruebas del mismo proceso
-        val app = ApplicationProvider.getApplicationContext<PrestamoLabApp>()
-        (app.container.prestamoRepository as InMemoryPrestamoRepository).reiniciar()
-        composeTestRule.waitForIdle()
+    fun prepararSesionEstudiante() {
+        reiniciarDatosSemilla()
+        composeTestRule.iniciarSesionComoEstudiante()
     }
 
     @Test
