@@ -25,6 +25,7 @@ fun GestionScreen(onVerCatalogo: () -> Unit, onCerrarSesion: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .safeDrawingPadding()
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {

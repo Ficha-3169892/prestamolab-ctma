@@ -1,5 +1,6 @@
 package com.example.prestamolab.data.remote
 
+import com.example.prestamolab.model.Rol
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URLEncoder
@@ -51,7 +52,8 @@ interface PrestamosRemoteDataSource {
 
     suspend fun devoluciones(usuarioId: String?): List<DevolucionRemota>
 
-    suspend fun guardarEquipo(equipo: EquipoRemoto)
+    /** La app no crea equipos (lo hace el instructor, HU-12): solo cambia su estado al reservar o devolver. */
+    suspend fun actualizarEstadoEquipo(id: String, estado: String)
     suspend fun guardarPrestamo(prestamo: PrestamoRemoto)
     suspend fun guardarDevolucion(devolucion: DevolucionRemota)
 }
@@ -106,14 +108,10 @@ class SupabasePrestamosDataSource(private val cliente: SupabaseRestClient) : Pre
         }
     }
 
-    override suspend fun guardarEquipo(equipo: EquipoRemoto) = cliente.upsert(
-        "equipments",
-        JSONObject()
-            .put("id", equipo.id)
-            .put("name", equipo.nombre)
-            .put("category", equipo.categoria)
-            .put("status", equipo.estado)
-            .toString()
+    // PATCH y no upsert: equipments tiene columnas NOT NULL (p. ej. title) que la app no maneja
+    override suspend fun actualizarEstadoEquipo(id: String, estado: String) = cliente.patch(
+        "equipments?id=eq.${codificar(id)}",
+        JSONObject().put("status", estado).toString()
     )
 
     override suspend fun guardarPrestamo(prestamo: PrestamoRemoto) = cliente.upsert(
@@ -121,6 +119,8 @@ class SupabasePrestamosDataSource(private val cliente: SupabaseRestClient) : Pre
         JSONObject()
             .put("id", prestamo.id)
             .put("user_id", prestamo.usuarioId)
+            // loans.user_role es NOT NULL; solo el estudiante solicita préstamos (CA-HU03-08)
+            .put("user_role", Rol.ESTUDIANTE.name)
             .put("equipment_id", prestamo.equipoId)
             .put("status", prestamo.estado)
             .put("request_date", prestamo.fechaSolicitud)

@@ -34,7 +34,13 @@ class CoordinadorSincronizacion(
 
         return when (val resultado = sincronizador.sincronizar(usuario)) {
             is ResultadoSincronizacion.Exito -> {
-                avisos.descartar()
+                if (resultado.rechazados > 0) {
+                    avisos.informar(
+                        "El servidor rechazó ${resultado.rechazados} cambio(s). Se conservan en el teléfono."
+                    )
+                } else {
+                    avisos.descartar()
+                }
                 AccionTrasSincronizar.EXITO
             }
             ResultadoSincronizacion.NoAutorizado -> {

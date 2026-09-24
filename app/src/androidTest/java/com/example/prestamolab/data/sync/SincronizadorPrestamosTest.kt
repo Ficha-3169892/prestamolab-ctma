@@ -80,7 +80,7 @@ class SincronizadorPrestamosTest {
         assertEquals(estudiante.id, enviado.usuarioId)
         assertEquals(CatalogoInicial.remoteIdPorIdLocal[1], enviado.equipoId)
         assertEquals("SOLICITADA", enviado.estado)
-        assertEquals(EstadoEquipo.RESERVADO.name, remoto.equipos.single { it.id == enviado.equipoId }.estado)
+        assertEquals(EstadoEquipo.RESERVADO.name, remoto.estadosEnviados[enviado.equipoId])
         assertEquals(EstadoSincronizacion.SINCRONIZADO, db.loanDao().obtener(solicitud.id)!!.syncStatus)
         assertEquals(EstadoSincronizacion.SINCRONIZADO, db.equipmentDao().obtener(1)!!.syncStatus)
     }
@@ -218,9 +218,28 @@ class SincronizadorPrestamosTest {
 
         val resultado = sincronizador.sincronizar(estudiante)
 
-        assertTrue(resultado is ResultadoSincronizacion.Exito)
+        assertEquals(1, (resultado as ResultadoSincronizacion.Exito).rechazados)
         assertEquals(EstadoSincronizacion.ERROR, db.loanDao().obtener(rechazada.id)!!.syncStatus)
         assertEquals(EstadoSincronizacion.SINCRONIZADO, db.loanDao().obtener(aceptada.id)!!.syncStatus)
+    }
+
+    @Test
+    fun UnRegistroEnErrorNoSePisaConLaVersionRemota() = runTest {
+        // Caso real del 2026-09-24: Supabase rechazó el cambio a DEVUELTO y la recepción lo revertía
+        repository.registrarDevolucion(NuevaDevolucion(2, CondicionEquipo.BUENO, "", null)).getOrThrow()
+        remoto.prestamoRechazado = "5eed0000-0000-4000-8000-000000000002"
+        remoto.errorDeRechazo = SupabaseHttpException(400, "null value in column \"user_role\"")
+        remoto.prestamos += PrestamoRemoto(
+            "5eed0000-0000-4000-8000-000000000002", estudiante.id, CatalogoInicial.remoteIdPorIdLocal.getValue(5),
+            "PRESTADO", "2026-09-03T13:00:00+00:00", "2026-09-03T17:00:00+00:00", "Ambiente de Electrónica",
+            "Prototipo de sensores IoT", 4
+        )
+
+        sincronizador.sincronizar(estudiante)
+
+        val local = db.loanDao().obtener(2)!!
+        assertEquals(EstadoSolicitud.DEVUELTO, local.status)
+        assertEquals(EstadoSincronizacion.ERROR, local.syncStatus)
     }
 
     @Test

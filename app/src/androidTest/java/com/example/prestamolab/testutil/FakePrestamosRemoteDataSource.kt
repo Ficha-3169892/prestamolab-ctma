@@ -37,10 +37,13 @@ class FakePrestamosRemoteDataSource : PrestamosRemoteDataSource {
         return devoluciones.filter { it.prestamoId in suyos }
     }
 
-    override suspend fun guardarEquipo(equipo: EquipoRemoto) {
+    /** Último estado enviado por equipo (PATCH): se registra aunque el equipo no exista en [equipos]. */
+    val estadosEnviados = mutableMapOf<String, String>()
+
+    override suspend fun actualizarEstadoEquipo(id: String, estado: String) {
         lanzarSiHayError()
-        equipos.removeAll { it.id == equipo.id }
-        equipos += equipo
+        estadosEnviados[id] = estado
+        equipos.replaceAll { if (it.id == id) it.copy(estado = estado) else it }
     }
 
     override suspend fun guardarPrestamo(prestamo: PrestamoRemoto) {

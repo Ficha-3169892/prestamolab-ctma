@@ -21,7 +21,8 @@ import kotlinx.coroutines.CancellationException
 import java.io.IOException
 
 sealed interface ResultadoSincronizacion {
-    data class Exito(val enviados: Int, val recibidos: Int) : ResultadoSincronizacion
+    /** [rechazados]: registros que el servidor no aceptó; quedan en ERROR y se conservan en el teléfono. */
+    data class Exito(val enviados: Int, val recibidos: Int, val rechazados: Int = 0) : ResultadoSincronizacion
     /** 401: la credencial ya no es válida; hay que volver al login. */
     data object NoAutorizado : ResultadoSincronizacion
     /** 404: la tabla o recurso no existe en Supabase; se conservan los datos locales. */
@@ -51,9 +52,9 @@ class SincronizadorPrestamos(
     private val returnDao = db.returnDao()
 
     override suspend fun sincronizar(usuario: Usuario): ResultadoSincronizacion = try {
-        val enviados = enviarPendientes()
+        val envio = enviarPendientes()
         val recibidos = recibir(usuario)
-        ResultadoSincronizacion.Exito(enviados, recibidos)
+        ResultadoSincronizacion.Exito(envio.enviados, recibidos, envio.rechazados)
     } catch (e: CancellationException) {
         throw e
     } catch (e: SupabaseHttpException) {
@@ -70,12 +71,21 @@ class SincronizadorPrestamos(
     // ── Envío ────────────────────────────────────────────────────────────────
 
     /** En orden de dependencia: un préstamo necesita su equipo y una devolución su préstamo. */
-    private suspend fun enviarPendientes(): Int {
+    private class ResumenEnvio {
         var enviados = 0
+        var rechazados = 0
+
+        fun contar(resultado: EstadoSincronizacion) {
+            if (resultado == EstadoSincronizacion.SINCRONIZADO) enviados++ else rechazados++
+        }
+    }
+
+    private suspend fun enviarPendientes(): ResumenEnvio {
+        val resumen = ResumenEnvio()
         for (equipo in equipmentDao.pendientes()) {
-            val resultado = enviar { remoto.guardarEquipo(equipo.aRemoto()) }
+            val resultado = enviar { remoto.actualizarEstadoEquipo(equipo.remoteId, equipo.status.name) }
             equipmentDao.marcarEnviado(equipo.id, equipo.status, resultado)
-            if (resultado == EstadoSincronizacion.SINCRONIZADO) enviados++
+            resumen.contar(resultado)
         }
         for (prestamo in loanDao.pendientes()) {
             val remotoPrestamo = prestamo.aRemoto()
@@ -86,7 +96,7 @@ class SincronizadorPrestamos(
                 enviar { remoto.guardarPrestamo(remotoPrestamo) }
             }
             loanDao.marcarEnviado(prestamo.id, prestamo.status, resultado)
-            if (resultado == EstadoSincronizacion.SINCRONIZADO) enviados++
+            resumen.contar(resultado)
         }
         for (devolucion in returnDao.pendientes()) {
             val prestamo = loanDao.obtener(devolucion.loanId) ?: continue
@@ -94,9 +104,9 @@ class SincronizadorPrestamos(
             if (prestamo.syncStatus != EstadoSincronizacion.SINCRONIZADO) continue
             val resultado = enviar { remoto.guardarDevolucion(devolucion.aRemoto(prestamo.remoteId)) }
             returnDao.marcarEnviado(devolucion.id, resultado)
-            if (resultado == EstadoSincronizacion.SINCRONIZADO) enviados++
+            resumen.contar(resultado)
         }
-        return enviados
+        return resumen
     }
 
     /**
@@ -110,8 +120,6 @@ class SincronizadorPrestamos(
         if (e.codigo == 401 || e.codigo == 404 || esTemporal(e.codigo)) throw e
         EstadoSincronizacion.ERROR
     }
-
-    private fun EquipmentEntity.aRemoto() = EquipoRemoto(remoteId, name, category, status.name)
 
     private suspend fun LoanEntity.aRemoto(): PrestamoRemoto? {
         val dueno = userId ?: return null
@@ -156,7 +164,10 @@ class SincronizadorPrestamos(
         }
     }
 
-    /** Devuelve 1 si cambió Room. Un registro local PENDIENTE no se pisa: su cambio aún no se envió. */
+    /**
+     * Devuelve 1 si cambió Room. Un registro local PENDIENTE o en ERROR no se pisa: guarda un
+     * cambio del usuario que Supabase todavía no tiene.
+     */
     private suspend fun guardarEquipo(r: EquipoRemoto): Int {
         val estado = EstadoEquipo.entries.find { it.name == r.estado } ?: return 0
         val local = equipmentDao.obtenerPorRemoteId(r.id)
@@ -166,7 +177,7 @@ class SincronizadorPrestamos(
         )
         return when {
             local == null -> { equipmentDao.insertar(entidad); 1 }
-            local.syncStatus == EstadoSincronizacion.PENDIENTE || local == entidad -> 0
+            local.syncStatus != EstadoSincronizacion.SINCRONIZADO || local == entidad -> 0
             else -> { equipmentDao.actualizar(entidad); 1 }
         }
     }
@@ -191,7 +202,7 @@ class SincronizadorPrestamos(
         )
         return when {
             local == null -> { loanDao.insertar(entidad); 1 }
-            local.syncStatus == EstadoSincronizacion.PENDIENTE || local == entidad -> 0
+            local.syncStatus != EstadoSincronizacion.SINCRONIZADO || local == entidad -> 0
             else -> { loanDao.actualizar(entidad); 1 }
         }
     }
@@ -215,7 +226,7 @@ class SincronizadorPrestamos(
         )
         return when {
             local == null -> { returnDao.insertar(entidad); 1 }
-            local.syncStatus == EstadoSincronizacion.PENDIENTE || local == entidad -> 0
+            local.syncStatus != EstadoSincronizacion.SINCRONIZADO || local == entidad -> 0
             else -> { returnDao.actualizar(entidad); 1 }
         }
     }

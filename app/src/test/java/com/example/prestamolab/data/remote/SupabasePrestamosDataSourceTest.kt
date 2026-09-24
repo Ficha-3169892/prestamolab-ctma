@@ -122,7 +122,22 @@ class SupabasePrestamosDataSourceTest {
         assertEquals("u1", cuerpo.getString("user_id"))
         assertEquals("e1", cuerpo.getString("equipment_id"))
         assertEquals("2026-09-24T10:00:00-05:00", cuerpo.getString("return_date"))
+        // loans.user_role es NOT NULL en Supabase
+        assertEquals("ESTUDIANTE", cuerpo.getString("user_role"))
         assertFalse(cuerpo.has("solicitante"))
+    }
+
+    @Test
+    fun `El estado del equipo se envia con PATCH y solo la columna status`() = runTest {
+        responder(204, "")
+
+        remoto.actualizarEstadoEquipo("0b1e0000-0000-4000-8000-000000000005", "DISPONIBLE")
+
+        val peticion = servidor.takeRequest()
+        assertEquals("PATCH", peticion.method)
+        assertEquals("/rest/v1/equipments?id=eq.0b1e0000-0000-4000-8000-000000000005", peticion.path)
+        // Un upsert fallaba: equipments tiene columnas NOT NULL (title) que la app no maneja
+        assertEquals("""{"status":"DISPONIBLE"}""", peticion.body.readUtf8())
     }
 
     @Test
@@ -159,7 +174,7 @@ class SupabasePrestamosDataSourceTest {
     fun `TC-HU07-05 - Respuesta 503 lanza SupabaseHttpException 503`() = runTest {
         responder(503, "Service Unavailable")
 
-        val error = runCatching { remoto.guardarEquipo(EquipoRemoto("e1", "X", "Y", "DISPONIBLE")) }.exceptionOrNull()
+        val error = runCatching { remoto.actualizarEstadoEquipo("e1", "DISPONIBLE") }.exceptionOrNull()
 
         assertEquals(503, (error as SupabaseHttpException).codigo)
     }

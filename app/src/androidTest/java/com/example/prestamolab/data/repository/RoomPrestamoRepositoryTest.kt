@@ -179,6 +179,23 @@ class RoomPrestamoRepositoryTest {
     }
 
     @Test
+    fun DevolucionYaRecibidaDeOtroDispositivo_SeRechazaSinCerrarLaApp() = runTest {
+        // Caso real del 2026-09-24: la devolución llegó de Supabase pero el préstamo seguía PRESTADO
+        db.returnDao().insertar(
+            com.example.prestamolab.data.local.entity.ReturnEntity(
+                remoteId = "r-remota", loanId = 2, equipmentCondition = CondicionEquipo.BUENO, notes = "",
+                returnDate = "2026-09-24 14:06", latitude = null, longitude = null,
+                syncStatus = EstadoSincronizacion.SINCRONIZADO
+            )
+        )
+
+        val resultado = repository.registrarDevolucion(NuevaDevolucion(2, CondicionEquipo.BUENO, "", null))
+
+        assertEquals("Este préstamo ya tiene una devolución registrada", resultado.exceptionOrNull()?.message)
+        assertEquals(EstadoSolicitud.PRESTADO, repository.solicitudes.first().first { it.id == 2 }.estado)
+    }
+
+    @Test
     fun DevolverUnaSolicitudNoEntregada_SeRechaza() = runTest {
         val resultado = repository.registrarDevolucion(NuevaDevolucion(1, CondicionEquipo.BUENO, "", null))
 

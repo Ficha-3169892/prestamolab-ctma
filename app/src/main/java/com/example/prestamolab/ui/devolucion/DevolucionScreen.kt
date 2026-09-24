@@ -82,6 +82,8 @@ fun DevolucionScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            // Sin Scaffold: la app es de borde a borde y la barra de navegación tapaba "Confirmar devolución"
+            .safeDrawingPadding()
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)

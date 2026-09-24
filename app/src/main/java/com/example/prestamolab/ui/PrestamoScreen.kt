@@ -282,7 +282,10 @@ fun PrestamoScreen(
                                                 )
                                                 Spacer(modifier = Modifier.height(4.dp))
                                                 Text(text = "Solicitante: ${solicitud.solicitante}", fontFamily = FontFamily.SansSerif)
-                                                Text(text = "Equipo ID: ${solicitud.equipoId}", fontFamily = FontFamily.SansSerif)
+                                                // El id local no coincide con el de Supabase: se muestra el nombre
+                                                val nombreEquipo = uiState.equipos.find { it.id == solicitud.equipoId }?.nombre
+                                                    ?: "#${solicitud.equipoId}"
+                                                Text(text = "Equipo: $nombreEquipo", fontFamily = FontFamily.SansSerif)
                                                 Text(text = "Fecha: ${solicitud.fechaInicio}", fontFamily = FontFamily.SansSerif)
                                                 Spacer(modifier = Modifier.height(6.dp))
                                                 Text(

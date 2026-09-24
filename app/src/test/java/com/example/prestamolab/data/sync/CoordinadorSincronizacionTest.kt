@@ -37,6 +37,14 @@ class CoordinadorSincronizacionTest {
     }
 
     @Test
+    fun `Registros rechazados se avisan sin reintentar`() = runTest {
+        val accion = coordinador(ResultadoSincronizacion.Exito(enviados = 1, recibidos = 0, rechazados = 2)).ejecutar()
+
+        assertEquals(AccionTrasSincronizar.EXITO, accion)
+        assertEquals("El servidor rechazó 2 cambio(s). Se conservan en el teléfono.", avisos.mensaje.value)
+    }
+
+    @Test
     fun `TC-HU07-03 - 401 cierra la sesion para volver al login`() = runTest {
         val accion = coordinador(ResultadoSincronizacion.NoAutorizado).ejecutar()
 

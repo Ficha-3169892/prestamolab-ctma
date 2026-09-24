@@ -99,6 +99,12 @@ class RoomPrestamoRepository(
                 IllegalStateException("Solo se pueden devolver préstamos en estado PRESTADO")
             )
         }
+        // Otro dispositivo ya la registró y llegó por sincronización: el índice único la rechazaría
+        if (returnDao.obtenerPorPrestamo(prestamo.id) != null) {
+            return@withTransaction Result.failure(
+                IllegalStateException("Este préstamo ya tiene una devolución registrada")
+            )
+        }
 
         val devolucion = ReturnEntity(
             remoteId = generarRemoteId(),

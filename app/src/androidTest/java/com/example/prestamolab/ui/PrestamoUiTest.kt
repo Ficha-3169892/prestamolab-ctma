@@ -116,8 +116,8 @@ class PrestamoUiTest {
 
         composeTestRule.onNodeWithText("Mis Solicitudes (3)").assertIsDisplayed()
         // La solicitud nueva es la última de la lista y puede quedar fuera de pantalla
-        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Equipo ID: 1"))
-        composeTestRule.onNodeWithText("Equipo ID: 1").assertIsDisplayed()
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Equipo: Multímetro Digital"))
+        composeTestRule.onNodeWithText("Equipo: Multímetro Digital").assertIsDisplayed()
     }
 
     @Test
