@@ -18,12 +18,18 @@ import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-/** Fuente de verdad local: la UI solo lee de Room mediante Flow (HU-06). */
+/**
+ * Fuente de verdad local: la UI solo lee de Room mediante Flow (HU-06). Cada cambio queda
+ * PENDIENTE y [alCambiarLocalmente] pide enviarlo a Supabase cuando haya conexión (HU-07).
+ */
 class RoomPrestamoRepository(
     private val db: PrestamoLabDatabase,
-    private val reloj: () -> Long = System::currentTimeMillis
+    private val reloj: () -> Long = System::currentTimeMillis,
+    private val generarRemoteId: () -> String = { UUID.randomUUID().toString() },
+    private val alCambiarLocalmente: () -> Unit = {}
 ) : PrestamoRepository {
 
     private val equipmentDao = db.equipmentDao()
@@ -49,7 +55,9 @@ class RoomPrestamoRepository(
 
         val inicio = reloj()
         val prestamo = LoanEntity(
+            remoteId = generarRemoteId(),
             equipmentId = nueva.equipoId,
+            userId = nueva.usuarioId,
             requesterName = nueva.solicitante,
             environment = nueva.ambiente,
             purpose = nueva.proposito,
@@ -63,7 +71,7 @@ class RoomPrestamoRepository(
         // Cambiamos a RESERVADO según TC-14
         equipmentDao.actualizarEstado(nueva.equipoId, EstadoEquipo.RESERVADO)
         Result.success(prestamo.copy(id = id).aDominio())
-    }
+    }.also { if (it.isSuccess) alCambiarLocalmente() }
 
     override suspend fun cancelarSolicitud(id: Int): Result<Unit> = db.withTransaction {
         val prestamo = loanDao.obtener(id)
@@ -80,7 +88,7 @@ class RoomPrestamoRepository(
         // Al cancelar, el equipo vuelve a estar disponible (TC-15)
         equipmentDao.actualizarEstado(prestamo.equipmentId, EstadoEquipo.DISPONIBLE)
         Result.success(Unit)
-    }
+    }.also { if (it.isSuccess) alCambiarLocalmente() }
 
     override suspend fun registrarDevolucion(nueva: NuevaDevolucion): Result<Devolucion> = db.withTransaction {
         val prestamo = loanDao.obtener(nueva.solicitudId)
@@ -93,6 +101,7 @@ class RoomPrestamoRepository(
         }
 
         val devolucion = ReturnEntity(
+            remoteId = generarRemoteId(),
             loanId = prestamo.id,
             equipmentCondition = nueva.condicion,
             notes = nueva.observacion.trim(),
@@ -104,7 +113,7 @@ class RoomPrestamoRepository(
         loanDao.actualizarEstado(prestamo.id, EstadoSolicitud.DEVUELTO)
         equipmentDao.actualizarEstado(prestamo.equipmentId, EstadoEquipo.DISPONIBLE)
         Result.success(devolucion.copy(id = id).aDominio())
-    }
+    }.also { if (it.isSuccess) alCambiarLocalmente() }
 
     private fun formatear(instante: Long): String =
         SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(instante))

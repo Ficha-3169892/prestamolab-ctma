@@ -1,0 +1,52 @@
+package com.example.prestamolab.data.local
+
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import java.util.UUID
+
+/**
+ * uuid en Supabase de los 5 equipos que la versión 1 sembraba con ids 1 a 5.
+ * docs/supabase/004_sincronizacion.sql inserta los mismos, así el catálogo no se duplica.
+ */
+object CatalogoInicial {
+    val remoteIdPorIdLocal = mapOf(
+        1 to "0b1e0000-0000-4000-8000-000000000001",
+        2 to "0b1e0000-0000-4000-8000-000000000002",
+        3 to "0b1e0000-0000-4000-8000-000000000003",
+        4 to "0b1e0000-0000-4000-8000-000000000004",
+        5 to "0b1e0000-0000-4000-8000-000000000005"
+    )
+}
+
+/** v1 → v2: columnas de sincronización (remote_id, sync_status) y dueño del préstamo (user_id). */
+val MIGRACION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE equipments ADD COLUMN remote_id TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE equipments ADD COLUMN sync_status TEXT NOT NULL DEFAULT 'SINCRONIZADO'")
+        db.execSQL("ALTER TABLE loans ADD COLUMN remote_id TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE loans ADD COLUMN user_id TEXT")
+        db.execSQL("ALTER TABLE loans ADD COLUMN sync_status TEXT NOT NULL DEFAULT 'PENDIENTE'")
+        db.execSQL("ALTER TABLE returns ADD COLUMN remote_id TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE returns ADD COLUMN sync_status TEXT NOT NULL DEFAULT 'PENDIENTE'")
+
+        // Cada fila necesita su propio uuid antes de crear los índices únicos
+        asignarRemoteIds(db, "equipments") { id -> CatalogoInicial.remoteIdPorIdLocal[id] }
+        asignarRemoteIds(db, "loans") { null }
+        asignarRemoteIds(db, "returns") { null }
+
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_equipments_remote_id ON equipments (remote_id)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_loans_remote_id ON loans (remote_id)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_loans_user_id ON loans (user_id)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_returns_remote_id ON returns (remote_id)")
+    }
+
+    private fun asignarRemoteIds(db: SupportSQLiteDatabase, tabla: String, fijo: (Int) -> String?) {
+        val ids = db.query("SELECT id FROM $tabla").use { cursor ->
+            buildList { while (cursor.moveToNext()) add(cursor.getInt(0)) }
+        }
+        ids.forEach { id ->
+            val remoteId = fijo(id) ?: UUID.randomUUID().toString()
+            db.execSQL("UPDATE $tabla SET remote_id = ? WHERE id = ?", arrayOf(remoteId, id))
+        }
+    }
+}

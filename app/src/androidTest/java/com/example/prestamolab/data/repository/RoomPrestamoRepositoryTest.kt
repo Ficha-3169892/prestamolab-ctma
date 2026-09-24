@@ -4,7 +4,9 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
+import com.example.prestamolab.data.local.DatosSemilla
 import com.example.prestamolab.data.local.PrestamoLabDatabase
+import com.example.prestamolab.data.local.entity.EstadoSincronizacion
 import com.example.prestamolab.model.CondicionEquipo
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
@@ -27,12 +29,15 @@ class RoomPrestamoRepositoryTest {
 
     private lateinit var db: PrestamoLabDatabase
     private lateinit var repository: RoomPrestamoRepository
+    private var cambiosLocales = 0
+    private var siguienteUuid = 0
 
     private val formato = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
     private val instanteFijo = formato.parse("2026-09-24 08:00")!!.time
 
     private fun nueva(equipoId: Int) = NuevaSolicitud(
         equipoId = equipoId,
+        usuarioId = "uuid-estudiante",
         solicitante = "Aprendiz Test",
         ambiente = "Lab 1",
         proposito = "Proposito valido",
@@ -42,7 +47,13 @@ class RoomPrestamoRepositoryTest {
     @Before
     fun setup() {
         db = PrestamoLabDatabase.construir(ApplicationProvider.getApplicationContext<Context>(), enMemoria = true)
-        repository = RoomPrestamoRepository(db, reloj = { instanteFijo })
+        DatosSemilla.reiniciar(db)
+        repository = RoomPrestamoRepository(
+            db,
+            reloj = { instanteFijo },
+            generarRemoteId = { "uuid-${++siguienteUuid}" },
+            alCambiarLocalmente = { cambiosLocales++ }
+        )
     }
 
     @After
@@ -69,6 +80,26 @@ class RoomPrestamoRepositoryTest {
         assertEquals("2026-09-24 10:00", solicitud.fechaFin)
         assertEquals(EstadoEquipo.RESERVADO, repository.obtenerEquipo(1)?.estado)
         assertEquals(solicitud, repository.solicitudes.first().last())
+    }
+
+    @Test
+    fun TC_HU06_02_SolicitudNueva_QuedaPendienteConUuidYPideSincronizar() = runTest {
+        val solicitud = repository.crearSolicitud(nueva(1)).getOrThrow()
+
+        val guardada = db.loanDao().obtener(solicitud.id)!!
+        assertEquals(EstadoSincronizacion.PENDIENTE, guardada.syncStatus)
+        assertEquals("uuid-1", guardada.remoteId)
+        assertEquals("uuid-estudiante", guardada.userId)
+        // El equipo reservado también debe llegar a Supabase
+        assertEquals(EstadoSincronizacion.PENDIENTE, db.equipmentDao().obtener(1)!!.syncStatus)
+        assertEquals(1, cambiosLocales)
+    }
+
+    @Test
+    fun OperacionRechazada_NoPideSincronizar() = runTest {
+        repository.crearSolicitud(nueva(2))
+
+        assertEquals(0, cambiosLocales)
     }
 
     @Test
@@ -169,7 +200,7 @@ class RoomPrestamoRepositoryTest {
         repository.crearSolicitud(nueva(1)).getOrThrow()
         repository.crearSolicitud(nueva(3)).getOrThrow()
 
-        db.reiniciar()
+        DatosSemilla.reiniciar(db)
 
         assertEquals(listOf(1, 2), repository.solicitudes.first().map { it.id })
         assertEquals(3, repository.crearSolicitud(nueva(1)).getOrThrow().id)

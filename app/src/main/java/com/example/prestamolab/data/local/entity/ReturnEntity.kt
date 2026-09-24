@@ -15,10 +15,12 @@ import com.example.prestamolab.model.Devolucion
         ForeignKey(entity = LoanEntity::class, parentColumns = ["id"], childColumns = ["loan_id"])
     ],
     // Un préstamo se devuelve una sola vez (CA-HU05-05)
-    indices = [Index(value = ["loan_id"], unique = true)]
+    indices = [Index(value = ["loan_id"], unique = true), Index(value = ["remote_id"], unique = true)]
 )
 data class ReturnEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    /** returns.id (uuid) generado en el dispositivo. */
+    @ColumnInfo(name = "remote_id", defaultValue = "''") val remoteId: String,
     @ColumnInfo(name = "loan_id") val loanId: Int,
     @ColumnInfo(name = "equipment_condition") val equipmentCondition: CondicionEquipo,
     val notes: String,
@@ -26,7 +28,9 @@ data class ReturnEntity(
     @ColumnInfo(name = "return_date") val returnDate: String,
     // Null cuando no se concedió el permiso o no se pudo obtener la ubicación
     val latitude: Double?,
-    val longitude: Double?
+    val longitude: Double?,
+    @ColumnInfo(name = "sync_status", defaultValue = "'PENDIENTE'")
+    val syncStatus: EstadoSincronizacion = EstadoSincronizacion.PENDIENTE
 )
 
 fun ReturnEntity.aDominio() = Devolucion(

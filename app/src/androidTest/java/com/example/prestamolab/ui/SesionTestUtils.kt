@@ -4,6 +4,7 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.test.core.app.ApplicationProvider
 import com.example.prestamolab.PrestamoLabApp
+import com.example.prestamolab.data.local.DatosSemilla
 import com.example.prestamolab.testutil.FakeUsuariosDataSource
 import kotlinx.coroutines.runBlocking
 
@@ -12,7 +13,7 @@ private val app: PrestamoLabApp
 
 /** Restaura los datos semilla: el repositorio vive en la Application y se comparte entre pruebas. */
 fun reiniciarDatosSemilla() {
-    app.container.database.reiniciar()
+    DatosSemilla.reiniciar(app.container.database)
 }
 
 fun ComposeTestRule.iniciarSesionComoEstudiante() = iniciarSesion(

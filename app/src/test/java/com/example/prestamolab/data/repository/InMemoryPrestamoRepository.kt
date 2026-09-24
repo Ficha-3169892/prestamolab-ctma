@@ -8,6 +8,7 @@ import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.NuevaDevolucion
 import com.example.prestamolab.model.NuevaSolicitud
 import com.example.prestamolab.model.SolicitudPrestamo
+import com.example.prestamolab.ui.PrestamoViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,6 +46,7 @@ class InMemoryPrestamoRepository(
         val solicitud = SolicitudPrestamo(
             id = (_solicitudes.value.maxOfOrNull { it.id } ?: 0) + 1,
             equipoId = nueva.equipoId,
+            usuarioId = nueva.usuarioId,
             solicitante = nueva.solicitante,
             ambiente = nueva.ambiente,
             proposito = nueva.proposito,
@@ -111,6 +113,8 @@ class InMemoryPrestamoRepository(
 
     private companion object {
         const val FECHA_DEMO = "2026-09-04"
+        // Dueño de la semilla: el usuario por defecto de PrestamoViewModel
+        val USUARIO_DEMO = PrestamoViewModel.USUARIO_DEMO.id
 
         fun equiposIniciales() = listOf(
             Equipo(1, "Multímetro Digital", "Herramienta", EstadoEquipo.DISPONIBLE),
@@ -124,11 +128,11 @@ class InMemoryPrestamoRepository(
 
         fun solicitudesIniciales() = listOf(
             SolicitudPrestamo(
-                1, 2, "Andrés Vargas", "Laboratorio 302", "Práctica de señales",
+                1, 2, USUARIO_DEMO, "Andrés Vargas", "Laboratorio 302", "Práctica de señales",
                 2, "2026-09-02", "2026-09-05", EstadoSolicitud.SOLICITADA
             ),
             SolicitudPrestamo(
-                2, 5, "Andrés Vargas", "Ambiente de Electrónica", "Prototipo de sensores IoT",
+                2, 5, USUARIO_DEMO, "Andrés Vargas", "Ambiente de Electrónica", "Prototipo de sensores IoT",
                 4, "2026-09-03", "2026-09-03", EstadoSolicitud.PRESTADO
             )
         )

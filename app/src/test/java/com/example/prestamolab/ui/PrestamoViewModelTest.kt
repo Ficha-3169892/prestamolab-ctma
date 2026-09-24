@@ -2,10 +2,12 @@ package com.example.prestamolab.ui
 
 import com.example.prestamolab.data.repository.InMemoryPrestamoRepository
 import com.example.prestamolab.data.repository.PrestamoRepository
+import com.example.prestamolab.data.sync.AvisosSincronizacion
 import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.Rol
+import com.example.prestamolab.model.Usuario
 import com.example.prestamolab.testutil.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -312,7 +314,7 @@ class PrestamoViewModelTest {
 
     @Test
     fun `TC-HU03-08 - El instructor no puede registrar solicitudes aunque llegue al formulario`() {
-        val vm = PrestamoViewModel(repository, "Instructor CTMA", Rol.INSTRUCTOR)
+        val vm = PrestamoViewModel(repository, Usuario("u-instructor", "Instructor CTMA", "instructor@sena.edu.co", Rol.INSTRUCTOR))
         val antes = vm.uiState.value.solicitudes.size
         vm.seleccionarEquipoParaDetalle(vm.uiState.value.equipos.first { it.estado == EstadoEquipo.DISPONIBLE })
         vm.onAmbienteChanged("Lab 1")
@@ -321,5 +323,33 @@ class PrestamoViewModelTest {
 
         assertFalse(vm.guardarSolicitud())
         assertEquals(antes, vm.uiState.value.solicitudes.size)
+    }
+
+    @Test
+    fun `Mis Solicitudes del estudiante solo muestra las suyas y el instructor ve todas`() = runTest {
+        val otro = Usuario("u-otro", "Otro Aprendiz", "otro@sena.edu.co", Rol.ESTUDIANTE)
+        val vmOtro = PrestamoViewModel(repository, otro)
+        vmOtro.seleccionarEquipoParaDetalle(vmOtro.uiState.value.equipos.first { it.id == 1 })
+        vmOtro.onAmbienteChanged("Lab 2")
+        vmOtro.onPropositoChanged("Proposito del otro aprendiz")
+        vmOtro.onDuracionChanged("1")
+        assertTrue(vmOtro.guardarSolicitud())
+
+        assertEquals(listOf("u-otro"), vmOtro.uiState.value.solicitudes.map { it.usuarioId })
+        assertTrue(viewModel.uiState.value.solicitudes.all { it.usuarioId == PrestamoViewModel.USUARIO_DEMO.id })
+        val instructor = PrestamoViewModel(repository, Usuario("u-instructor", "Instructor", "i@sena.edu.co", Rol.INSTRUCTOR))
+        assertEquals(3, instructor.uiState.value.solicitudes.size)
+    }
+
+    @Test
+    fun `TC-HU07-04 - El aviso de sincronizacion se muestra y se puede descartar`() {
+        val avisos = AvisosSincronizacion()
+        val vm = PrestamoViewModel(repository, avisos = avisos)
+
+        avisos.informar("No se encontró un recurso en el servidor.")
+        assertEquals("No se encontró un recurso en el servidor.", vm.uiState.value.avisoSincronizacion)
+
+        vm.descartarAvisoSincronizacion()
+        assertNull(vm.uiState.value.avisoSincronizacion)
     }
 }

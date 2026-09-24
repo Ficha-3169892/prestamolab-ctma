@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.prestamolab.PrestamoLabApp
 import com.example.prestamolab.data.repository.PrestamoRepository
+import com.example.prestamolab.data.sync.AvisosSincronizacion
 import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.NuevaSolicitud
@@ -35,14 +36,18 @@ data class PrestamoUiState(
     val errorProposito: String? = null,
     val errorDuracion: String? = null,
     val guardando: Boolean = false,
-    val mensajeError: String? = null
+    val mensajeError: String? = null,
+    /** Problema de sincronización con Supabase que el usuario debe conocer (CA-HU07-04). */
+    val avisoSincronizacion: String? = null
 )
 
 class PrestamoViewModel(
     private val repository: PrestamoRepository,
-    private val solicitante: String = SOLICITANTE_DEMO,
-    private val rol: Rol = Rol.ESTUDIANTE
+    private val usuario: Usuario = USUARIO_DEMO,
+    private val avisos: AvisosSincronizacion = AvisosSincronizacion()
 ) : ViewModel() {
+
+    private val rol: Rol get() = usuario.rol
 
     private val _uiState = MutableStateFlow(PrestamoUiState())
     val uiState: StateFlow<PrestamoUiState> = _uiState.asStateFlow()
@@ -65,10 +70,17 @@ class PrestamoViewModel(
         }
         viewModelScope.launch {
             repository.solicitudes.collect { solicitudes ->
-                _uiState.update { it.copy(solicitudes = solicitudes) }
+                // El instructor revisa todas; el estudiante solo ve las suyas
+                val visibles = if (rol == Rol.INSTRUCTOR) solicitudes else solicitudes.filter { it.usuarioId == usuario.id }
+                _uiState.update { it.copy(solicitudes = visibles) }
             }
         }
+        viewModelScope.launch {
+            avisos.mensaje.collect { aviso -> _uiState.update { it.copy(avisoSincronizacion = aviso) } }
+        }
     }
+
+    fun descartarAvisoSincronizacion() = avisos.descartar()
 
     fun navegarA(seccion: SeccionApp) {
         _uiState.update { it.copy(seccionActual = seccion) }
@@ -168,7 +180,8 @@ class PrestamoViewModel(
 
         val nueva = NuevaSolicitud(
             equipoId = equipo.id,
-            solicitante = solicitante,
+            usuarioId = usuario.id,
+            solicitante = usuario.nombre,
             ambiente = estadoActual.ambiente.trim(),
             proposito = estadoActual.proposito,
             duracionHoras = duracion
@@ -209,12 +222,13 @@ class PrestamoViewModel(
     }
 
     companion object {
-        const val SOLICITANTE_DEMO = "Andrés Vargas"
+        /** Usuario por defecto de las pruebas unitarias. */
+        val USUARIO_DEMO = Usuario("u-demo", "Andrés Vargas", "estudiante@sena.edu.co", Rol.ESTUDIANTE)
 
         fun factory(usuario: Usuario): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PrestamoLabApp
-                PrestamoViewModel(app.container.prestamoRepository, usuario.nombre, usuario.rol)
+                PrestamoViewModel(app.container.prestamoRepository, usuario, app.container.avisosSincronizacion)
             }
         }
     }

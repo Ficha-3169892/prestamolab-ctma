@@ -78,11 +78,15 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+    implementation(libs.work.runtime.ktx)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
+    testImplementation(libs.mockwebserver)
+    // org.json real: en la JVM el android.jar solo trae stubs que lanzan excepción
+    testImplementation(libs.org.json)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -90,6 +94,13 @@ dependencies {
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.room.testing)
     androidTestImplementation(libs.turbine)
+    androidTestImplementation(libs.work.testing)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    constraints {
+        // room-testing (MigrationTestHelper) exige 1.8.1; sin esto el APK de pruebas hereda la
+        // 1.7.3 de room-runtime y falla con AbstractMethodError al leer los esquemas exportados
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
+    }
 }

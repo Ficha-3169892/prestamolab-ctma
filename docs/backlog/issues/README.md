@@ -12,17 +12,17 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | [HU-13](HU13.md) | Registrar geolocalización de las operaciones | Media | 5 | 6 | 3 |
 | [HU-01](HU01.md) | Consultar equipos disponibles | Alta | 6 | 5 | 1 |
 | [HU-02](HU02.md) | Consultar detalle de un equipo | Alta | 6 | 4 | 4 |
-| [HU-06](HU06.md) | Conservar datos localmente sin conexión | Alta | 6 | 5 | 1 |
+| [HU-06](HU06.md) | Conservar datos localmente sin conexión | Alta | 6 | 5 | 3 |
 | [HU-11](HU11.md) | Gestionar actividades formativas (instructor) | Media | 6 | 5 | 0 |
 | [HU-12](HU12.md) | Gestionar inventario de equipos (instructor) | Media | 6 | 5 | 0 |
 | [HU-03](HU03.md) | Solicitar préstamo | Alta | 7 | 8 | 8 |
 | [HU-04](HU04.md) | Consultar mis préstamos activos | Alta | 7 | 6 | 3 |
 | [HU-14](HU14.md) | Revisar solicitudes de préstamo (instructor) | Alta | 7 | 4 | 0 |
-| [HU-07](HU07.md) | Sincronizar datos con servicio remoto | Media/Alta | 8 | 5 | 0 |
+| [HU-07](HU07.md) | Sincronizar datos con servicio remoto | Media/Alta | 8 | 5 | 5 |
 | [HU-08](HU08.md) | Adjuntar evidencia fotográfica | Media | 8 | 5 | 0 |
 | [HU-09](HU09.md) | Recibir recordatorio de devolución | Media | 9 | 4 | 0 |
 
-**Total:** 74 criterios, 74 casos de prueba, 32 ya automatizados.
+**Total:** 74 criterios, 74 casos de prueba, 39 ya automatizados.
 
 ## Matriz HU → CA → TC → prueba
 
@@ -57,15 +57,15 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU05 | CA-HU05-04 | TC-HU05-04 | Unitaria + UI | `DevolucionViewModelTest.TC-HU05-04; DevolucionUiTest.TC_HU05_04_EquipoDanadoSinObservacion_MuestraError` |
 | HU05 | CA-HU05-05 | TC-HU05-05 | Unitaria (TDD) | `RoomPrestamoRepositoryTest.TC_HU05_05_DevolverUnPrestamoYaDevuelto_SeRechazaSinCambios` |
 | HU06 | CA-HU06-01 | TC-HU06-01 | Instrumentada | Pendiente |
-| HU06 | CA-HU06-02 | TC-HU06-02 | Integración | Pendiente |
+| HU06 | CA-HU06-02 | TC-HU06-02 | Integración | `RoomPrestamoRepositoryTest.TC_HU06_02_SolicitudNueva_QuedaPendienteConUuidYPideSincronizar` |
 | HU06 | CA-HU06-03 | TC-HU06-03 | Integración | `RoomPrestamoRepositoryTest.TC_HU06_03_ElFlujoDeEquiposEmiteLosCambiosDeRoom` |
-| HU06 | CA-HU06-04 | TC-HU06-04 | Instrumentada | Pendiente |
+| HU06 | CA-HU06-04 | TC-HU06-04 | Instrumentada | `MigracionTest.TC_HU06_04_MigracionDeV1AV2ConservaLosDatos` |
 | HU06 | CA-HU06-05 | TC-HU06-05 | Integración | Pendiente |
-| HU07 | CA-HU07-01 | TC-HU07-01 | Integración | Pendiente |
-| HU07 | CA-HU07-02 | TC-HU07-02 | Integración | Pendiente |
-| HU07 | CA-HU07-03 | TC-HU07-03 | Integración | Pendiente |
-| HU07 | CA-HU07-04 | TC-HU07-04 | Integración | Pendiente |
-| HU07 | CA-HU07-05 | TC-HU07-05 | Integración | Pendiente |
+| HU07 | CA-HU07-01 | TC-HU07-01 | Integración | `SincronizadorPrestamosTest.TC_HU07_01_PendientesSeEnvianYQuedanSincronizados; SupabasePrestamosDataSourceTest.TC-HU07-01` |
+| HU07 | CA-HU07-02 | TC-HU07-02 | Integración | `SincronizadorPrestamosTest.TC_HU07_02_DatosRemotosNuevosActualizanRoom; SupabasePrestamosDataSourceTest.TC-HU07-02` |
+| HU07 | CA-HU07-03 | TC-HU07-03 | Integración | `CoordinadorSincronizacionTest.TC-HU07-03; SincronizacionWorkerTest.TC_HU07_03_Respuesta401_CierraLaSesionYFalla; SupabasePrestamosDataSourceTest.TC-HU07-03` |
+| HU07 | CA-HU07-04 | TC-HU07-04 | Integración | `CoordinadorSincronizacionTest.TC-HU07-04; SincronizadorPrestamosTest.TC_HU07_04_Respuesta404ConservaLosDatosLocales; PrestamoViewModelTest.TC-HU07-04` |
+| HU07 | CA-HU07-05 | TC-HU07-05 | Integración | `SincronizacionWorkerTest.TC_HU07_05_Error5xx_PideReintentarConEsperaExponencial; SincronizadorPrestamosTest.TC_HU07_05_Error5xxOTiempoAgotadoDejaLosRegistrosPendientes; SupabasePrestamosDataSourceTest.TC-HU07-05` |
 | HU08 | CA-HU08-01 | TC-HU08-01 | Instrumentada | Pendiente |
 | HU08 | CA-HU08-02 | TC-HU08-02 | Integración | Pendiente |
 | HU08 | CA-HU08-03 | TC-HU08-03 | Instrumentada | Pendiente |
