@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             PrestamoLabTheme {
-                val viewModel: PrestamoViewModel = viewModel()
+                val viewModel: PrestamoViewModel = viewModel(factory = PrestamoViewModel.Factory)
                 PrestamoScreen(viewModel = viewModel)
             }
         }

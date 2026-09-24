@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.prestamolab.model.Equipo
+import com.example.prestamolab.model.EstadoEquipo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +52,7 @@ fun CatalogScreen(
                         Text(
                             text = "Estado: ${equipo.estado}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (equipo.estado == "DISPONIBLE") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                            color = if (equipo.estado == EstadoEquipo.DISPONIBLE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                         )
                     }
                 }

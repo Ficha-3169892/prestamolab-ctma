@@ -15,6 +15,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.prestamolab.model.EstadoEquipo
+import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.ui.catalogo.CatalogScreen
 import com.example.prestamolab.ui.solicitud.SolicitudScreen
 
@@ -152,7 +154,7 @@ fun PrestamoScreen(
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
 
-                                    val esDisponible = equipo.estado == "DISPONIBLE"
+                                    val esDisponible = equipo.estado == EstadoEquipo.DISPONIBLE
                                     Surface(
                                         color = if (esDisponible) blueContainer else Color(0xFFFFDAD6),
                                         shape = RoundedCornerShape(8.dp)
@@ -173,7 +175,7 @@ fun PrestamoScreen(
 
                             Button(
                                 onClick = { viewModel.irAFormulario() },
-                                enabled = equipo.estado == "DISPONIBLE",
+                                enabled = equipo.estado == EstadoEquipo.DISPONIBLE,
                                 colors = ButtonDefaults.buttonColors(containerColor = blueHeader),
                                 shape = RoundedCornerShape(14.dp),
                                 modifier = Modifier
@@ -202,7 +204,7 @@ fun PrestamoScreen(
                 )
 
                 SeccionApp.MIS_SOLICITUDES -> {
-                    val solicitudesVisibles = uiState.solicitudes.filter { it.estado != "CANCELADA" }
+                    val solicitudesVisibles = uiState.solicitudes.filter { it.estado != EstadoSolicitud.CANCELADA }
 
                     if (solicitudesVisibles.isEmpty()) {
                         Box(

@@ -130,6 +130,15 @@ fun SolicitudScreen(
             )
         }
 
+        if (uiState.mensajeError != null) {
+            Text(
+                text = uiState.mensajeError,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = FontFamily.SansSerif
+            )
+        }
+
         Spacer(modifier = Modifier.weight(1f))
 
         Button(

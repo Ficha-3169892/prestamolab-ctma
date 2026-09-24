@@ -3,7 +3,11 @@ package com.example.prestamolab.ui
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.core.app.ApplicationProvider
 import com.example.prestamolab.MainActivity
+import com.example.prestamolab.PrestamoLabApp
+import com.example.prestamolab.data.repository.InMemoryPrestamoRepository
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -13,6 +17,14 @@ class PrestamoUiTest {
 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()
+
+    @Before
+    fun reiniciarDatos() {
+        // El repositorio vive en la Application y se comparte entre pruebas del mismo proceso
+        val app = ApplicationProvider.getApplicationContext<PrestamoLabApp>()
+        (app.container.prestamoRepository as InMemoryPrestamoRepository).reiniciar()
+        composeTestRule.waitForIdle()
+    }
 
     @Test
     fun TC01_CargarCatalogoInicial_MuestraEquipos() {
@@ -158,10 +170,12 @@ class PrestamoUiTest {
 
     @Test
     fun Formulario_CargaNombreEquipoCorrectamente() {
-        composeTestRule.onNodeWithText("Osciloscopio 100MHz").performClick()
+        // Es el último del catálogo: en pantallas pequeñas la LazyColumn aún no lo ha compuesto
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Fuente de Poder DC"))
+        composeTestRule.onNodeWithText("Fuente de Poder DC").performClick()
         composeTestRule.onNodeWithText("Solicitar Préstamo").performClick()
 
-        composeTestRule.onNodeWithText("Equipo: Osciloscopio 100MHz").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Equipo: Fuente de Poder DC").assertIsDisplayed()
     }
 
     // Helper

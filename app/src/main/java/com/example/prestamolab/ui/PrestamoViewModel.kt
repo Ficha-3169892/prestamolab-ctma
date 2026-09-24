@@ -1,13 +1,21 @@
 package com.example.prestamolab.ui
 
 import androidx.lifecycle.ViewModel
-import com.example.prestamolab.data.repository.InMemoryPrestamoRepository
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.prestamolab.PrestamoLabApp
+import com.example.prestamolab.data.repository.PrestamoRepository
 import com.example.prestamolab.model.Equipo
+import com.example.prestamolab.model.EstadoEquipo
+import com.example.prestamolab.model.NuevaSolicitud
 import com.example.prestamolab.model.SolicitudPrestamo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 enum class SeccionApp {
     CATALOGO, DETALLE_EQUIPO, FORMULARIO, MIS_SOLICITUDES
@@ -24,12 +32,15 @@ data class PrestamoUiState(
     val errorAmbiente: String? = null,
     val errorProposito: String? = null,
     val errorDuracion: String? = null,
-    val guardando: Boolean = false
+    val guardando: Boolean = false,
+    val mensajeError: String? = null
 )
 
-class PrestamoViewModel : ViewModel() {
-
-    private val repository = InMemoryPrestamoRepository()
+class PrestamoViewModel(
+    private val repository: PrestamoRepository,
+    // Temporal hasta implementar el inicio de sesión (HU-10)
+    private val solicitante: String = SOLICITANTE_DEMO
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PrestamoUiState())
     val uiState: StateFlow<PrestamoUiState> = _uiState.asStateFlow()
@@ -39,11 +50,21 @@ class PrestamoViewModel : ViewModel() {
     }
 
     private fun cargarDatosIniciales() {
-        _uiState.update { state ->
-            state.copy(
-                equipos = repository.obtenerEquipos(),
-                solicitudes = repository.obtenerSolicitudes()
-            )
+        viewModelScope.launch {
+            repository.equipos.collect { equipos ->
+                _uiState.update { state ->
+                    // Mantiene el detalle sincronizado con el estado actual del equipo
+                    val seleccionado = state.equipoSeleccionado?.let { sel ->
+                        equipos.find { it.id == sel.id } ?: sel
+                    }
+                    state.copy(equipos = equipos, equipoSeleccionado = seleccionado)
+                }
+            }
+        }
+        viewModelScope.launch {
+            repository.solicitudes.collect { solicitudes ->
+                _uiState.update { it.copy(solicitudes = solicitudes) }
+            }
         }
     }
 
@@ -61,17 +82,19 @@ class PrestamoViewModel : ViewModel() {
     }
 
     fun seleccionarEquipoPorId(id: Int) {
-        val equipo = repository.obtenerEquipo(id)
-        _uiState.update {
-            it.copy(
-                equipoSeleccionado = equipo,
-                seccionActual = SeccionApp.DETALLE_EQUIPO
-            )
+        viewModelScope.launch {
+            val equipo = repository.obtenerEquipo(id)
+            _uiState.update {
+                it.copy(
+                    equipoSeleccionado = equipo,
+                    seccionActual = SeccionApp.DETALLE_EQUIPO
+                )
+            }
         }
     }
 
     fun irAFormulario() {
-        _uiState.update { it.copy(seccionActual = SeccionApp.FORMULARIO) }
+        _uiState.update { it.copy(seccionActual = SeccionApp.FORMULARIO, mensajeError = null) }
     }
 
     fun onAmbienteChanged(nuevoAmbiente: String) {
@@ -86,6 +109,10 @@ class PrestamoViewModel : ViewModel() {
         _uiState.update { it.copy(duracionHoras = nuevaDuracion, errorDuracion = null) }
     }
 
+    /**
+     * Valida el formulario y, si es válido, envía la solicitud al repositorio.
+     * Retorna true cuando la solicitud pasó la validación y se despachó.
+     */
     fun guardarSolicitud(): Boolean {
         if (_uiState.value.guardando) return false
 
@@ -93,7 +120,7 @@ class PrestamoViewModel : ViewModel() {
         val equipo = estadoActual.equipoSeleccionado ?: return false
 
         // Evitar solicitud sobre equipo no disponible (TC-12)
-        if (equipo.estado != "DISPONIBLE") return false
+        if (equipo.estado != EstadoEquipo.DISPONIBLE) return false
 
         var hayError = false
         var errAmbiente: String? = null
@@ -133,48 +160,58 @@ class PrestamoViewModel : ViewModel() {
         }
 
         // Bloqueo de doble pulsación (TC-13)
-        _uiState.update { it.copy(guardando = true) }
+        _uiState.update { it.copy(guardando = true, mensajeError = null) }
 
-        val nuevaSolicitud = SolicitudPrestamo(
-            id = (100..999).random(),
+        val nueva = NuevaSolicitud(
             equipoId = equipo.id,
-            solicitante = "Andrés Vargas",
-            fechaInicio = "2026-09-04",
-            fechaFin = "2026-09-04",
-            estado = "SOLICITADA"
+            solicitante = solicitante,
+            ambiente = estadoActual.ambiente.trim(),
+            proposito = estadoActual.proposito,
+            duracionHoras = duracion
         )
 
-        repository.crearSolicitud(nuevaSolicitud)
-
-        _uiState.update { state ->
-            state.copy(
-                equipos = repository.obtenerEquipos(),
-                solicitudes = repository.obtenerSolicitudes(),
-                seccionActual = SeccionApp.MIS_SOLICITUDES,
-                equipoSeleccionado = null,
-                ambiente = "",
-                proposito = "",
-                duracionHoras = "1",
-                errorAmbiente = null,
-                errorProposito = null,
-                errorDuracion = null,
-                guardando = false
-            )
+        viewModelScope.launch {
+            repository.crearSolicitud(nueva)
+                .onSuccess {
+                    _uiState.update { state ->
+                        state.copy(
+                            seccionActual = SeccionApp.MIS_SOLICITUDES,
+                            equipoSeleccionado = null,
+                            ambiente = "",
+                            proposito = "",
+                            duracionHoras = "1",
+                            errorAmbiente = null,
+                            errorProposito = null,
+                            errorDuracion = null,
+                            guardando = false
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(guardando = false, mensajeError = error.message ?: "No se pudo registrar la solicitud")
+                    }
+                }
         }
         return true
     }
 
     fun cancelarSolicitud(idSolicitud: Int) {
-        val solicitud = repository.obtenerSolicitudes().find { it.id == idSolicitud }
-        // TC-16: Re-cancelar solicitud CANCELADA -> sin cambio
-        if (solicitud?.estado == "CANCELADA") return
+        viewModelScope.launch {
+            repository.cancelarSolicitud(idSolicitud).onFailure { error ->
+                _uiState.update { it.copy(mensajeError = error.message) }
+            }
+        }
+    }
 
-        repository.cancelarSolicitud(idSolicitud)
-        _uiState.update { state ->
-            state.copy(
-                equipos = repository.obtenerEquipos(),
-                solicitudes = repository.obtenerSolicitudes()
-            )
+    companion object {
+        const val SOLICITANTE_DEMO = "Andrés Vargas"
+
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PrestamoLabApp
+                PrestamoViewModel(app.container.prestamoRepository)
+            }
         }
     }
 }
