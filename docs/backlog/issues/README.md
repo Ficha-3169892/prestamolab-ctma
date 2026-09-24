@@ -7,7 +7,9 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 
 | Issue | Historia | Prioridad | Sprint | Criterios | Automatizados |
 |---|---|---|---|---|---|
+| [HU-05](HU05.md) | Registrar devolución | Alta | 5 | 5 | 5 |
 | [HU-10](HU10.md) | Iniciar sesión y control de acceso por rol | Alta | 5 | 7 | 7 |
+| [HU-13](HU13.md) | Registrar geolocalización de las operaciones | Media | 5 | 6 | 3 |
 | [HU-01](HU01.md) | Consultar equipos disponibles | Alta | 6 | 5 | 1 |
 | [HU-02](HU02.md) | Consultar detalle de un equipo | Alta | 6 | 4 | 4 |
 | [HU-06](HU06.md) | Conservar datos localmente sin conexión | Alta | 6 | 5 | 0 |
@@ -15,14 +17,12 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | [HU-12](HU12.md) | Gestionar inventario de equipos (instructor) | Media | 6 | 5 | 0 |
 | [HU-03](HU03.md) | Solicitar préstamo | Alta | 7 | 8 | 8 |
 | [HU-04](HU04.md) | Consultar mis préstamos activos | Alta | 7 | 6 | 3 |
-| [HU-05](HU05.md) | Registrar devolución | Alta | 7 | 5 | 0 |
-| [HU-13](HU13.md) | Registrar geolocalización de las operaciones | Media | 7 | 5 | 0 |
 | [HU-14](HU14.md) | Revisar solicitudes de préstamo (instructor) | Alta | 7 | 4 | 0 |
 | [HU-07](HU07.md) | Sincronizar datos con servicio remoto | Media/Alta | 8 | 5 | 0 |
 | [HU-08](HU08.md) | Adjuntar evidencia fotográfica | Media | 8 | 5 | 0 |
 | [HU-09](HU09.md) | Recibir recordatorio de devolución | Media | 9 | 4 | 0 |
 
-**Total:** 73 criterios, 73 casos de prueba, 23 ya automatizados.
+**Total:** 74 criterios, 74 casos de prueba, 31 ya automatizados.
 
 ## Matriz HU → CA → TC → prueba
 
@@ -51,11 +51,11 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU04 | CA-HU04-04 | TC-HU04-04 | UI | Pendiente |
 | HU04 | CA-HU04-05 | TC-HU04-05 | Unitaria | `PrestamoViewModelTest.TC-15` |
 | HU04 | CA-HU04-06 | TC-HU04-06 | Unitaria | `PrestamoViewModelTest.TC-16; InMemoryPrestamoRepositoryTest.cancelar es idempotente` |
-| HU05 | CA-HU05-01 | TC-HU05-01 | UI | Pendiente |
-| HU05 | CA-HU05-02 | TC-HU05-02 | Unitaria (TDD) | Pendiente |
-| HU05 | CA-HU05-03 | TC-HU05-03 | Integración | Pendiente |
-| HU05 | CA-HU05-04 | TC-HU05-04 | Unitaria | Pendiente |
-| HU05 | CA-HU05-05 | TC-HU05-05 | Unitaria (TDD) | Pendiente |
+| HU05 | CA-HU05-01 | TC-HU05-01 | UI + Unitaria | `DevolucionUiTest.TC_HU05_01_SoloElPrestamoPrestadoOfreceRegistrarDevolucion; DevolucionViewModelTest.TC-HU05-01` |
+| HU05 | CA-HU05-02 | TC-HU05-02 | Unitaria (TDD) + UI | `DevolucionViewModelTest.TC-HU05-02; DevolucionUiTest.TC_HU05_02_DevolucionConUbicacion_CierraElPrestamo` |
+| HU05 | CA-HU05-03 | TC-HU05-03 | Unitaria | `DevolucionViewModelTest.TC-HU05-03` |
+| HU05 | CA-HU05-04 | TC-HU05-04 | Unitaria + UI | `DevolucionViewModelTest.TC-HU05-04; DevolucionUiTest.TC_HU05_04_EquipoDanadoSinObservacion_MuestraError` |
+| HU05 | CA-HU05-05 | TC-HU05-05 | Unitaria (TDD) | `InMemoryPrestamoRepositoryTest.TC-HU05-05` |
 | HU06 | CA-HU06-01 | TC-HU06-01 | Instrumentada | Pendiente |
 | HU06 | CA-HU06-02 | TC-HU06-02 | Integración | Pendiente |
 | HU06 | CA-HU06-03 | TC-HU06-03 | Integración | Pendiente |
@@ -92,11 +92,12 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU12 | CA-HU12-03 | TC-HU12-03 | Integración | Pendiente |
 | HU12 | CA-HU12-04 | TC-HU12-04 | Unitaria | Pendiente |
 | HU12 | CA-HU12-05 | TC-HU12-05 | UI | Pendiente |
-| HU13 | CA-HU13-01 | TC-HU13-01 | Instrumentada | Pendiente |
-| HU13 | CA-HU13-02 | TC-HU13-02 | Unitaria | Pendiente |
+| HU13 | CA-HU13-01 | TC-HU13-01 | Manual | Pendiente |
+| HU13 | CA-HU13-02 | TC-HU13-02 | UI + Unitaria | `DevolucionUiTest.TC_HU13_02_CapturarUbicacion_MuestraCoordenadasYMensaje; DevolucionViewModelTest.TC-HU13-02` |
 | HU13 | CA-HU13-03 | TC-HU13-03 | Unitaria | Pendiente |
-| HU13 | CA-HU13-04 | TC-HU13-04 | Unitaria | Pendiente |
-| HU13 | CA-HU13-05 | TC-HU13-05 | Integración | Pendiente |
+| HU13 | CA-HU13-04 | TC-HU13-04 | Unitaria + UI | `DevolucionViewModelTest.TC-HU13-04; DevolucionUiTest.TC_HU05_02_DevolucionConUbicacion_CierraElPrestamo` |
+| HU13 | CA-HU13-05 | TC-HU13-05 | Unitaria | `DevolucionViewModelTest.TC-HU13-05` |
+| HU13 | CA-HU13-06 | TC-HU13-06 | Integración | Pendiente |
 | HU14 | CA-HU14-01 | TC-HU14-01 | UI | Pendiente |
 | HU14 | CA-HU14-02 | TC-HU14-02 | Unitaria (TDD) | Pendiente |
 | HU14 | CA-HU14-03 | TC-HU14-03 | Unitaria (TDD) | Pendiente |

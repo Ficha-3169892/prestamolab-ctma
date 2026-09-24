@@ -13,14 +13,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.prestamolab.model.Usuario
 import com.example.prestamolab.ui.PrestamoScreen
 import com.example.prestamolab.ui.PrestamoViewModel
 import com.example.prestamolab.ui.auth.LoginScreen
 import com.example.prestamolab.ui.auth.LoginViewModel
+import com.example.prestamolab.ui.devolucion.DevolucionRoute
+import com.example.prestamolab.ui.devolucion.DevolucionViewModel
 import com.example.prestamolab.ui.gestion.GestionScreen
 import com.example.prestamolab.ui.sesion.EstadoSesion
 import com.example.prestamolab.ui.sesion.SesionViewModel
@@ -71,8 +75,19 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
                     onGestionClick = if (ControlAcceso.puedeAcceder(Rutas.GESTION, usuario.rol)) {
                         { navController.navigate(Rutas.GESTION) }
                     } else null,
+                    onRegistrarDevolucion = { id -> navController.navigate(Rutas.devolucion(id)) },
                     onCerrarSesion = onCerrarSesion
                 )
+            }
+        }
+        composable(
+            route = Rutas.DEVOLUCION,
+            arguments = listOf(navArgument(Rutas.ARG_SOLICITUD_ID) { type = NavType.IntType })
+        ) { entrada ->
+            val solicitudId = entrada.arguments?.getInt(Rutas.ARG_SOLICITUD_ID) ?: -1
+            RutaProtegida(Rutas.DEVOLUCION, usuario, onVolver = { navController.popBackStack() }) {
+                val viewModel: DevolucionViewModel = viewModel(factory = DevolucionViewModel.factory(solicitudId))
+                DevolucionRoute(viewModel = viewModel, onVolver = { navController.popBackStack() })
             }
         }
         composable(Rutas.GESTION) {

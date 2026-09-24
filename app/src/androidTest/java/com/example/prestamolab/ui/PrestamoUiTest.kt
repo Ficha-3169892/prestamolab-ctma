@@ -102,7 +102,7 @@ class PrestamoUiTest {
         composeTestRule.onNodeWithText("Propósito (10-180 caracteres)").performTextInput("Propósito para test de doble click")
 
         composeTestRule.onNodeWithText("Solicitar").performClick()
-        composeTestRule.onNodeWithText("Mis Solicitudes (2)").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Mis Solicitudes (3)").assertIsDisplayed()
     }
 
     @Test
@@ -114,7 +114,9 @@ class PrestamoUiTest {
 
         composeTestRule.onNodeWithText("Solicitar").performClick()
 
-        composeTestRule.onNodeWithText("Mis Solicitudes (2)").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Mis Solicitudes (3)").assertIsDisplayed()
+        // La solicitud nueva es la última de la lista y puede quedar fuera de pantalla
+        composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Equipo ID: 1"))
         composeTestRule.onNodeWithText("Equipo ID: 1").assertIsDisplayed()
     }
 
@@ -151,7 +153,7 @@ class PrestamoUiTest {
     @Test
     fun Navegacion_BottomBar_CicloCompleto() {
         composeTestRule.onAllNodesWithText("Mis Solicitudes")[0].performClick()
-        composeTestRule.onNodeWithText("Mis Solicitudes (1)").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Mis Solicitudes (2)").assertIsDisplayed()
 
         composeTestRule.onNodeWithText("Catálogo").performClick()
         composeTestRule.onNodeWithText("PréstamoLab CTMA").assertIsDisplayed()

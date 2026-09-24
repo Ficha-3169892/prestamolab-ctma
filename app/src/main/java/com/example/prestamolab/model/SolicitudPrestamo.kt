@@ -1,6 +1,6 @@
 package com.example.prestamolab.model
 
-enum class EstadoSolicitud { SOLICITADA, CANCELADA }
+enum class EstadoSolicitud { SOLICITADA, PRESTADO, DEVUELTO, CANCELADA }
 
 data class SolicitudPrestamo(
     val id: Int,

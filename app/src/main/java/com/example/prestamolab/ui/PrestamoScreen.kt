@@ -26,6 +26,7 @@ fun PrestamoScreen(
     viewModel: PrestamoViewModel,
     puedeSolicitar: Boolean = true,
     onGestionClick: (() -> Unit)? = null,
+    onRegistrarDevolucion: (Int) -> Unit = {},
     onCerrarSesion: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -222,7 +223,10 @@ fun PrestamoScreen(
                 )
 
                 SeccionApp.MIS_SOLICITUDES -> {
-                    val solicitudesVisibles = uiState.solicitudes.filter { it.estado != EstadoSolicitud.CANCELADA }
+                    // CA-HU04-03: canceladas y devueltas no son activas
+                    val solicitudesVisibles = uiState.solicitudes.filter {
+                        it.estado == EstadoSolicitud.SOLICITADA || it.estado == EstadoSolicitud.PRESTADO
+                    }
 
                     if (solicitudesVisibles.isEmpty()) {
                         Box(
@@ -277,17 +281,33 @@ fun PrestamoScreen(
                                             )
 
                                             Spacer(modifier = Modifier.height(12.dp))
-                                            Button(
-                                                onClick = { viewModel.cancelarSolicitud(solicitud.id) },
-                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC93B2B)),
-                                                shape = RoundedCornerShape(8.dp)
-                                            ) {
-                                                Text(
-                                                    text = "Cancelar Solicitud",
-                                                    color = Color.White,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontFamily = FontFamily.SansSerif
-                                                )
+                                            // CA-HU05-01: solo un préstamo PRESTADO se devuelve; solo uno SOLICITADO se cancela
+                                            if (solicitud.estado == EstadoSolicitud.PRESTADO) {
+                                                Button(
+                                                    onClick = { onRegistrarDevolucion(solicitud.id) },
+                                                    colors = ButtonDefaults.buttonColors(containerColor = blueHeader),
+                                                    shape = RoundedCornerShape(8.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "Registrar devolución",
+                                                        color = Color.White,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontFamily = FontFamily.SansSerif
+                                                    )
+                                                }
+                                            } else {
+                                                Button(
+                                                    onClick = { viewModel.cancelarSolicitud(solicitud.id) },
+                                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC93B2B)),
+                                                    shape = RoundedCornerShape(8.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "Cancelar Solicitud",
+                                                        color = Color.White,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontFamily = FontFamily.SansSerif
+                                                    )
+                                                }
                                             }
                                         }
                                     }

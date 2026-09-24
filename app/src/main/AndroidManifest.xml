@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- GPS: solo en primer plano y solo al registrar una devolución (sin ubicación en segundo plano).
+         Android 12+ exige pedir FINE junto con COARSE; el usuario puede elegir la aproximada. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+
     <application
         android:name=".PrestamoLabApp"
         android:allowBackup="true"

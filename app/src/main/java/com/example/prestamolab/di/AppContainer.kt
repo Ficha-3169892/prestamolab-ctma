@@ -6,6 +6,8 @@ import com.example.prestamolab.data.auth.DataStoreSessionStore
 import com.example.prestamolab.data.auth.DemoAuthRepository
 import com.example.prestamolab.data.auth.SessionStore
 import com.example.prestamolab.data.auth.sesionDataStore
+import com.example.prestamolab.data.location.FusedLocationProvider
+import com.example.prestamolab.data.location.LocationProvider
 import com.example.prestamolab.data.repository.InMemoryPrestamoRepository
 import com.example.prestamolab.data.repository.PrestamoRepository
 
@@ -16,4 +18,7 @@ class AppContainer(context: Context) {
     val prestamoRepository: PrestamoRepository by lazy { InMemoryPrestamoRepository() }
     val sessionStore: SessionStore by lazy { DataStoreSessionStore(appContext.sesionDataStore) }
     val authRepository: AuthRepository by lazy { DemoAuthRepository(sessionStore) }
+
+    /** Reemplazable en pruebas instrumentadas para no depender del GPS real. */
+    var locationProvider: LocationProvider = FusedLocationProvider(appContext)
 }
