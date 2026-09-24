@@ -19,10 +19,10 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | [HU-04](HU04.md) | Consultar mis préstamos activos | Alta | 7 | 6 | 3 |
 | [HU-14](HU14.md) | Revisar solicitudes de préstamo (instructor) | Alta | 7 | 4 | 4 |
 | [HU-07](HU07.md) | Sincronizar datos con servicio remoto | Media/Alta | 8 | 5 | 5 |
-| [HU-08](HU08.md) | Adjuntar evidencia fotográfica | Media | 8 | 5 | 0 |
+| [HU-08](HU08.md) | Adjuntar evidencia fotográfica | Media | 8 | 5 | 5 |
 | [HU-09](HU09.md) | Recibir recordatorio de devolución | Media | 9 | 4 | 4 |
 
-**Total:** 74 criterios, 74 casos de prueba, 57 ya automatizados.
+**Total:** 74 criterios, 74 casos de prueba, 62 ya automatizados.
 
 ## Matriz HU → CA → TC → prueba
 
@@ -66,11 +66,11 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU07 | CA-HU07-03 | TC-HU07-03 | Integración | `CoordinadorSincronizacionTest.TC-HU07-03; SincronizacionWorkerTest.TC_HU07_03_Respuesta401_CierraLaSesionYFalla; SupabasePrestamosDataSourceTest.TC-HU07-03` |
 | HU07 | CA-HU07-04 | TC-HU07-04 | Integración | `CoordinadorSincronizacionTest.TC-HU07-04; SincronizadorPrestamosTest.TC_HU07_04_Respuesta404ConservaLosDatosLocales; PrestamoViewModelTest.TC-HU07-04` |
 | HU07 | CA-HU07-05 | TC-HU07-05 | Integración | `SincronizacionWorkerTest.TC_HU07_05_Error5xx_PideReintentarConEsperaExponencial; SincronizadorPrestamosTest.TC_HU07_05_Error5xxOTiempoAgotadoDejaLosRegistrosPendientes; SupabasePrestamosDataSourceTest.TC-HU07-05` |
-| HU08 | CA-HU08-01 | TC-HU08-01 | Instrumentada | Pendiente |
-| HU08 | CA-HU08-02 | TC-HU08-02 | Integración | Pendiente |
-| HU08 | CA-HU08-03 | TC-HU08-03 | Instrumentada | Pendiente |
-| HU08 | CA-HU08-04 | TC-HU08-04 | Unitaria | Pendiente |
-| HU08 | CA-HU08-05 | TC-HU08-05 | Integración | Pendiente |
+| HU08 | CA-HU08-01 | TC-HU08-01 | Instrumentada | `EvidenciasUiTest.TC_HU08_01_Y_03_ElPermisoSePideAlAdjuntar_YNegarloMuestraUnMensaje` |
+| HU08 | CA-HU08-02 | TC-HU08-02 | Integración | `EvidenciasDatosTest.TC_HU08_02_LaUriQuedaAsociadaAlPrestamoEnRoom; EvidenciasViewModelTest.TC_HU08_02_AlConfirmarLaFoto_SuUriQuedaAsociadaAlPrestamo` |
+| HU08 | CA-HU08-03 | TC-HU08-03 | Instrumentada | `EvidenciasUiTest.TC_HU08_01_Y_03_ElPermisoSePideAlAdjuntar_YNegarloMuestraUnMensaje; EvidenciasViewModelTest.TC_HU08_03_PermisoNegado_MuestraUnMensajeExplicativo` |
+| HU08 | CA-HU08-04 | TC-HU08-04 | Unitaria | `EvidenciasViewModelTest.TC_HU08_04_CancelarLaCamara_NoCreaEvidenciaYBorraElArchivo` |
+| HU08 | CA-HU08-05 | TC-HU08-05 | Integración | `SincronizadorPrestamosTest.TC_HU08_05_LaFotoSeSubeAStorageYSeGuardaSuUrlRemota; SupabasePrestamosDataSourceTest.TC-HU08-05` |
 | HU09 | CA-HU09-01 | TC-HU09-01 | Integración | `WorkManagerRecordatoriosTest.TC_HU09_01_SeProgramaUnTrabajoParaLaHoraDelAviso; PlanRecordatoriosTest.TC_HU09_01_PrestamoPrestado_SeProgramaTreintaMinutosAntesDelFin; CoordinadorRecordatoriosTest.TC_HU09_01_AlAprobarseUnaSolicitudSeProgramaSuRecordatorio` |
 | HU09 | CA-HU09-02 | TC-HU09-02 | Instrumentada | `RecordatorioWorkerTest.TC_HU09_02_AlLlegarLaHora_MuestraElEquipoYLaHoraLimite; AndroidNotificadorTest.TC_HU09_02_PublicaElAvisoConEquipoHoraYAccionDeApertura; RecordatorioUiTest.TC_HU09_02_TocarElRecordatorio_AbreElPrestamo` |
 | HU09 | CA-HU09-03 | TC-HU09-03 | Integración | `WorkManagerRecordatoriosTest.TC_HU09_03_ElPrestamoQueSaleDeLaListaQuedaCancelado; CoordinadorRecordatoriosTest.TC_HU09_03_AlDevolverSeCancelaElRecordatorio` |

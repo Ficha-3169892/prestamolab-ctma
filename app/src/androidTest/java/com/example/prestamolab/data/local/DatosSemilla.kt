@@ -56,6 +56,7 @@ object DatosSemilla {
         // runInTransaction avisa al InvalidationTracker, así los Flow de los DAO vuelven a emitir
         db.runInTransaction {
             val sql = db.openHelper.writableDatabase
+            sql.execSQL("DELETE FROM evidences")
             sql.execSQL("DELETE FROM activities")
             sql.execSQL("DELETE FROM returns")
             sql.execSQL("DELETE FROM loans")

@@ -78,3 +78,17 @@ val MIGRACION_4_5 = object : Migration(4, 5) {
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_activities_remote_id` ON `activities` (`remote_id`)")
     }
 }
+
+/** v5 → v6: evidencias fotográficas de los préstamos (HU-08), copia local de public.evidences. */
+val MIGRACION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `evidences` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`remote_id` TEXT NOT NULL, `loan_id` INTEGER NOT NULL, `stage` TEXT NOT NULL, " +
+                "`local_uri` TEXT NOT NULL, `photo_url` TEXT, `taken_at` TEXT NOT NULL, `sync_status` TEXT NOT NULL, " +
+                "FOREIGN KEY(`loan_id`) REFERENCES `loans`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )"
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_evidences_loan_id` ON `evidences` (`loan_id`)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_evidences_remote_id` ON `evidences` (`remote_id`)")
+    }
+}

@@ -10,6 +10,7 @@ import com.example.prestamolab.data.local.entity.ReturnEntity
 import com.example.prestamolab.data.remote.ActividadRemota
 import com.example.prestamolab.data.remote.DevolucionRemota
 import com.example.prestamolab.data.remote.EquipoRemoto
+import com.example.prestamolab.data.remote.EvidenciaRemota
 import com.example.prestamolab.data.remote.FechasSupabase
 import com.example.prestamolab.data.remote.PrestamoRemoto
 import com.example.prestamolab.data.remote.PrestamosRemoteDataSource
@@ -46,13 +47,16 @@ interface Sincronizador {
 class SincronizadorPrestamos(
     private val db: PrestamoLabDatabase,
     private val remoto: PrestamosRemoteDataSource,
-    private val fechas: FechasSupabase = FechasSupabase()
+    private val fechas: FechasSupabase = FechasSupabase(),
+    /** Bytes de una foto de evidencia a partir de su URI local; null si ya no existe. */
+    private val leerFoto: (String) -> ByteArray? = { null }
 ) : Sincronizador {
 
     private val equipmentDao = db.equipmentDao()
     private val loanDao = db.loanDao()
     private val returnDao = db.returnDao()
     private val activityDao = db.activityDao()
+    private val evidenceDao = db.evidenceDao()
 
     override suspend fun sincronizar(usuario: Usuario): ResultadoSincronizacion = try {
         val envio = enviarPendientes(usuario)
@@ -140,7 +144,45 @@ class SincronizadorPrestamos(
             returnDao.marcarEnviado(devolucion.id, resultado)
             resumen.contar(resultado)
         }
+        enviarEvidencias(resumen)
         return resumen
+    }
+
+    /**
+     * CA-HU08-05: primero la foto a Storage (su URL se guarda al instante, así un reintento no la
+     * vuelve a subir) y después la fila en evidences, que exige que el préstamo ya esté en Supabase.
+     */
+    private suspend fun enviarEvidencias(resumen: ResumenEnvio) {
+        for (evidencia in evidenceDao.pendientes()) {
+            val prestamo = loanDao.obtener(evidencia.loanId) ?: continue
+            if (prestamo.syncStatus != EstadoSincronizacion.SINCRONIZADO) continue
+
+            val url = evidencia.photoUrl ?: run {
+                val bytes = leerFoto(evidencia.localUri)
+                if (bytes == null) {
+                    // El archivo se borró del teléfono: no hay nada que subir
+                    evidenceDao.marcarEnviada(evidencia.id, EstadoSincronizacion.ERROR)
+                    resumen.contar(EstadoSincronizacion.ERROR)
+                    return@run null
+                }
+                var subida: String? = null
+                val resultado = enviar { subida = remoto.subirFoto("${prestamo.remoteId}/${evidencia.remoteId}.jpg", bytes) }
+                if (resultado != EstadoSincronizacion.SINCRONIZADO) {
+                    evidenceDao.marcarEnviada(evidencia.id, resultado)
+                    resumen.contar(resultado)
+                    return@run null
+                }
+                subida!!.also { evidenceDao.guardarUrl(evidencia.id, it) }
+            } ?: continue
+
+            val resultado = enviar {
+                remoto.guardarEvidencia(
+                    EvidenciaRemota(evidencia.remoteId, prestamo.remoteId, evidencia.stage.name, url, fechas.aIso(evidencia.takenAt))
+                )
+            }
+            evidenceDao.marcarEnviada(evidencia.id, resultado)
+            resumen.contar(resultado)
+        }
     }
 
     /**

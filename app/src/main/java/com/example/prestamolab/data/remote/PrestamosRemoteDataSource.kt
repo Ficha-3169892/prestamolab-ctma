@@ -53,6 +53,15 @@ data class ActividadRemota(
     val instructorId: String
 )
 
+/** Fila de `public.evidences` (HU-08); la foto ya está en Storage. */
+data class EvidenciaRemota(
+    val id: String,
+    val prestamoId: String,
+    val etapa: String,
+    val urlFoto: String,
+    val fecha: String
+)
+
 /**
  * Acceso a las tablas remotas. Lanza [SupabaseHttpException] ante respuestas fuera de 2xx
  * e IOException ante fallos de red o tiempo de espera agotado.
@@ -79,6 +88,10 @@ interface PrestamosRemoteDataSource {
     suspend fun actividades(): List<ActividadRemota>
     suspend fun guardarActividad(actividad: ActividadRemota)
     suspend fun eliminarActividad(id: String)
+
+    /** HU-08: sube la foto al bucket de evidencias y devuelve su URL pública. */
+    suspend fun subirFoto(ruta: String, bytes: ByteArray): String
+    suspend fun guardarEvidencia(evidencia: EvidenciaRemota)
 }
 
 class SupabasePrestamosDataSource(private val cliente: SupabaseRestClient) : PrestamosRemoteDataSource {
@@ -211,12 +224,31 @@ class SupabasePrestamosDataSource(private val cliente: SupabaseRestClient) : Pre
 
     override suspend fun eliminarActividad(id: String) = cliente.delete("activities?id=eq.${codificar(id)}")
 
+    override suspend fun subirFoto(ruta: String, bytes: ByteArray): String =
+        cliente.subirArchivo(BUCKET_EVIDENCIAS, ruta, bytes, "image/jpeg")
+
+    override suspend fun guardarEvidencia(evidencia: EvidenciaRemota) = cliente.upsert(
+        "evidences",
+        JSONObject()
+            .put("id", evidencia.id)
+            .put("loan_id", evidencia.prestamoId)
+            .put("stage", evidencia.etapa)
+            .put("photo_url", evidencia.urlFoto)
+            .put("taken_at", evidencia.fecha)
+            .toString()
+    )
+
     private fun filas(json: String): List<JSONObject> {
         val arreglo = JSONArray(json)
         return List(arreglo.length()) { arreglo.getJSONObject(it) }
     }
 
     private fun codificar(valor: String) = URLEncoder.encode(valor, "UTF-8")
+
+    companion object {
+        /** Lo crea docs/supabase/008_evidencias.sql. */
+        const val BUCKET_EVIDENCIAS = "evidencias"
+    }
 }
 
 // optString devuelve "null" para JSON null; estas variantes devuelven null de Kotlin

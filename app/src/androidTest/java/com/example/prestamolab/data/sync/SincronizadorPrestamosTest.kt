@@ -10,13 +10,17 @@ import com.example.prestamolab.data.local.entity.EstadoSincronizacion
 import com.example.prestamolab.data.remote.ActividadRemota
 import com.example.prestamolab.data.remote.DevolucionRemota
 import com.example.prestamolab.data.remote.EquipoRemoto
+import com.example.prestamolab.data.remote.EvidenciaRemota
+import com.example.prestamolab.data.remote.PrestamosRemoteDataSource
 import com.example.prestamolab.data.remote.FechasSupabase
 import com.example.prestamolab.data.remote.PrestamoRemoto
 import com.example.prestamolab.data.remote.SupabaseHttpException
 import com.example.prestamolab.data.repository.RoomActividadRepository
+import com.example.prestamolab.data.repository.RoomEvidenciaRepository
 import com.example.prestamolab.data.repository.RoomPrestamoRepository
 import com.example.prestamolab.model.CondicionEquipo
 import com.example.prestamolab.model.DatosActividad
+import com.example.prestamolab.model.EtapaEvidencia
 import com.example.prestamolab.model.ReglasActividad
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
@@ -427,5 +431,75 @@ class SincronizadorPrestamosTest {
         // La semilla (SINCRONIZADA) ya no está en Supabase: se borra; la nueva llega con hora local
         assertEquals(listOf("Taller de redes"), lista.map { it.titulo })
         assertEquals(fechas.desdeIso("2026-10-10T13:00:00+00:00"), lista.single().fecha)
+    }
+
+    private val fotosLocales = mutableMapOf("content://prueba/foto1.jpg" to byteArrayOf(7, 7, 7))
+
+    private fun sincronizadorConFotos() = SincronizadorPrestamos(db, remoto, fechas) { fotosLocales[it] }
+
+    private suspend fun evidenciaDelPrestamo2() = RoomEvidenciaRepository(db)
+        .registrar(2, EtapaEvidencia.ENTREGA, "content://prueba/foto1.jpg").getOrThrow()
+
+    @Test
+    fun TC_HU08_05_LaFotoSeSubeAStorageYSeGuardaSuUrlRemota() = runTest {
+        val evidencia = evidenciaDelPrestamo2()
+        val entidad = db.evidenceDao().obtener(evidencia.id)!!
+
+        sincronizadorConFotos().sincronizar(estudiante)
+
+        val ruta = "5eed0000-0000-4000-8000-000000000002/${entidad.remoteId}.jpg"
+        assertArrayEquals(byteArrayOf(7, 7, 7), remoto.fotos[ruta])
+        val remota = remoto.evidencias.single()
+        assertEquals("https://storage.prueba/evidencias/$ruta", remota.urlFoto)
+        assertEquals("5eed0000-0000-4000-8000-000000000002", remota.prestamoId)
+        assertEquals("ENTREGA", remota.etapa)
+        val guardada = db.evidenceDao().obtener(evidencia.id)!!
+        assertEquals(remota.urlFoto, guardada.photoUrl)
+        assertEquals(EstadoSincronizacion.SINCRONIZADO, guardada.syncStatus)
+    }
+
+    @Test
+    fun SiFallaElRegistro_LaFotoNoSeVuelveASubir() = runTest {
+        val evidencia = evidenciaDelPrestamo2()
+        // La foto sube, pero el registro en la tabla falla por un error temporal
+        val sincronizador = sincronizadorConFotos()
+        val remotoConFalloEnTabla = object : PrestamosRemoteDataSource by remoto {
+            override suspend fun guardarEvidencia(evidencia: EvidenciaRemota) = throw SupabaseHttpException(503, "")
+        }
+        SincronizadorPrestamos(db, remotoConFalloEnTabla, fechas) { fotosLocales[it] }.sincronizar(estudiante)
+        assertEquals(1, remoto.fotos.size)
+        assertNotNull(db.evidenceDao().obtener(evidencia.id)!!.photoUrl)
+        assertEquals(EstadoSincronizacion.PENDIENTE, db.evidenceDao().obtener(evidencia.id)!!.syncStatus)
+
+        fotosLocales.clear() // si intentara subirla de nuevo, ya no encontraría el archivo
+        sincronizador.sincronizar(estudiante)
+
+        assertEquals(EstadoSincronizacion.SINCRONIZADO, db.evidenceDao().obtener(evidencia.id)!!.syncStatus)
+        assertEquals(1, remoto.evidencias.size)
+    }
+
+    @Test
+    fun LaEvidenciaEsperaASuPrestamo() = runTest {
+        // El préstamo 2 cambió en el teléfono y aún no está en Supabase
+        db.loanDao().actualizarEstado(2, EstadoSolicitud.PRESTADO)
+        remoto.prestamoRechazado = "5eed0000-0000-4000-8000-000000000002"
+        remoto.errorDeRechazo = SupabaseHttpException(409, "conflicto")
+        val evidencia = evidenciaDelPrestamo2()
+
+        sincronizadorConFotos().sincronizar(estudiante)
+
+        assertTrue(remoto.fotos.isEmpty())
+        assertEquals(EstadoSincronizacion.PENDIENTE, db.evidenceDao().obtener(evidencia.id)!!.syncStatus)
+    }
+
+    @Test
+    fun SiLaFotoYaNoExiste_LaEvidenciaQuedaEnError() = runTest {
+        val evidencia = evidenciaDelPrestamo2()
+        fotosLocales.clear()
+
+        val resultado = sincronizadorConFotos().sincronizar(estudiante)
+
+        assertEquals(1, (resultado as ResultadoSincronizacion.Exito).rechazados)
+        assertEquals(EstadoSincronizacion.ERROR, db.evidenceDao().obtener(evidencia.id)!!.syncStatus)
     }
 }

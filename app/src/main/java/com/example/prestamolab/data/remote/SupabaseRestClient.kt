@@ -28,6 +28,11 @@ class SupabaseRestClient(
         .writeTimeout(tiempoEsperaMs, TimeUnit.MILLISECONDS)
         .build()
 
+    private val httpArchivos = http.newBuilder()
+        .readTimeout(TIEMPO_ARCHIVOS_S, TimeUnit.SECONDS)
+        .writeTimeout(TIEMPO_ARCHIVOS_S, TimeUnit.SECONDS)
+        .build()
+
     /** [recurso] es la tabla con su consulta, p. ej. `users?select=id&email=eq.x`. Devuelve el JSON crudo. */
     suspend fun get(recurso: String): String = enviar(recurso) { get() }
 
@@ -58,9 +63,31 @@ class SupabaseRestClient(
         }
     }
 
+    /**
+     * Sube un archivo a Supabase Storage (HU-08) y devuelve su URL pública. x-upsert permite
+     * repetir la subida interrumpida sin error por archivo duplicado. Una foto de cámara pesa varios MB:
+     * se da más tiempo que a una consulta.
+     */
+    suspend fun subirArchivo(bucket: String, ruta: String, bytes: ByteArray, tipo: String): String {
+        enviarA("storage/v1/object/$bucket/$ruta", httpArchivos) {
+            header("x-upsert", "true")
+            post(bytes.toRequestBody(tipo.toMediaType()))
+        }
+        return urlPublica(bucket, ruta)
+    }
+
+    fun urlPublica(bucket: String, ruta: String) = "${baseUrl.trimEnd('/')}/storage/v1/object/public/$bucket/$ruta"
+
     private suspend fun enviar(recurso: String, configurar: Request.Builder.() -> Request.Builder): String =
+        enviarA("rest/v1/$recurso", http, configurar)
+
+    private suspend fun enviarA(
+        ruta: String,
+        cliente: OkHttpClient,
+        configurar: Request.Builder.() -> Request.Builder
+    ): String =
         withContext(ioDispatcher) {
-            val url = "${baseUrl.trimEnd('/')}/rest/v1/$recurso".toHttpUrlOrNull()
+            val url = "${baseUrl.trimEnd('/')}/$ruta".toHttpUrlOrNull()
                 ?: throw IOException("SUPABASE_URL no está configurada en local.properties")
             val peticion = Request.Builder()
                 .url(url)
@@ -69,7 +96,7 @@ class SupabaseRestClient(
                 .header("Accept", "application/json")
                 .configurar()
                 .build()
-            http.newCall(peticion).execute().use { respuesta ->
+            cliente.newCall(peticion).execute().use { respuesta ->
                 val cuerpo = respuesta.body?.string().orEmpty()
                 if (!respuesta.isSuccessful) throw SupabaseHttpException(respuesta.code, cuerpo)
                 cuerpo
@@ -77,6 +104,7 @@ class SupabaseRestClient(
         }
 
     private companion object {
+        const val TIEMPO_ARCHIVOS_S = 60L
         val JSON = "application/json; charset=utf-8".toMediaType()
     }
 }

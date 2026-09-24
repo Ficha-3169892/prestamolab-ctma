@@ -240,6 +240,37 @@ class SupabasePrestamosDataSourceTest {
     }
 
     @Test
+    fun `TC-HU08-05 - La foto se sube a Storage con upsert y devuelve su URL publica`() = runTest {
+        responder(200, """{"Key":"evidencias/l1/e1.jpg"}""")
+        val bytes = byteArrayOf(1, 2, 3)
+
+        val url = remoto.subirFoto("l1/e1.jpg", bytes)
+
+        val peticion = servidor.takeRequest()
+        assertEquals("POST", peticion.method)
+        assertEquals("/storage/v1/object/evidencias/l1/e1.jpg", peticion.path)
+        assertEquals("true", peticion.getHeader("x-upsert"))
+        assertEquals("image/jpeg", peticion.getHeader("Content-Type"))
+        assertArrayEquals(bytes, peticion.body.readByteArray())
+        assertEquals(servidor.url("/").toString().trimEnd('/') + "/storage/v1/object/public/evidencias/l1/e1.jpg", url)
+    }
+
+    @Test
+    fun `TC-HU08-05 - La evidencia se registra con la URL remota`() = runTest {
+        responder(201, "")
+
+        remoto.guardarEvidencia(EvidenciaRemota("e1", "l1", "ENTREGA", "https://x/e1.jpg", "2026-09-25T10:00:00-05:00"))
+
+        val peticion = servidor.takeRequest()
+        assertEquals("/rest/v1/evidences", peticion.path)
+        val cuerpo = JSONObject(peticion.body.readUtf8())
+        assertEquals("l1", cuerpo.getString("loan_id"))
+        assertEquals("ENTREGA", cuerpo.getString("stage"))
+        assertEquals("https://x/e1.jpg", cuerpo.getString("photo_url"))
+        assertEquals("2026-09-25T10:00:00-05:00", cuerpo.getString("taken_at"))
+    }
+
+    @Test
     fun `El estado del equipo se envia con PATCH y solo la columna status`() = runTest {
         responder(204, "")
 

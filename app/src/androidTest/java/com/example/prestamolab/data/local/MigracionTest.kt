@@ -138,4 +138,33 @@ class MigracionTest {
             assertEquals("Multímetro Digital", c.getString(0))
         }
     }
+
+    @Test
+    fun MigracionDeV5AV6CreaLaTablaDeEvidencias() {
+        helper.createDatabase(nombreBase, 5).apply {
+            execSQL(
+                "INSERT INTO equipments (id, remote_id, name, category, status, sync_status, deleted) " +
+                    "VALUES (5, 'e5', 'Kit Arduino Uno', 'Herramienta', 'PRESTADO', 'SINCRONIZADO', 0)"
+            )
+            execSQL(
+                "INSERT INTO loans (id, remote_id, equipment_id, user_id, requester_name, environment, purpose, " +
+                    "duration_hours, request_date, return_date, status, sync_status) VALUES " +
+                    "(2, 'l2', 5, 'u1', 'Andrés Vargas', 'Lab', 'IoT', 4, '2026-09-03 08:00', '2026-09-03 12:00', " +
+                    "'PRESTADO', 'SINCRONIZADO')"
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(nombreBase, 6, true, MIGRACION_5_6)
+
+        db.execSQL(
+            "INSERT INTO evidences (remote_id, loan_id, stage, local_uri, taken_at, sync_status) " +
+                "VALUES ('ev1', 2, 'ENTREGA', 'content://x/1.jpg', '2026-09-25 10:00', 'PENDIENTE')"
+        )
+        db.query("SELECT loan_id, photo_url FROM evidences").use { c ->
+            c.moveToNext()
+            assertEquals(2, c.getInt(0))
+            assertTrue(c.isNull(1))
+        }
+    }
 }

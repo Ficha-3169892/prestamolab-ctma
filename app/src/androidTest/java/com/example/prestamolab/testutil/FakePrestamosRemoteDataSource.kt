@@ -3,6 +3,7 @@ package com.example.prestamolab.testutil
 import com.example.prestamolab.data.remote.ActividadRemota
 import com.example.prestamolab.data.remote.DevolucionRemota
 import com.example.prestamolab.data.remote.EquipoRemoto
+import com.example.prestamolab.data.remote.EvidenciaRemota
 import com.example.prestamolab.data.remote.PrestamoRemoto
 import com.example.prestamolab.data.remote.PrestamosRemoteDataSource
 
@@ -82,6 +83,24 @@ class FakePrestamosRemoteDataSource : PrestamosRemoteDataSource {
         lanzarSiHayError()
         actividadesEliminadas += id
         actividades.removeAll { it.id == id }
+    }
+
+    /** Fotos subidas a Storage por ruta; [errorAlSubirFoto] simula un fallo solo en la subida. */
+    val fotos = mutableMapOf<String, ByteArray>()
+    val evidencias = mutableListOf<EvidenciaRemota>()
+    var errorAlSubirFoto: Exception? = null
+
+    override suspend fun subirFoto(ruta: String, bytes: ByteArray): String {
+        lanzarSiHayError()
+        errorAlSubirFoto?.let { throw it }
+        fotos[ruta] = bytes
+        return "https://storage.prueba/evidencias/$ruta"
+    }
+
+    override suspend fun guardarEvidencia(evidencia: EvidenciaRemota) {
+        lanzarSiHayError()
+        evidencias.removeAll { it.id == evidencia.id }
+        evidencias += evidencia
     }
 
     override suspend fun guardarPrestamo(prestamo: PrestamoRemoto) {

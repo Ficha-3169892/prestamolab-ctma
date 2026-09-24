@@ -24,6 +24,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.prestamolab.PrestamoLabApp
 import com.example.prestamolab.model.EstadoSolicitud
+import com.example.prestamolab.model.EtapaEvidencia
+import com.example.prestamolab.ui.evidencias.EvidenciasRoute
+import com.example.prestamolab.ui.evidencias.EvidenciasViewModel
 import com.example.prestamolab.model.Rol
 import com.example.prestamolab.model.Usuario
 import com.example.prestamolab.ui.recordatorios.PedirPermisoNotificaciones
@@ -101,6 +104,7 @@ private fun destinoPrincipalDe(ruta: String?): String? = when (ruta) {
     Rutas.DETALLE_EQUIPO, Rutas.SOLICITUD -> Rutas.CATALOGO
     Rutas.REVISAR_SOLICITUDES, Rutas.INVENTARIO, Rutas.NUEVO_EQUIPO, Rutas.EDITAR_EQUIPO -> Rutas.GESTION
     Rutas.NUEVA_ACTIVIDAD, Rutas.EDITAR_ACTIVIDAD -> Rutas.ACTIVIDADES
+    Rutas.EVIDENCIAS -> Rutas.MIS_SOLICITUDES
     else -> ruta
 }
 
@@ -269,7 +273,8 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
                             solicitudes = uiState.solicitudes,
                             equipos = uiState.equipos,
                             onCancelarClick = prestamoViewModel::cancelarSolicitud,
-                            onRegistrarDevolucionClick = { id -> navController.navigate(Rutas.devolucion(id)) }
+                            onRegistrarDevolucionClick = { id -> navController.navigate(Rutas.devolucion(id)) },
+                            onEvidenciasClick = { id -> navController.navigate(Rutas.evidencias(id, EtapaEvidencia.ENTREGA)) }
                         )
                     }
                 }
@@ -280,7 +285,28 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
                     val solicitudId = entrada.arguments?.getInt(Rutas.ARG_SOLICITUD_ID) ?: -1
                     RutaProtegida(Rutas.DEVOLUCION, usuario, onVolver = { navController.popBackStack() }) {
                         val viewModel: DevolucionViewModel = viewModel(factory = DevolucionViewModel.factory(solicitudId))
-                        DevolucionRoute(viewModel = viewModel, onVolver = { navController.popBackStack() })
+                        DevolucionRoute(
+                            viewModel = viewModel,
+                            onVolver = { navController.popBackStack() },
+                            onAdjuntarEvidenciaClick = {
+                                navController.navigate(Rutas.evidencias(solicitudId, EtapaEvidencia.DEVOLUCION))
+                            }
+                        )
+                    }
+                }
+                composable(
+                    route = Rutas.EVIDENCIAS,
+                    arguments = listOf(
+                        navArgument(Rutas.ARG_SOLICITUD_ID) { type = NavType.IntType },
+                        navArgument(Rutas.ARG_ETAPA) { type = NavType.StringType }
+                    )
+                ) { entrada ->
+                    val solicitudId = entrada.arguments?.getInt(Rutas.ARG_SOLICITUD_ID) ?: -1
+                    val etapa = EtapaEvidencia.entries.find { it.name == entrada.arguments?.getString(Rutas.ARG_ETAPA) }
+                        ?: EtapaEvidencia.ENTREGA
+                    RutaProtegida(Rutas.EVIDENCIAS, usuario, onVolver = { navController.popBackStack() }) {
+                        val viewModel: EvidenciasViewModel = viewModel(factory = EvidenciasViewModel.factory(solicitudId, etapa))
+                        EvidenciasRoute(viewModel, solicitudId, etapa, onVolver = { navController.popBackStack() })
                     }
                 }
                 composable(Rutas.GESTION) {

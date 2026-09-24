@@ -6,16 +6,18 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.prestamolab.data.local.dao.ActivityDao
 import com.example.prestamolab.data.local.dao.EquipmentDao
+import com.example.prestamolab.data.local.dao.EvidenceDao
 import com.example.prestamolab.data.local.dao.LoanDao
 import com.example.prestamolab.data.local.dao.ReturnDao
 import com.example.prestamolab.data.local.entity.ActivityEntity
 import com.example.prestamolab.data.local.entity.EquipmentEntity
+import com.example.prestamolab.data.local.entity.EvidenceEntity
 import com.example.prestamolab.data.local.entity.LoanEntity
 import com.example.prestamolab.data.local.entity.ReturnEntity
 
 @Database(
-    entities = [EquipmentEntity::class, LoanEntity::class, ReturnEntity::class, ActivityEntity::class],
-    version = 5,
+    entities = [EquipmentEntity::class, LoanEntity::class, ReturnEntity::class, ActivityEntity::class, EvidenceEntity::class],
+    version = 6,
     exportSchema = true
 )
 abstract class PrestamoLabDatabase : RoomDatabase() {
@@ -23,6 +25,7 @@ abstract class PrestamoLabDatabase : RoomDatabase() {
     abstract fun loanDao(): LoanDao
     abstract fun returnDao(): ReturnDao
     abstract fun activityDao(): ActivityDao
+    abstract fun evidenceDao(): EvidenceDao
 
     companion object {
         const val NOMBRE = "prestamolab.db"
@@ -34,7 +37,7 @@ abstract class PrestamoLabDatabase : RoomDatabase() {
             } else {
                 Room.databaseBuilder(context, PrestamoLabDatabase::class.java, NOMBRE)
             }
-            return builder.addMigrations(MIGRACION_1_2, MIGRACION_2_3, MIGRACION_3_4, MIGRACION_4_5).build()
+            return builder.addMigrations(MIGRACION_1_2, MIGRACION_2_3, MIGRACION_3_4, MIGRACION_4_5, MIGRACION_5_6).build()
         }
     }
 }

@@ -1,17 +1,20 @@
 package com.example.prestamolab.ui.navigation
 
+import com.example.prestamolab.model.EtapaEvidencia
 import com.example.prestamolab.model.Rol
 
 object Rutas {
     const val ARG_EQUIPO_ID = "equipoId"
     const val ARG_SOLICITUD_ID = "solicitudId"
     const val ARG_ACTIVIDAD_ID = "actividadId"
+    const val ARG_ETAPA = "etapa"
 
     const val CATALOGO = "catalogo"
     const val DETALLE_EQUIPO = "equipo/{$ARG_EQUIPO_ID}"
     const val SOLICITUD = "equipo/{$ARG_EQUIPO_ID}/solicitud"
     const val MIS_SOLICITUDES = "mis-solicitudes"
     const val DEVOLUCION = "devolucion/{$ARG_SOLICITUD_ID}"
+    const val EVIDENCIAS = "prestamo/{$ARG_SOLICITUD_ID}/evidencias/{$ARG_ETAPA}"
     const val GESTION = "gestion"
     const val ACTIVIDADES = "actividades"
     const val NUEVA_ACTIVIDAD = "actividades/nueva"
@@ -24,6 +27,7 @@ object Rutas {
     fun detalleEquipo(equipoId: Int) = "equipo/$equipoId"
     fun solicitud(equipoId: Int) = "equipo/$equipoId/solicitud"
     fun devolucion(solicitudId: Int) = "devolucion/$solicitudId"
+    fun evidencias(solicitudId: Int, etapa: EtapaEvidencia) = "prestamo/$solicitudId/evidencias/${etapa.name}"
     fun editarEquipo(equipoId: Int) = "gestion/inventario/$equipoId/editar"
     fun editarActividad(actividadId: Int) = "actividades/$actividadId/editar"
 }
@@ -39,6 +43,8 @@ object ControlAcceso {
         Rutas.SOLICITUD to setOf(Rol.ESTUDIANTE),
         Rutas.MIS_SOLICITUDES to setOf(Rol.ESTUDIANTE),
         Rutas.DEVOLUCION to setOf(Rol.ESTUDIANTE),
+        // Adjuntar evidencias es del estudiante que recibe y devuelve el equipo (HU-08)
+        Rutas.EVIDENCIAS to setOf(Rol.ESTUDIANTE),
         Rutas.GESTION to setOf(Rol.INSTRUCTOR),
         Rutas.REVISAR_SOLICITUDES to setOf(Rol.INSTRUCTOR),
         // El inventario solo lo mantiene el instructor (CA-HU12-05)

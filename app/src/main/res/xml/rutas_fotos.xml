@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fotos de evidencia (HU-08): solo la carpeta privada files/evidencias se comparte con la cámara -->
+<paths>
+    <files-path name="evidencias" path="evidencias/" />
+</paths>

@@ -51,6 +51,13 @@ class ControlAccesoTest {
     }
 
     @Test
+    fun `HU-08 - Solo el estudiante adjunta evidencias`() {
+        assertTrue(ControlAcceso.puedeAcceder(Rutas.EVIDENCIAS, Rol.ESTUDIANTE))
+        assertFalse(ControlAcceso.puedeAcceder(Rutas.EVIDENCIAS, Rol.INSTRUCTOR))
+        assertEquals("prestamo/2/evidencias/DEVOLUCION", Rutas.evidencias(2, com.example.prestamolab.model.EtapaEvidencia.DEVOLUCION))
+    }
+
+    @Test
     fun `Cada rol inicia en su pantalla principal`() {
         assertEquals(Rutas.GESTION, ControlAcceso.rutaInicio(Rol.INSTRUCTOR))
         assertEquals(Rutas.CATALOGO, ControlAcceso.rutaInicio(Rol.ESTUDIANTE))

@@ -14,6 +14,11 @@
     <!-- Recordatorio de devolución (HU-09): Android 13+ lo pide al tener un préstamo entregado -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Evidencia fotográfica (HU-08): se pide al tocar "Adjuntar evidencia", no al abrir la app.
+         Al declararlo, Android exige concederlo también para usar la app de cámara del sistema. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
     <application
         android:name=".PrestamoLabApp"
         android:allowBackup="true"
@@ -36,6 +41,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- La cámara del sistema escribe la foto en files/evidencias a través de este proveedor -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/rutas_fotos" />
+        </provider>
     </application>
 
 </manifest>

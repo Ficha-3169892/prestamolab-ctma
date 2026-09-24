@@ -38,7 +38,7 @@ private fun tienePermisoUbicacion(context: Context) = PERMISOS_UBICACION.any {
 
 /** Conecta la pantalla con el ViewModel y gestiona el permiso de ubicación en tiempo de ejecución. */
 @Composable
-fun DevolucionRoute(viewModel: DevolucionViewModel, onVolver: () -> Unit) {
+fun DevolucionRoute(viewModel: DevolucionViewModel, onVolver: () -> Unit, onAdjuntarEvidenciaClick: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
@@ -62,7 +62,8 @@ fun DevolucionRoute(viewModel: DevolucionViewModel, onVolver: () -> Unit) {
             else solicitarPermiso.launch(PERMISOS_UBICACION)
         },
         onConfirmarClick = viewModel::registrarDevolucion,
-        onVolver = onVolver
+        onVolver = onVolver,
+        onAdjuntarEvidenciaClick = onAdjuntarEvidenciaClick
     )
 }
 
@@ -74,7 +75,8 @@ fun DevolucionScreen(
     onObservacionChange: (String) -> Unit,
     onCapturarUbicacionClick: () -> Unit,
     onConfirmarClick: () -> Unit,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    onAdjuntarEvidenciaClick: () -> Unit = {}
 ) {
     val blueAccent = Color(0xFF1E6091)
     val blueCardBg = Color(0xFFF0F7FA)
@@ -152,6 +154,11 @@ fun DevolucionScreen(
                     )
 
                     SeccionUbicacion(uiState, onCapturarUbicacionClick)
+
+                    // HU-08: foto del estado del equipo al devolverlo (opcional)
+                    OutlinedButton(onClick = onAdjuntarEvidenciaClick, modifier = Modifier.fillMaxWidth()) {
+                        Text("Adjuntar evidencia de devolución")
+                    }
 
                     uiState.mensajeError?.let {
                         Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)

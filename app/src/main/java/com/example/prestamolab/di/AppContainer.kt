@@ -10,6 +10,8 @@ import com.example.prestamolab.data.auth.UsuariosAuthRepository
 import com.example.prestamolab.data.auth.UsuariosRemoteDataSource
 import com.example.prestamolab.data.auth.sesionDataStore
 import com.example.prestamolab.data.local.PrestamoLabDatabase
+import com.example.prestamolab.data.evidencias.AlmacenFotos
+import com.example.prestamolab.data.evidencias.FileProviderAlmacenFotos
 import com.example.prestamolab.data.location.FusedLocationProvider
 import com.example.prestamolab.data.recordatorios.AndroidNotificador
 import com.example.prestamolab.data.recordatorios.AperturasPendientes
@@ -22,6 +24,8 @@ import com.example.prestamolab.data.remote.PrestamosRemoteDataSource
 import com.example.prestamolab.data.remote.SupabasePrestamosDataSource
 import com.example.prestamolab.data.remote.SupabaseRestClient
 import com.example.prestamolab.data.repository.ActividadRepository
+import com.example.prestamolab.data.repository.EvidenciaRepository
+import com.example.prestamolab.data.repository.RoomEvidenciaRepository
 import com.example.prestamolab.data.repository.PrestamoRepository
 import com.example.prestamolab.data.repository.RoomActividadRepository
 import com.example.prestamolab.data.repository.RoomPrestamoRepository
@@ -57,13 +61,19 @@ class AppContainer(context: Context) {
     val coordinadorSincronizacion by lazy {
         CoordinadorSincronizacion(
             authRepository,
-            SincronizadorPrestamos(database, prestamosRemoteDataSource),
+            SincronizadorPrestamos(database, prestamosRemoteDataSource, leerFoto = almacenFotos::leer),
             avisosSincronizacion
         )
     }
 
     val prestamoRepository: PrestamoRepository by lazy {
         RoomPrestamoRepository(database, alCambiarLocalmente = { programadorSincronizacion.sincronizarAhora() })
+    }
+
+    // HU-08: fotos de evidencia; las pruebas reemplazan el almacén antes de onCreate
+    var almacenFotos: AlmacenFotos = FileProviderAlmacenFotos(appContext)
+    val evidenciaRepository: EvidenciaRepository by lazy {
+        RoomEvidenciaRepository(database, alCambiarLocalmente = { programadorSincronizacion.sincronizarAhora() })
     }
 
     val actividadRepository: ActividadRepository by lazy {

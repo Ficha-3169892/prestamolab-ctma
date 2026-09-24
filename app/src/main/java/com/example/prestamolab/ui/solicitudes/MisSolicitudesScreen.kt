@@ -21,7 +21,8 @@ fun MisSolicitudesScreen(
     solicitudes: List<SolicitudPrestamo>,
     equipos: List<Equipo>,
     onCancelarClick: (Int) -> Unit,
-    onRegistrarDevolucionClick: (Int) -> Unit
+    onRegistrarDevolucionClick: (Int) -> Unit,
+    onEvidenciasClick: (Int) -> Unit
 ) {
     val blueHeader = Color(0xFF1E6091)
     val blueDarkText = Color(0xFF0F2537)
@@ -92,17 +93,26 @@ fun MisSolicitudesScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         // CA-HU05-01: solo un préstamo PRESTADO se devuelve; solo uno SOLICITADO se cancela
                         if (solicitud.estado == EstadoSolicitud.PRESTADO) {
-                            Button(
-                                onClick = { onRegistrarDevolucionClick(solicitud.id) },
-                                colors = ButtonDefaults.buttonColors(containerColor = blueHeader),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Text(
-                                    text = "Registrar devolución",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.SansSerif
-                                )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(
+                                    onClick = { onRegistrarDevolucionClick(solicitud.id) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = blueHeader),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        text = "Registrar devolución",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.SansSerif
+                                    )
+                                }
+                                // HU-08: fotos del estado del equipo al recibirlo
+                                OutlinedButton(
+                                    onClick = { onEvidenciasClick(solicitud.id) },
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(text = "Evidencias", fontFamily = FontFamily.SansSerif)
+                                }
                             }
                         } else {
                             Button(
