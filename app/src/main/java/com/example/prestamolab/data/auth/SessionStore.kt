@@ -44,9 +44,10 @@ class DataStoreSessionStore(private val dataStore: DataStore<Preferences>) : Ses
     }
 
     private companion object {
-        val USUARIO_ID = stringPreferencesKey("usuario_id")
-        val NOMBRE = stringPreferencesKey("nombre")
-        val CORREO = stringPreferencesKey("correo")
-        val ROL = stringPreferencesKey("rol")
+        // Mismos nombres que las columnas de public.users
+        val USUARIO_ID = stringPreferencesKey("user_id")
+        val NOMBRE = stringPreferencesKey("full_name")
+        val CORREO = stringPreferencesKey("email")
+        val ROL = stringPreferencesKey("role")
     }
 }

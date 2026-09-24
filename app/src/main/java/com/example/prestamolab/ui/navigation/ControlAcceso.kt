@@ -21,6 +21,12 @@ object ControlAcceso {
 
     fun puedeAcceder(ruta: String, rol: Rol): Boolean = rol in permisos[ruta].orEmpty()
 
+    /** Pantalla de inicio tras el login: el instructor entra a Gestión y el estudiante al Catálogo. */
+    fun rutaInicio(rol: Rol): String = when (rol) {
+        Rol.INSTRUCTOR -> Rutas.GESTION
+        Rol.ESTUDIANTE -> Rutas.PRESTAMOS
+    }
+
     /** Solicitar, devolver y adjuntar evidencias son acciones exclusivas del estudiante. */
     fun puedeSolicitarPrestamo(rol: Rol): Boolean = rol == Rol.ESTUDIANTE
 }

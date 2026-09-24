@@ -81,7 +81,7 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU10 | CA-HU10-04 | TC-HU10-04 | Instrumentada | `DataStoreSessionStoreTest.TC_HU10_04_SesionPersisteAlReabrirElAlmacenamiento` |
 | HU10 | CA-HU10-05 | TC-HU10-05 | Unitaria | `SesionViewModelTest.TC-HU10-05; LoginUiTest.TC_HU10_05_CerrarSesion_VuelveAlLogin` |
 | HU10 | CA-HU10-06 | TC-HU10-06 | UI | `ControlAccesoTest.TC-HU10-06; LoginUiTest.TC_HU10_06_Estudiante_NoVeGestion` |
-| HU10 | CA-HU10-07 | TC-HU10-07 | UI | `ControlAccesoTest.TC-HU10-07; LoginUiTest.TC_HU10_07_Instructor_VeYAbreGestion` |
+| HU10 | CA-HU10-07 | TC-HU10-07 | UI | `ControlAccesoTest.TC-HU10-07; LoginUiTest.TC_HU10_07_Instructor_IniciaEnGestion` |
 | HU11 | CA-HU11-01 | TC-HU11-01 | Integración | Pendiente |
 | HU11 | CA-HU11-02 | TC-HU11-02 | Unitaria | Pendiente |
 | HU11 | CA-HU11-03 | TC-HU11-03 | Integración | Pendiente |

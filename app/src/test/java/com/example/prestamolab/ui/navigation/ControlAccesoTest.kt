@@ -19,6 +19,12 @@ class ControlAccesoTest {
     }
 
     @Test
+    fun `Cada rol inicia en su pantalla principal`() {
+        assertEquals(Rutas.GESTION, ControlAcceso.rutaInicio(Rol.INSTRUCTOR))
+        assertEquals(Rutas.PRESTAMOS, ControlAcceso.rutaInicio(Rol.ESTUDIANTE))
+    }
+
+    @Test
     fun `Una ruta no registrada se niega a todos los roles`() {
         Rol.entries.forEach { assertFalse(ControlAcceso.puedeAcceder("ruta-desconocida", it)) }
     }

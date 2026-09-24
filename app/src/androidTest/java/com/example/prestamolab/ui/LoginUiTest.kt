@@ -75,10 +75,8 @@ class LoginUiTest {
     }
 
     @Test
-    fun TC_HU10_07_Instructor_VeYAbreGestion() {
+    fun TC_HU10_07_Instructor_IniciaEnGestion() {
         composeTestRule.iniciarSesionComoInstructor()
-
-        composeTestRule.onNodeWithText("Gestión").performClick()
 
         composeTestRule.onNodeWithText("Gestión (Instructor)").assertIsDisplayed()
         composeTestRule.onNodeWithText("Inventario de equipos").assertIsDisplayed()
@@ -89,6 +87,7 @@ class LoginUiTest {
     @Test
     fun TC_HU03_08_Instructor_NoVeSolicitarPrestamo() {
         composeTestRule.iniciarSesionComoInstructor()
+        composeTestRule.onNodeWithText("Ver catálogo de equipos").performClick()
 
         composeTestRule.onNodeWithText("Multímetro Digital").performClick()
 

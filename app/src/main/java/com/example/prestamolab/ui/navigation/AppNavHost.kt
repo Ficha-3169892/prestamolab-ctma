@@ -62,7 +62,7 @@ fun AppNavHost() {
 private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Rutas.PRESTAMOS) {
+    NavHost(navController = navController, startDestination = ControlAcceso.rutaInicio(usuario.rol)) {
         composable(Rutas.PRESTAMOS) {
             RutaProtegida(Rutas.PRESTAMOS, usuario, onVolver = onCerrarSesion) {
                 val viewModel: PrestamoViewModel = viewModel(
@@ -72,8 +72,9 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
                 PrestamoScreen(
                     viewModel = viewModel,
                     puedeSolicitar = ControlAcceso.puedeSolicitarPrestamo(usuario.rol),
+                    // Gestión es la raíz del instructor: se vuelve a ella en lugar de apilar otra copia
                     onGestionClick = if (ControlAcceso.puedeAcceder(Rutas.GESTION, usuario.rol)) {
-                        { navController.navigate(Rutas.GESTION) }
+                        { navController.popBackStack(Rutas.GESTION, inclusive = false) }
                     } else null,
                     onRegistrarDevolucion = { id -> navController.navigate(Rutas.devolucion(id)) },
                     onCerrarSesion = onCerrarSesion
@@ -91,8 +92,11 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
             }
         }
         composable(Rutas.GESTION) {
-            RutaProtegida(Rutas.GESTION, usuario, onVolver = { navController.popBackStack() }) {
-                GestionScreen(onVolver = { navController.popBackStack() })
+            RutaProtegida(Rutas.GESTION, usuario, onVolver = onCerrarSesion) {
+                GestionScreen(
+                    onVerCatalogo = { navController.navigate(Rutas.PRESTAMOS) { launchSingleTop = true } },
+                    onCerrarSesion = onCerrarSesion
+                )
             }
         }
     }

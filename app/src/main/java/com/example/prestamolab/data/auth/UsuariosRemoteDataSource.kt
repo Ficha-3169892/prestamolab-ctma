@@ -11,7 +11,7 @@ import java.net.URLEncoder
 
 enum class CampoIdentificador(val columna: String) { CORREO("email"), DOCUMENTO("document") }
 
-/** Fila de `public.users` sin la contraseña, que nunca se descarga. */
+/** Fila de `public.users` sin password_hash, que nunca se descarga. */
 data class UsuarioRemoto(
     val id: String,
     val email: String,
@@ -20,8 +20,11 @@ data class UsuarioRemoto(
 )
 
 interface UsuariosRemoteDataSource {
-    /** Devuelve el usuario cuyo [campo] y contraseña coinciden, o null si no existe. Lanza IOException sin red. */
-    suspend fun buscarPorCredenciales(campo: CampoIdentificador, valor: String, contrasena: String): UsuarioRemoto?
+    /**
+     * Devuelve el usuario cuyo [campo] y hash SHA-256 de la contraseña coinciden, o null si no existe.
+     * Lanza IOException sin red.
+     */
+    suspend fun buscarPorCredenciales(campo: CampoIdentificador, valor: String, contrasenaHash: String): UsuarioRemoto?
 }
 
 /** Consulta la tabla `users` mediante la API REST de Supabase (PostgREST). */
@@ -34,16 +37,16 @@ class SupabaseUsuariosDataSource(
     override suspend fun buscarPorCredenciales(
         campo: CampoIdentificador,
         valor: String,
-        contrasena: String
+        contrasenaHash: String
     ): UsuarioRemoto? = withContext(ioDispatcher) {
         if (baseUrl.isBlank()) throw IOException("SUPABASE_URL no está configurada en local.properties")
 
-        // La contraseña solo se usa como filtro: el select no la incluye en la respuesta
+        // El hash solo se usa como filtro: el select no lo incluye en la respuesta
         val url = URL(
             "${baseUrl.trimEnd('/')}/rest/v1/users" +
                 "?select=id,email,full_name,role" +
                 "&${campo.columna}=eq.${codificar(valor)}" +
-                "&password=eq.${codificar(contrasena)}" +
+                "&password_hash=eq.${codificar(contrasenaHash)}" +
                 "&limit=1"
         )
         val conexion = url.openConnection() as HttpURLConnection

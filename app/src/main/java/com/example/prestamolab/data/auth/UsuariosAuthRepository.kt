@@ -6,7 +6,10 @@ import com.example.prestamolab.model.Usuario
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 
-/** Valida correo o documento y contraseña contra la tabla `users`, sin Supabase Auth. */
+/**
+ * Valida correo o documento y contraseña contra la tabla `users`, sin Supabase Auth.
+ * La contraseña en texto plano no sale de aquí: se envía su hash SHA-256.
+ */
 class UsuariosAuthRepository(
     private val remoto: UsuariosRemoteDataSource,
     private val sessionStore: SessionStore
@@ -20,7 +23,7 @@ class UsuariosAuthRepository(
         val consulta = if (campo == CampoIdentificador.CORREO) valor.lowercase() else valor
 
         val encontrado = try {
-            remoto.buscarPorCredenciales(campo, consulta, contrasena)
+            remoto.buscarPorCredenciales(campo, consulta, HashUtils.sha256(contrasena))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

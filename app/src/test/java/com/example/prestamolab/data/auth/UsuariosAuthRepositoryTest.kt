@@ -64,6 +64,13 @@ class UsuariosAuthRepositoryTest {
     }
 
     @Test
+    fun `se envia el hash SHA-256 de la contrasena, nunca el texto plano`() = runTest {
+        repository.iniciarSesion(FakeUsuariosDataSource.CORREO_ESTUDIANTE, FakeUsuariosDataSource.CONTRASENA)
+
+        assertEquals(FakeUsuariosDataSource.HASH_CONTRASENA, remoto.hashes.single())
+    }
+
+    @Test
     fun `sin conexion devuelve el error de red y no guarda sesion`() = runTest {
         remoto.error = IOException("sin red")
 
@@ -76,7 +83,7 @@ class UsuariosAuthRepositoryTest {
     @Test
     fun `un rol desconocido en la tabla no abre sesion`() = runTest {
         val admin = FakeUsuariosDataSource.Fila(
-            UsuarioRemoto("uuid-admin", "admin@sena.edu.co", "Admin", "ADMIN"), "99999", "123"
+            UsuarioRemoto("uuid-admin", "admin@sena.edu.co", "Admin", "ADMIN"), "99999", HashUtils.sha256("123")
         )
         repository = UsuariosAuthRepository(FakeUsuariosDataSource(listOf(admin)), store)
 
