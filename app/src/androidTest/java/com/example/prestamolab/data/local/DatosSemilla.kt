@@ -28,12 +28,12 @@ object DatosSemilla {
         LoanEntity(
             1, "5eed0000-0000-4000-8000-000000000001", 2, ESTUDIANTE, "Andrés Vargas", "Laboratorio 302",
             "Práctica de señales", 2, "2026-09-02 08:00", "2026-09-02 10:00", EstadoSolicitud.SOLICITADA,
-            EstadoSincronizacion.SINCRONIZADO
+            syncStatus = EstadoSincronizacion.SINCRONIZADO
         ),
         LoanEntity(
             2, "5eed0000-0000-4000-8000-000000000002", 5, ESTUDIANTE, "Andrés Vargas", "Ambiente de Electrónica",
             "Prototipo de sensores IoT", 4, "2026-09-03 08:00", "2026-09-03 12:00", EstadoSolicitud.PRESTADO,
-            EstadoSincronizacion.SINCRONIZADO
+            syncStatus = EstadoSincronizacion.SINCRONIZADO
         )
     )
 

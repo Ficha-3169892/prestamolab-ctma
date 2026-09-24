@@ -357,6 +357,51 @@ class PrestamoViewModelTest {
         assertEquals(3, instructor.uiState.value.solicitudes.size)
     }
 
+    private fun instructor() =
+        PrestamoViewModel(repository, Usuario("u-instructor", "Instructor CTMA", "instructor@sena.edu.co", Rol.INSTRUCTOR))
+
+    @Test
+    fun `TC-HU14-02 - El instructor aprueba la solicitud y el equipo queda prestado`() {
+        val vm = instructor()
+
+        vm.aprobarSolicitud(1)
+
+        assertEquals(EstadoSolicitud.PRESTADO, vm.uiState.value.solicitudes.first { it.id == 1 }.estado)
+        assertEquals(EstadoEquipo.PRESTADO, vm.uiState.value.equipos.first { it.id == 2 }.estado)
+    }
+
+    @Test
+    fun `TC-HU14-03 - El instructor rechaza con motivo y el equipo vuelve a disponible`() {
+        val vm = instructor()
+
+        vm.rechazarSolicitud(1, "Equipo en calibración")
+
+        val solicitud = vm.uiState.value.solicitudes.first { it.id == 1 }
+        assertEquals(EstadoSolicitud.RECHAZADA, solicitud.estado)
+        assertEquals("Equipo en calibración", solicitud.motivoRechazo)
+        assertEquals(EstadoEquipo.DISPONIBLE, vm.uiState.value.equipos.first { it.id == 2 }.estado)
+    }
+
+    @Test
+    fun `TC-HU14-04 - Aprobar una solicitud cancelada muestra el error sin cambios`() {
+        viewModel.cancelarSolicitud(1)
+        val vm = instructor()
+
+        vm.aprobarSolicitud(1)
+
+        assertEquals(EstadoSolicitud.CANCELADA, vm.uiState.value.solicitudes.first { it.id == 1 }.estado)
+        assertEquals(EstadoEquipo.DISPONIBLE, vm.uiState.value.equipos.first { it.id == 2 }.estado)
+        assertNotNull(vm.uiState.value.mensajeError)
+    }
+
+    @Test
+    fun `El estudiante no puede aprobar ni rechazar solicitudes`() {
+        viewModel.aprobarSolicitud(1)
+        viewModel.rechazarSolicitud(1, "Motivo")
+
+        assertEquals(EstadoSolicitud.SOLICITADA, viewModel.uiState.value.solicitudes.first { it.id == 1 }.estado)
+    }
+
     @Test
     fun `TC-HU07-04 - El aviso de sincronizacion se muestra y se puede descartar`() {
         val avisos = AvisosSincronizacion()

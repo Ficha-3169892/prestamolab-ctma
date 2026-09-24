@@ -34,6 +34,13 @@ interface LoanDao {
     @Query("UPDATE loans SET status = :estado, sync_status = 'PENDIENTE' WHERE id = :id")
     suspend fun actualizarEstado(id: Int, estado: EstadoSolicitud)
 
+    /** Revisión del instructor (HU-14): también queda pendiente de enviar. */
+    @Query(
+        "UPDATE loans SET status = :estado, reviewed_by = :revisor, rejection_reason = :motivo, " +
+            "sync_status = 'PENDIENTE' WHERE id = :id"
+    )
+    suspend fun registrarRevision(id: Int, estado: EstadoSolicitud, revisor: String, motivo: String?)
+
     @Query("SELECT * FROM loans WHERE sync_status = 'PENDIENTE' ORDER BY id")
     suspend fun pendientes(): List<LoanEntity>
 

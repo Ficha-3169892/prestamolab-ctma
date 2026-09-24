@@ -13,7 +13,7 @@ import com.example.prestamolab.data.local.entity.ReturnEntity
 
 @Database(
     entities = [EquipmentEntity::class, LoanEntity::class, ReturnEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class PrestamoLabDatabase : RoomDatabase() {
@@ -31,7 +31,7 @@ abstract class PrestamoLabDatabase : RoomDatabase() {
             } else {
                 Room.databaseBuilder(context, PrestamoLabDatabase::class.java, NOMBRE)
             }
-            return builder.addMigrations(MIGRACION_1_2).build()
+            return builder.addMigrations(MIGRACION_1_2, MIGRACION_2_3).build()
         }
     }
 }

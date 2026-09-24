@@ -220,6 +220,25 @@ class PrestamoViewModel(
         }
     }
 
+    /** HU-14: solo el instructor revisa, aunque la ruta ya esté protegida por rol. */
+    fun aprobarSolicitud(idSolicitud: Int) {
+        if (rol != Rol.INSTRUCTOR) return
+        viewModelScope.launch {
+            repository.aprobarSolicitud(idSolicitud, usuario.id).onFailure { error ->
+                _uiState.update { it.copy(mensajeError = error.message) }
+            }
+        }
+    }
+
+    fun rechazarSolicitud(idSolicitud: Int, motivo: String) {
+        if (rol != Rol.INSTRUCTOR) return
+        viewModelScope.launch {
+            repository.rechazarSolicitud(idSolicitud, usuario.id, motivo).onFailure { error ->
+                _uiState.update { it.copy(mensajeError = error.message) }
+            }
+        }
+    }
+
     companion object {
         /** Usuario por defecto de las pruebas unitarias. */
         val USUARIO_DEMO = Usuario("u-demo", "Andrés Vargas", "estudiante@sena.edu.co", Rol.ESTUDIANTE)

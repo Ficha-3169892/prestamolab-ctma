@@ -33,6 +33,7 @@ import com.example.prestamolab.ui.devolucion.DevolucionViewModel
 import com.example.prestamolab.ui.equipo.DetalleEquipoScreen
 import com.example.prestamolab.ui.equipo.EstadoDetalleEquipo
 import com.example.prestamolab.ui.gestion.GestionScreen
+import com.example.prestamolab.ui.gestion.RevisarSolicitudesScreen
 import com.example.prestamolab.ui.sesion.EstadoSesion
 import com.example.prestamolab.ui.sesion.SesionViewModel
 import com.example.prestamolab.ui.solicitud.SolicitudScreen
@@ -83,6 +84,7 @@ private val DESTINOS = mapOf(
 /** El detalle y el formulario pertenecen a la pestaña Catálogo. */
 private fun destinoPrincipalDe(ruta: String?): String? = when (ruta) {
     Rutas.DETALLE_EQUIPO, Rutas.SOLICITUD -> Rutas.CATALOGO
+    Rutas.REVISAR_SOLICITUDES -> Rutas.GESTION
     else -> ruta
 }
 
@@ -253,7 +255,20 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
                 }
                 composable(Rutas.GESTION) {
                     RutaProtegida(Rutas.GESTION, usuario, onVolver = { navController.popBackStack() }) {
-                        GestionScreen()
+                        GestionScreen(onRevisarSolicitudesClick = { navController.navigate(Rutas.REVISAR_SOLICITUDES) })
+                    }
+                }
+                composable(Rutas.REVISAR_SOLICITUDES) {
+                    RutaProtegida(Rutas.REVISAR_SOLICITUDES, usuario, onVolver = { navController.popBackStack() }) {
+                        LaunchedEffect(Unit) { prestamoViewModel.limpiarMensajeError() }
+                        RevisarSolicitudesScreen(
+                            solicitudes = uiState.solicitudes,
+                            equipos = uiState.equipos,
+                            mensajeError = uiState.mensajeError,
+                            onAprobarClick = prestamoViewModel::aprobarSolicitud,
+                            onRechazarClick = prestamoViewModel::rechazarSolicitud,
+                            onAtrasClick = { navController.popBackStack() }
+                        )
                     }
                 }
             }

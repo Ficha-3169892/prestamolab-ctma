@@ -25,6 +25,9 @@ data class PrestamoRemoto(
     val ambiente: String,
     val proposito: String,
     val duracionHoras: Int,
+    /** Revisión del instructor (HU-14): users.id de quien revisó y motivo si rechazó. */
+    val revisadoPor: String? = null,
+    val motivoRechazo: String? = null,
     /** users.full_name; solo se recibe, no se envía. */
     val nombreSolicitante: String? = null
 )
@@ -73,7 +76,7 @@ class SupabasePrestamosDataSource(private val cliente: SupabaseRestClient) : Pre
     override suspend fun prestamos(usuarioId: String?): List<PrestamoRemoto> {
         // El nombre del solicitante se trae en la misma consulta mediante la FK loans.user_id → users.id
         val consulta = "loans?select=id,user_id,equipment_id,status,request_date,return_date," +
-            "environment,purpose,duration_hours,solicitante:users!loans_user_id_fkey(full_name)&order=request_date" +
+            "environment,purpose,duration_hours,reviewed_by,rejection_reason,solicitante:users!loans_user_id_fkey(full_name)&order=request_date" +
             (usuarioId?.let { "&user_id=eq.${codificar(it)}" } ?: "")
         return filas(cliente.get(consulta)).map {
             PrestamoRemoto(
@@ -86,6 +89,8 @@ class SupabasePrestamosDataSource(private val cliente: SupabaseRestClient) : Pre
                 ambiente = it.textoONulo("environment").orEmpty(),
                 proposito = it.textoONulo("purpose").orEmpty(),
                 duracionHoras = it.getInt("duration_hours"),
+                revisadoPor = it.textoONulo("reviewed_by"),
+                motivoRechazo = it.textoONulo("rejection_reason"),
                 nombreSolicitante = it.optJSONObject("solicitante")?.textoONulo("full_name")
             )
         }
@@ -128,6 +133,8 @@ class SupabasePrestamosDataSource(private val cliente: SupabaseRestClient) : Pre
             .put("environment", prestamo.ambiente)
             .put("purpose", prestamo.proposito)
             .put("duration_hours", prestamo.duracionHoras)
+            .put("reviewed_by", prestamo.revisadoPor ?: JSONObject.NULL)
+            .put("rejection_reason", prestamo.motivoRechazo ?: JSONObject.NULL)
             .toString()
     )
 

@@ -222,4 +222,49 @@ class RoomPrestamoRepositoryTest {
         assertEquals(listOf(1, 2), repository.solicitudes.first().map { it.id })
         assertEquals(3, repository.crearSolicitud(nueva(1)).getOrThrow().id)
     }
+
+    @Test
+    fun TC_HU14_02_AprobarSolicitud_EntregaElEquipoYQuedaPendienteDeEnviar() = runTest {
+        repository.aprobarSolicitud(1, "uuid-instructor").getOrThrow()
+
+        val prestamo = db.loanDao().obtener(1)!!
+        assertEquals(EstadoSolicitud.PRESTADO, prestamo.status)
+        assertEquals("uuid-instructor", prestamo.reviewedBy)
+        assertNull(prestamo.rejectionReason)
+        assertEquals(EstadoSincronizacion.PENDIENTE, prestamo.syncStatus)
+        assertEquals(EstadoEquipo.PRESTADO, repository.obtenerEquipo(2)?.estado)
+        assertEquals(1, cambiosLocales)
+    }
+
+    @Test
+    fun TC_HU14_03_RechazarSolicitud_GuardaElMotivoYLiberaElEquipo() = runTest {
+        repository.rechazarSolicitud(1, "uuid-instructor", " Equipo en calibración ").getOrThrow()
+
+        val solicitud = repository.solicitudes.first().first { it.id == 1 }
+        assertEquals(EstadoSolicitud.RECHAZADA, solicitud.estado)
+        assertEquals("Equipo en calibración", solicitud.motivoRechazo)
+        assertEquals(EstadoEquipo.DISPONIBLE, repository.obtenerEquipo(2)?.estado)
+    }
+
+    @Test
+    fun TC_HU14_04_AprobarUnaSolicitudCancelada_SeRechazaSinCambios() = runTest {
+        repository.cancelarSolicitud(1).getOrThrow()
+        val cambiosAntes = cambiosLocales
+
+        val resultado = repository.aprobarSolicitud(1, "uuid-instructor")
+
+        assertTrue(resultado.exceptionOrNull() is IllegalStateException)
+        assertEquals(EstadoSolicitud.CANCELADA, db.loanDao().obtener(1)?.status)
+        assertNull(db.loanDao().obtener(1)?.reviewedBy)
+        assertEquals(EstadoEquipo.DISPONIBLE, repository.obtenerEquipo(2)?.estado)
+        assertEquals(cambiosAntes, cambiosLocales)
+    }
+
+    @Test
+    fun RechazarSinMotivo_NoCambiaNada() = runTest {
+        assertTrue(repository.rechazarSolicitud(1, "uuid-instructor", "  ").isFailure)
+
+        assertEquals(EstadoSolicitud.SOLICITADA, db.loanDao().obtener(1)?.status)
+        assertEquals(EstadoEquipo.RESERVADO, repository.obtenerEquipo(2)?.estado)
+    }
 }

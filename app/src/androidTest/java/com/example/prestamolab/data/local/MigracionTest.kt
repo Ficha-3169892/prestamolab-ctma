@@ -70,4 +70,31 @@ class MigracionTest {
             assertEquals("PENDIENTE", c.getString(2))
         }
     }
+
+    @Test
+    fun MigracionDeV2AV3AgregaLaRevisionSinPerderPrestamos() {
+        helper.createDatabase(nombreBase, 2).apply {
+            execSQL(
+                "INSERT INTO equipments (id, remote_id, name, category, status, sync_status) " +
+                    "VALUES (2, 'e2', 'Osciloscopio 100MHz', 'Laboratorio', 'RESERVADO', 'SINCRONIZADO')"
+            )
+            execSQL(
+                "INSERT INTO loans (id, remote_id, equipment_id, user_id, requester_name, environment, purpose, " +
+                    "duration_hours, request_date, return_date, status, sync_status) VALUES " +
+                    "(1, 'l1', 2, 'u1', 'Andrés Vargas', 'Lab', 'Señales', 2, '2026-09-02 08:00', " +
+                    "'2026-09-02 10:00', 'SOLICITADA', 'SINCRONIZADO')"
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(nombreBase, 3, true, MIGRACION_2_3)
+
+        db.query("SELECT status, sync_status, reviewed_by, rejection_reason FROM loans").use { c ->
+            c.moveToNext()
+            assertEquals("SOLICITADA", c.getString(0))
+            assertEquals("SINCRONIZADO", c.getString(1))
+            assertTrue(c.isNull(2))
+            assertTrue(c.isNull(3))
+        }
+    }
 }

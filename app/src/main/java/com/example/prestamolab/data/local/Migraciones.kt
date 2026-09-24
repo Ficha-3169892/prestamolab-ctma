@@ -50,3 +50,11 @@ val MIGRACION_1_2 = object : Migration(1, 2) {
         }
     }
 }
+
+/** v2 → v3: revisión del instructor (HU-14), mismas columnas que public.loans. */
+val MIGRACION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE loans ADD COLUMN reviewed_by TEXT")
+        db.execSQL("ALTER TABLE loans ADD COLUMN rejection_reason TEXT")
+    }
+}

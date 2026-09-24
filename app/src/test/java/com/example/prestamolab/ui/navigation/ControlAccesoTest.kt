@@ -22,6 +22,12 @@ class ControlAccesoTest {
     }
 
     @Test
+    fun `TC-HU14-01 - Solo el instructor revisa solicitudes`() {
+        assertTrue(ControlAcceso.puedeAcceder(Rutas.REVISAR_SOLICITUDES, Rol.INSTRUCTOR))
+        assertFalse(ControlAcceso.puedeAcceder(Rutas.REVISAR_SOLICITUDES, Rol.ESTUDIANTE))
+    }
+
+    @Test
     fun `Cada rol inicia en su pantalla principal`() {
         assertEquals(Rutas.GESTION, ControlAcceso.rutaInicio(Rol.INSTRUCTOR))
         assertEquals(Rutas.CATALOGO, ControlAcceso.rutaInicio(Rol.ESTUDIANTE))

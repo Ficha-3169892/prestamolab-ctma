@@ -133,7 +133,9 @@ class SincronizadorPrestamos(
             fechaLimite = fechas.aIso(returnDate),
             ambiente = environment,
             proposito = purpose,
-            duracionHoras = durationHours
+            duracionHoras = durationHours,
+            revisadoPor = reviewedBy,
+            motivoRechazo = rejectionReason
         )
     }
 
@@ -198,6 +200,8 @@ class SincronizadorPrestamos(
             requestDate = fechas.desdeIso(r.fechaSolicitud),
             returnDate = fechas.desdeIso(r.fechaLimite),
             status = estado,
+            reviewedBy = r.revisadoPor,
+            rejectionReason = r.motivoRechazo,
             syncStatus = EstadoSincronizacion.SINCRONIZADO
         )
         return when {

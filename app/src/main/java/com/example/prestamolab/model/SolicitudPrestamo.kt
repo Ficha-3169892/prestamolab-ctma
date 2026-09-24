@@ -14,7 +14,9 @@ data class SolicitudPrestamo(
     val duracionHoras: Int,
     val fechaInicio: String,
     val fechaFin: String,
-    val estado: EstadoSolicitud
+    val estado: EstadoSolicitud,
+    /** Lo registra el instructor al rechazar (CA-HU14-03). */
+    val motivoRechazo: String? = null
 )
 
 /** Datos que captura el formulario; el repositorio asigna id, fechas y estado. */

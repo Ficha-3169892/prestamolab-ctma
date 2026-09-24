@@ -10,13 +10,15 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-/** Menú de gestión del instructor. Cada sección se implementa en el sprint indicado. */
+private data class SeccionGestion(val titulo: String, val detalle: String, val onClick: (() -> Unit)? = null)
+
+/** Menú de gestión del instructor. Las secciones sin acción se implementan en el sprint indicado. */
 @Composable
-fun GestionScreen() {
+fun GestionScreen(onRevisarSolicitudesClick: () -> Unit) {
     val secciones = listOf(
-        "Inventario de equipos" to "HU-12 · Sprint 6",
-        "Actividades formativas" to "HU-11 · Sprint 6",
-        "Revisar solicitudes" to "HU-14 · Sprint 7"
+        SeccionGestion("Revisar solicitudes", "Aprobar o rechazar préstamos pendientes", onRevisarSolicitudesClick),
+        SeccionGestion("Inventario de equipos", "Próximamente: HU-12 · Sprint 6"),
+        SeccionGestion("Actividades formativas", "Próximamente: HU-11 · Sprint 6")
     )
 
     Column(
@@ -33,15 +35,17 @@ fun GestionScreen() {
             fontFamily = FontFamily.SansSerif,
             color = Color(0xFF0F2537)
         )
-        secciones.forEach { (titulo, pendiente) ->
+        secciones.forEach { seccion ->
             Card(
+                onClick = { seccion.onClick?.invoke() },
+                enabled = seccion.onClick != null,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F7FA))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(titulo, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, fontFamily = FontFamily.SansSerif)
-                    Text("Próximamente: $pendiente", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.SansSerif)
+                    Text(seccion.titulo, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, fontFamily = FontFamily.SansSerif)
+                    Text(seccion.detalle, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.SansSerif)
                 }
             }
         }

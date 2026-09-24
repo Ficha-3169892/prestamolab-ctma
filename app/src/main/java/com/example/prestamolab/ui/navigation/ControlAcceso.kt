@@ -12,6 +12,7 @@ object Rutas {
     const val MIS_SOLICITUDES = "mis-solicitudes"
     const val DEVOLUCION = "devolucion/{$ARG_SOLICITUD_ID}"
     const val GESTION = "gestion"
+    const val REVISAR_SOLICITUDES = "gestion/solicitudes"
 
     fun detalleEquipo(equipoId: Int) = "equipo/$equipoId"
     fun solicitud(equipoId: Int) = "equipo/$equipoId/solicitud"
@@ -29,7 +30,8 @@ object ControlAcceso {
         Rutas.SOLICITUD to setOf(Rol.ESTUDIANTE),
         Rutas.MIS_SOLICITUDES to setOf(Rol.ESTUDIANTE),
         Rutas.DEVOLUCION to setOf(Rol.ESTUDIANTE),
-        Rutas.GESTION to setOf(Rol.INSTRUCTOR)
+        Rutas.GESTION to setOf(Rol.INSTRUCTOR),
+        Rutas.REVISAR_SOLICITUDES to setOf(Rol.INSTRUCTOR)
     )
 
     fun puedeAcceder(ruta: String, rol: Rol): Boolean = rol in permisos[ruta].orEmpty()

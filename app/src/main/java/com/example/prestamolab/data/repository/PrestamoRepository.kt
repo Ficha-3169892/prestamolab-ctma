@@ -21,4 +21,10 @@ interface PrestamoRepository {
 
     /** Cierra un préstamo PRESTADO: lo marca DEVUELTO y libera el equipo. Falla en cualquier otro estado. */
     suspend fun registrarDevolucion(nueva: NuevaDevolucion): Result<Devolucion>
+
+    /** HU-14: SOLICITADA → PRESTADO y el equipo queda PRESTADO. Falla en cualquier otro estado. */
+    suspend fun aprobarSolicitud(id: Int, instructorId: String): Result<Unit>
+
+    /** HU-14: SOLICITADA → RECHAZADA con motivo y el equipo vuelve a DISPONIBLE. */
+    suspend fun rechazarSolicitud(id: Int, instructorId: String, motivo: String): Result<Unit>
 }

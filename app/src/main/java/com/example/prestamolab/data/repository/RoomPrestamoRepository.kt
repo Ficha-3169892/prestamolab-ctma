@@ -12,6 +12,8 @@ import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.NuevaDevolucion
 import com.example.prestamolab.model.NuevaSolicitud
+import com.example.prestamolab.model.ResultadoRevision
+import com.example.prestamolab.model.RevisionSolicitud
 import com.example.prestamolab.model.SolicitudPrestamo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -119,6 +121,26 @@ class RoomPrestamoRepository(
         loanDao.actualizarEstado(prestamo.id, EstadoSolicitud.DEVUELTO)
         equipmentDao.actualizarEstado(prestamo.equipmentId, EstadoEquipo.DISPONIBLE)
         Result.success(devolucion.copy(id = id).aDominio())
+    }.also { if (it.isSuccess) alCambiarLocalmente() }
+
+    override suspend fun aprobarSolicitud(id: Int, instructorId: String): Result<Unit> =
+        revisar(id, instructorId) { RevisionSolicitud.aprobar(it) }
+
+    override suspend fun rechazarSolicitud(id: Int, instructorId: String, motivo: String): Result<Unit> =
+        revisar(id, instructorId) { RevisionSolicitud.rechazar(it, motivo) }
+
+    /** Aplica la transición de [RevisionSolicitud] al préstamo y a su equipo en una sola transacción. */
+    private suspend fun revisar(
+        id: Int,
+        instructorId: String,
+        transicion: (EstadoSolicitud) -> Result<ResultadoRevision>
+    ): Result<Unit> = db.withTransaction {
+        val prestamo = loanDao.obtener(id)
+            ?: return@withTransaction Result.failure(NoSuchElementException("Solicitud no encontrada"))
+        transicion(prestamo.status).map { revision ->
+            loanDao.registrarRevision(id, revision.estadoSolicitud, instructorId, revision.motivoRechazo)
+            equipmentDao.actualizarEstado(prestamo.equipmentId, revision.estadoEquipo)
+        }
     }.also { if (it.isSuccess) alCambiarLocalmente() }
 
     private fun formatear(instante: Long): String =

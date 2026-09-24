@@ -17,12 +17,12 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | [HU-12](HU12.md) | Gestionar inventario de equipos (instructor) | Media | 6 | 5 | 0 |
 | [HU-03](HU03.md) | Solicitar préstamo | Alta | 7 | 8 | 8 |
 | [HU-04](HU04.md) | Consultar mis préstamos activos | Alta | 7 | 6 | 3 |
-| [HU-14](HU14.md) | Revisar solicitudes de préstamo (instructor) | Alta | 7 | 4 | 0 |
+| [HU-14](HU14.md) | Revisar solicitudes de préstamo (instructor) | Alta | 7 | 4 | 4 |
 | [HU-07](HU07.md) | Sincronizar datos con servicio remoto | Media/Alta | 8 | 5 | 5 |
 | [HU-08](HU08.md) | Adjuntar evidencia fotográfica | Media | 8 | 5 | 0 |
 | [HU-09](HU09.md) | Recibir recordatorio de devolución | Media | 9 | 4 | 0 |
 
-**Total:** 74 criterios, 74 casos de prueba, 39 ya automatizados.
+**Total:** 74 criterios, 74 casos de prueba, 43 ya automatizados.
 
 ## Matriz HU → CA → TC → prueba
 
@@ -98,10 +98,10 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU13 | CA-HU13-04 | TC-HU13-04 | Unitaria + UI | `DevolucionViewModelTest.TC-HU13-04; DevolucionUiTest.TC_HU05_02_DevolucionConUbicacion_CierraElPrestamo` |
 | HU13 | CA-HU13-05 | TC-HU13-05 | Unitaria | `DevolucionViewModelTest.TC-HU13-05` |
 | HU13 | CA-HU13-06 | TC-HU13-06 | Integración | Pendiente |
-| HU14 | CA-HU14-01 | TC-HU14-01 | UI | Pendiente |
-| HU14 | CA-HU14-02 | TC-HU14-02 | Unitaria (TDD) | Pendiente |
-| HU14 | CA-HU14-03 | TC-HU14-03 | Unitaria (TDD) | Pendiente |
-| HU14 | CA-HU14-04 | TC-HU14-04 | Unitaria (TDD) | Pendiente |
+| HU14 | CA-HU14-01 | TC-HU14-01 | UI | `RevisarSolicitudesUiTest.TC_HU14_01_ListaMuestraEstudianteEquipoAmbientePropositoYDuracion; ControlAccesoTest.TC-HU14-01` |
+| HU14 | CA-HU14-02 | TC-HU14-02 | Unitaria (TDD) | `RevisionSolicitudTest.TC_HU14_02_AprobarSolicitada_PasaAPrestadoYEntregaElEquipo; RoomPrestamoRepositoryTest.TC_HU14_02_AprobarSolicitud_EntregaElEquipoYQuedaPendienteDeEnviar; RevisarSolicitudesUiTest.TC_HU14_02_AprobarQuitaLaSolicitudYElEquipoQuedaPrestado` |
+| HU14 | CA-HU14-03 | TC-HU14-03 | Unitaria (TDD) | `RevisionSolicitudTest.TC_HU14_03_RechazarSolicitada_GuardaElMotivoYLiberaElEquipo; RoomPrestamoRepositoryTest.TC_HU14_03_RechazarSolicitud_GuardaElMotivoYLiberaElEquipo; RevisarSolicitudesUiTest.TC_HU14_03_RechazarExigeMotivoYLiberaElEquipo` |
+| HU14 | CA-HU14-04 | TC-HU14-04 | Unitaria (TDD) | `RevisionSolicitudTest.TC_HU14_04_AprobarCanceladaORechazada_SeRechazaSinCambios; RoomPrestamoRepositoryTest.TC_HU14_04_AprobarUnaSolicitudCancelada_SeRechazaSinCambios` |
 
 ## Equivalencia con la numeración anterior (Parte 1)
 

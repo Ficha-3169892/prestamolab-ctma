@@ -32,6 +32,9 @@ data class LoanEntity(
     /** Fecha límite pactada para devolver el equipo; la entrega real queda en returns.return_date. */
     @ColumnInfo(name = "return_date") val returnDate: String,
     val status: EstadoSolicitud,
+    /** Revisión del instructor (HU-14): quién revisó (users.id) y por qué rechazó. */
+    @ColumnInfo(name = "reviewed_by") val reviewedBy: String? = null,
+    @ColumnInfo(name = "rejection_reason") val rejectionReason: String? = null,
     @ColumnInfo(name = "sync_status", defaultValue = "'PENDIENTE'")
     val syncStatus: EstadoSincronizacion = EstadoSincronizacion.PENDIENTE
 )
@@ -46,5 +49,6 @@ fun LoanEntity.aDominio() = SolicitudPrestamo(
     duracionHoras = durationHours,
     fechaInicio = requestDate,
     fechaFin = returnDate,
-    estado = status
+    estado = status,
+    motivoRechazo = rejectionReason
 )

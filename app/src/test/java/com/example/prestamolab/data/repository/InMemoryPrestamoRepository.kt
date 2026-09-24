@@ -7,6 +7,8 @@ import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.NuevaDevolucion
 import com.example.prestamolab.model.NuevaSolicitud
+import com.example.prestamolab.model.ResultadoRevision
+import com.example.prestamolab.model.RevisionSolicitud
 import com.example.prestamolab.model.SolicitudPrestamo
 import com.example.prestamolab.ui.PrestamoViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -97,6 +99,28 @@ class InMemoryPrestamoRepository(
         cambiarEstadoSolicitud(solicitud.id, EstadoSolicitud.DEVUELTO)
         cambiarEstadoEquipo(solicitud.equipoId, EstadoEquipo.DISPONIBLE)
         Result.success(devolucion)
+    }
+
+    override suspend fun aprobarSolicitud(id: Int, instructorId: String): Result<Unit> =
+        revisar(id) { RevisionSolicitud.aprobar(it) }
+
+    override suspend fun rechazarSolicitud(id: Int, instructorId: String, motivo: String): Result<Unit> =
+        revisar(id) { RevisionSolicitud.rechazar(it, motivo) }
+
+    private suspend fun revisar(
+        id: Int,
+        transicion: (EstadoSolicitud) -> Result<ResultadoRevision>
+    ): Result<Unit> = mutex.withLock {
+        val solicitud = _solicitudes.value.find { it.id == id }
+            ?: return Result.failure(NoSuchElementException("Solicitud no encontrada"))
+        transicion(solicitud.estado).map { revision ->
+            _solicitudes.update { lista ->
+                lista.map {
+                    if (it.id == id) it.copy(estado = revision.estadoSolicitud, motivoRechazo = revision.motivoRechazo) else it
+                }
+            }
+            cambiarEstadoEquipo(solicitud.equipoId, revision.estadoEquipo)
+        }
     }
 
     private fun cambiarEstadoSolicitud(id: Int, estado: EstadoSolicitud) {

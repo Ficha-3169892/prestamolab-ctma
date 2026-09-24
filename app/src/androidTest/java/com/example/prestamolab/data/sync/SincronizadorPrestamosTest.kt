@@ -151,6 +151,35 @@ class SincronizadorPrestamosTest {
     }
 
     @Test
+    fun LaRevisionDelInstructorSeEnviaConElEstadoDelEquipo() = runTest {
+        repository.rechazarSolicitud(1, instructor.id, "Equipo en calibración").getOrThrow()
+
+        sincronizador.sincronizar(instructor)
+
+        val enviado = remoto.prestamos.single { it.id.endsWith("001") }
+        assertEquals("RECHAZADA", enviado.estado)
+        assertEquals(instructor.id, enviado.revisadoPor)
+        assertEquals("Equipo en calibración", enviado.motivoRechazo)
+        assertEquals("DISPONIBLE", remoto.estadosEnviados[CatalogoInicial.remoteIdPorIdLocal.getValue(2)])
+        assertEquals(EstadoSincronizacion.SINCRONIZADO, db.loanDao().obtener(1)?.syncStatus)
+    }
+
+    @Test
+    fun ElEstudianteRecibeElMotivoDeRechazo() = runTest {
+        remoto.prestamos += PrestamoRemoto(
+            "5eed0000-0000-4000-8000-000000000001", estudiante.id, CatalogoInicial.remoteIdPorIdLocal.getValue(2),
+            "RECHAZADA", "2026-09-02T13:00:00+00:00", "2026-09-02T15:00:00+00:00", "Laboratorio 302",
+            "Práctica de señales", 2, revisadoPor = instructor.id, motivoRechazo = "Equipo en calibración"
+        )
+
+        sincronizador.sincronizar(estudiante)
+
+        val solicitud = repository.solicitudes.first().first { it.id == 1 }
+        assertEquals(EstadoSolicitud.RECHAZADA, solicitud.estado)
+        assertEquals("Equipo en calibración", solicitud.motivoRechazo)
+    }
+
+    @Test
     fun ElEstudianteSoloRecibeSusPrestamosYElInstructorTodos() = runTest {
         remoto.prestamos += PrestamoRemoto(
             "otro", "uuid-otro", CatalogoInicial.remoteIdPorIdLocal.getValue(3), "SOLICITADA",

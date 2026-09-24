@@ -128,6 +128,55 @@ class SupabasePrestamosDataSourceTest {
     }
 
     @Test
+    fun `La revision del instructor se envia en reviewed_by y rejection_reason`() = runTest {
+        responder(201, "")
+
+        remoto.guardarPrestamo(
+            PrestamoRemoto(
+                "l1", "u1", "e1", "RECHAZADA", "2026-09-24T08:00:00-05:00", "2026-09-24T10:00:00-05:00",
+                "Lab 1", "Practica de redes", 2, revisadoPor = "i1", motivoRechazo = "Equipo en calibración"
+            )
+        )
+
+        val cuerpo = JSONObject(servidor.takeRequest().body.readUtf8())
+        assertEquals("i1", cuerpo.getString("reviewed_by"))
+        assertEquals("Equipo en calibración", cuerpo.getString("rejection_reason"))
+    }
+
+    @Test
+    fun `Un prestamo sin revisar envia la revision como null`() = runTest {
+        responder(201, "")
+
+        remoto.guardarPrestamo(
+            PrestamoRemoto(
+                "l1", "u1", "e1", "SOLICITADA", "2026-09-24T08:00:00-05:00", "2026-09-24T10:00:00-05:00",
+                "Lab 1", "Practica de redes", 2
+            )
+        )
+
+        val cuerpo = JSONObject(servidor.takeRequest().body.readUtf8())
+        assertTrue(cuerpo.isNull("reviewed_by"))
+        assertTrue(cuerpo.isNull("rejection_reason"))
+    }
+
+    @Test
+    fun `Se recibe el motivo de rechazo y quien reviso`() = runTest {
+        responder(
+            200,
+            """[{"id":"l1","user_id":"u1","equipment_id":"e1","status":"RECHAZADA",
+                "request_date":"2026-09-24T13:00:00+00:00","return_date":"2026-09-24T15:00:00+00:00",
+                "environment":"Lab 1","purpose":"Practica de redes","duration_hours":2,
+                "reviewed_by":"i1","rejection_reason":"Equipo en calibración","solicitante":null}]"""
+        )
+
+        val prestamo = remoto.prestamos("u1").single()
+
+        assertEquals("i1", prestamo.revisadoPor)
+        assertEquals("Equipo en calibración", prestamo.motivoRechazo)
+        assertTrue(rutaDecodificada().contains("reviewed_by,rejection_reason"))
+    }
+
+    @Test
     fun `El estado del equipo se envia con PATCH y solo la columna status`() = runTest {
         responder(204, "")
 
