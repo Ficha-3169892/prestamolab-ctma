@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Login contra la tabla users de Supabase (HU-10) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- GPS: solo en primer plano y solo al registrar una devolución (sin ubicación en segundo plano).
          Android 12+ exige pedir FINE junto con COARSE; el usuario puede elegir la aproximada. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
