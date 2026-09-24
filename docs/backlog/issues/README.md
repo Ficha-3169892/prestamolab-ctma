@@ -20,9 +20,9 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | [HU-14](HU14.md) | Revisar solicitudes de préstamo (instructor) | Alta | 7 | 4 | 4 |
 | [HU-07](HU07.md) | Sincronizar datos con servicio remoto | Media/Alta | 8 | 5 | 5 |
 | [HU-08](HU08.md) | Adjuntar evidencia fotográfica | Media | 8 | 5 | 0 |
-| [HU-09](HU09.md) | Recibir recordatorio de devolución | Media | 9 | 4 | 0 |
+| [HU-09](HU09.md) | Recibir recordatorio de devolución | Media | 9 | 4 | 4 |
 
-**Total:** 74 criterios, 74 casos de prueba, 53 ya automatizados.
+**Total:** 74 criterios, 74 casos de prueba, 57 ya automatizados.
 
 ## Matriz HU → CA → TC → prueba
 
@@ -71,10 +71,10 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU08 | CA-HU08-03 | TC-HU08-03 | Instrumentada | Pendiente |
 | HU08 | CA-HU08-04 | TC-HU08-04 | Unitaria | Pendiente |
 | HU08 | CA-HU08-05 | TC-HU08-05 | Integración | Pendiente |
-| HU09 | CA-HU09-01 | TC-HU09-01 | Integración | Pendiente |
-| HU09 | CA-HU09-02 | TC-HU09-02 | Instrumentada | Pendiente |
-| HU09 | CA-HU09-03 | TC-HU09-03 | Integración | Pendiente |
-| HU09 | CA-HU09-04 | TC-HU09-04 | Instrumentada | Pendiente |
+| HU09 | CA-HU09-01 | TC-HU09-01 | Integración | `WorkManagerRecordatoriosTest.TC_HU09_01_SeProgramaUnTrabajoParaLaHoraDelAviso; PlanRecordatoriosTest.TC_HU09_01_PrestamoPrestado_SeProgramaTreintaMinutosAntesDelFin; CoordinadorRecordatoriosTest.TC_HU09_01_AlAprobarseUnaSolicitudSeProgramaSuRecordatorio` |
+| HU09 | CA-HU09-02 | TC-HU09-02 | Instrumentada | `RecordatorioWorkerTest.TC_HU09_02_AlLlegarLaHora_MuestraElEquipoYLaHoraLimite; AndroidNotificadorTest.TC_HU09_02_PublicaElAvisoConEquipoHoraYAccionDeApertura; RecordatorioUiTest.TC_HU09_02_TocarElRecordatorio_AbreElPrestamo` |
+| HU09 | CA-HU09-03 | TC-HU09-03 | Integración | `WorkManagerRecordatoriosTest.TC_HU09_03_ElPrestamoQueSaleDeLaListaQuedaCancelado; CoordinadorRecordatoriosTest.TC_HU09_03_AlDevolverSeCancelaElRecordatorio` |
+| HU09 | CA-HU09-04 | TC-HU09-04 | Instrumentada | `RecordatorioWorkerTest.TC_HU09_04_SinPermiso_NoMuestraNadaYNoFalla; PermisoNotificacionesTest.TC_HU09_04_EnAndroid13SinPermiso_SePideAlTenerUnPrestamoEntregado (el diálogo del sistema se verifica a mano: revocar el permiso mata el proceso de prueba)` |
 | HU10 | CA-HU10-01 | TC-HU10-01 | Unitaria | `LoginViewModelTest.TC-HU10-01; LoginUiTest.TC_HU10_01_LoginValido_MuestraCatalogo` |
 | HU10 | CA-HU10-02 | TC-HU10-02 | Unitaria | `LoginViewModelTest.TC-HU10-02; LoginUiTest.TC_HU10_02_LoginInvalido_MuestraErrorYSigueEnLogin` |
 | HU10 | CA-HU10-03 | TC-HU10-03 | Unitaria | `LoginViewModelTest.TC-HU10-03; LoginUiTest.TC_HU10_03_CamposVacios_MuestranErrores` |

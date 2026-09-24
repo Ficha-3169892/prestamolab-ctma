@@ -14,5 +14,6 @@ class PrestamoLabApp : Application() {
     override fun onCreate() {
         super.onCreate()
         container.iniciarSincronizacion(appScope)
+        container.iniciarRecordatorios(appScope)
     }
 }

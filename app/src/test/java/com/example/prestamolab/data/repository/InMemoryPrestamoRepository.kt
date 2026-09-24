@@ -24,12 +24,13 @@ import java.util.Locale
 
 /** Doble de pruebas unitarias con las mismas reglas que [RoomPrestamoRepository], sin SQLite. */
 class InMemoryPrestamoRepository(
-    private val ahora: () -> String = { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date()) }
+    private val ahora: () -> String = { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date()) },
+    solicitudes: List<SolicitudPrestamo> = solicitudesIniciales()
 ) : PrestamoRepository {
 
     private val mutex = Mutex()
     private val _equipos = MutableStateFlow(equiposIniciales())
-    private val _solicitudes = MutableStateFlow(solicitudesIniciales())
+    private val _solicitudes = MutableStateFlow(solicitudes)
     private val _devoluciones = MutableStateFlow(emptyList<Devolucion>())
 
     override val equipos: StateFlow<List<Equipo>> = _equipos.asStateFlow()
@@ -170,12 +171,12 @@ class InMemoryPrestamoRepository(
         }
     }
 
-    private companion object {
-        const val FECHA_DEMO = "2026-09-04"
+    companion object {
+        private const val FECHA_DEMO = "2026-09-04"
         // Dueño de la semilla: el usuario por defecto de PrestamoViewModel
-        val USUARIO_DEMO = PrestamoViewModel.USUARIO_DEMO.id
+        private val USUARIO_DEMO = PrestamoViewModel.USUARIO_DEMO.id
 
-        fun equiposIniciales() = listOf(
+        private fun equiposIniciales() = listOf(
             Equipo(1, "Multímetro Digital", "Herramienta", EstadoEquipo.DISPONIBLE),
             // Reservado por la solicitud semilla #1
             Equipo(2, "Osciloscopio 100MHz", "Laboratorio", EstadoEquipo.RESERVADO),

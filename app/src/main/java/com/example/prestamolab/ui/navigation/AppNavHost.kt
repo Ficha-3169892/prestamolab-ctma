@@ -22,7 +22,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.prestamolab.PrestamoLabApp
+import com.example.prestamolab.model.EstadoSolicitud
+import com.example.prestamolab.model.Rol
 import com.example.prestamolab.model.Usuario
+import com.example.prestamolab.ui.recordatorios.PedirPermisoNotificaciones
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.flow.filterNotNull
 import com.example.prestamolab.ui.EventoPrestamo
 import com.example.prestamolab.ui.PrestamoViewModel
 import com.example.prestamolab.ui.actividades.ActividadFormularioScreen
@@ -124,6 +130,20 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
     )
     val uiState by prestamoViewModel.uiState.collectAsState()
     val puedeSolicitar = ControlAcceso.puedeSolicitarPrestamo(usuario.rol)
+
+    // CA-HU09-02: la notificación de recordatorio abre la pantalla del préstamo
+    val aperturas = (LocalContext.current.applicationContext as PrestamoLabApp).container.aperturas
+    LaunchedEffect(aperturas) {
+        aperturas.solicitudId.filterNotNull().collect { solicitudId ->
+            aperturas.consumir()
+            if (ControlAcceso.puedeAcceder(Rutas.DEVOLUCION, usuario.rol)) {
+                navController.navigate(Rutas.devolucion(solicitudId)) { launchSingleTop = true }
+            }
+        }
+    }
+    if (usuario.rol == Rol.ESTUDIANTE) {
+        PedirPermisoNotificaciones(hayPrestamoEntregado = uiState.solicitudes.any { it.estado == EstadoSolicitud.PRESTADO })
+    }
 
     LaunchedEffect(prestamoViewModel) {
         prestamoViewModel.eventos.collect { evento ->

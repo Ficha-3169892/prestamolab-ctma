@@ -11,6 +11,12 @@ import com.example.prestamolab.data.auth.UsuariosRemoteDataSource
 import com.example.prestamolab.data.auth.sesionDataStore
 import com.example.prestamolab.data.local.PrestamoLabDatabase
 import com.example.prestamolab.data.location.FusedLocationProvider
+import com.example.prestamolab.data.recordatorios.AndroidNotificador
+import com.example.prestamolab.data.recordatorios.AperturasPendientes
+import com.example.prestamolab.data.recordatorios.CoordinadorRecordatorios
+import com.example.prestamolab.data.recordatorios.Notificador
+import com.example.prestamolab.data.recordatorios.ProgramadorRecordatorios
+import com.example.prestamolab.data.recordatorios.WorkManagerRecordatorios
 import com.example.prestamolab.data.location.LocationProvider
 import com.example.prestamolab.data.remote.PrestamosRemoteDataSource
 import com.example.prestamolab.data.remote.SupabasePrestamosDataSource
@@ -62,6 +68,19 @@ class AppContainer(context: Context) {
 
     val actividadRepository: ActividadRepository by lazy {
         RoomActividadRepository(database, alCambiarLocalmente = { programadorSincronizacion.sincronizarAhora() })
+    }
+
+    // HU-09: recordatorios de devolución; las pruebas los reemplazan antes de onCreate
+    var programadorRecordatorios: ProgramadorRecordatorios = WorkManagerRecordatorios(appContext)
+    var notificador: Notificador = AndroidNotificador(appContext)
+    val aperturas = AperturasPendientes()
+
+    fun iniciarRecordatorios(scope: CoroutineScope) {
+        CoordinadorRecordatorios(
+            authRepository.sesion.map { it?.usuario },
+            prestamoRepository,
+            programadorRecordatorios
+        ).iniciar(scope)
     }
 
     var locationProvider: LocationProvider = FusedLocationProvider(appContext)
