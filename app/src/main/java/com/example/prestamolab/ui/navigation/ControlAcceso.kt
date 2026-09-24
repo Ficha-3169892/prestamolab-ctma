@@ -5,6 +5,7 @@ import com.example.prestamolab.model.Rol
 object Rutas {
     const val ARG_EQUIPO_ID = "equipoId"
     const val ARG_SOLICITUD_ID = "solicitudId"
+    const val ARG_ACTIVIDAD_ID = "actividadId"
 
     const val CATALOGO = "catalogo"
     const val DETALLE_EQUIPO = "equipo/{$ARG_EQUIPO_ID}"
@@ -12,6 +13,9 @@ object Rutas {
     const val MIS_SOLICITUDES = "mis-solicitudes"
     const val DEVOLUCION = "devolucion/{$ARG_SOLICITUD_ID}"
     const val GESTION = "gestion"
+    const val ACTIVIDADES = "actividades"
+    const val NUEVA_ACTIVIDAD = "actividades/nueva"
+    const val EDITAR_ACTIVIDAD = "actividades/{$ARG_ACTIVIDAD_ID}/editar"
     const val REVISAR_SOLICITUDES = "gestion/solicitudes"
     const val INVENTARIO = "gestion/inventario"
     const val NUEVO_EQUIPO = "gestion/inventario/nuevo"
@@ -21,6 +25,7 @@ object Rutas {
     fun solicitud(equipoId: Int) = "equipo/$equipoId/solicitud"
     fun devolucion(solicitudId: Int) = "devolucion/$solicitudId"
     fun editarEquipo(equipoId: Int) = "gestion/inventario/$equipoId/editar"
+    fun editarActividad(actividadId: Int) = "actividades/$actividadId/editar"
 }
 
 /** Matriz de permisos por ruta (RBAC). Una ruta que no está aquí se niega a todos. */
@@ -39,7 +44,11 @@ object ControlAcceso {
         // El inventario solo lo mantiene el instructor (CA-HU12-05)
         Rutas.INVENTARIO to setOf(Rol.INSTRUCTOR),
         Rutas.NUEVO_EQUIPO to setOf(Rol.INSTRUCTOR),
-        Rutas.EDITAR_EQUIPO to setOf(Rol.INSTRUCTOR)
+        Rutas.EDITAR_EQUIPO to setOf(Rol.INSTRUCTOR),
+        // Todos consultan las actividades; solo el instructor las crea o edita (CA-HU11-05)
+        Rutas.ACTIVIDADES to todos,
+        Rutas.NUEVA_ACTIVIDAD to setOf(Rol.INSTRUCTOR),
+        Rutas.EDITAR_ACTIVIDAD to setOf(Rol.INSTRUCTOR)
     )
 
     fun puedeAcceder(ruta: String, rol: Rol): Boolean = rol in permisos[ruta].orEmpty()
@@ -55,5 +64,5 @@ object ControlAcceso {
 
     /** Destinos de la barra inferior según el rol, en orden. */
     fun destinosPrincipales(rol: Rol): List<String> =
-        listOf(Rutas.CATALOGO, Rutas.MIS_SOLICITUDES, Rutas.GESTION).filter { puedeAcceder(it, rol) }
+        listOf(Rutas.CATALOGO, Rutas.MIS_SOLICITUDES, Rutas.ACTIVIDADES, Rutas.GESTION).filter { puedeAcceder(it, rol) }
 }

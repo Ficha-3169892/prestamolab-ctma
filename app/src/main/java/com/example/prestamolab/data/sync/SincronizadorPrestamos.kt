@@ -2,10 +2,12 @@ package com.example.prestamolab.data.sync
 
 import androidx.room.withTransaction
 import com.example.prestamolab.data.local.PrestamoLabDatabase
+import com.example.prestamolab.data.local.entity.ActivityEntity
 import com.example.prestamolab.data.local.entity.EquipmentEntity
 import com.example.prestamolab.data.local.entity.EstadoSincronizacion
 import com.example.prestamolab.data.local.entity.LoanEntity
 import com.example.prestamolab.data.local.entity.ReturnEntity
+import com.example.prestamolab.data.remote.ActividadRemota
 import com.example.prestamolab.data.remote.DevolucionRemota
 import com.example.prestamolab.data.remote.EquipoRemoto
 import com.example.prestamolab.data.remote.FechasSupabase
@@ -50,6 +52,7 @@ class SincronizadorPrestamos(
     private val equipmentDao = db.equipmentDao()
     private val loanDao = db.loanDao()
     private val returnDao = db.returnDao()
+    private val activityDao = db.activityDao()
 
     override suspend fun sincronizar(usuario: Usuario): ResultadoSincronizacion = try {
         val envio = enviarPendientes(usuario)
@@ -112,6 +115,23 @@ class SincronizadorPrestamos(
             loanDao.marcarEnviado(prestamo.id, prestamo.status, resultado)
             resumen.contar(resultado)
         }
+        // Solo el instructor mantiene las actividades (HU-11)
+        if (esInstructor) {
+            for (actividad in activityDao.pendientes()) {
+                if (actividad.deleted) {
+                    val resultado = enviar { remoto.eliminarActividad(actividad.remoteId) }
+                    if (resultado == EstadoSincronizacion.SINCRONIZADO) activityDao.borrar(actividad.id)
+                    else activityDao.restaurar(actividad.id)
+                    resumen.contar(resultado)
+                    continue
+                }
+                val resultado = enviar { remoto.guardarActividad(actividad.aRemoto()) }
+                with(actividad) {
+                    activityDao.marcarEnviada(id, title, description, location, scheduledAt, resultado)
+                }
+                resumen.contar(resultado)
+            }
+        }
         for (devolucion in returnDao.pendientes()) {
             val prestamo = loanDao.obtener(devolucion.loanId) ?: continue
             // Si su préstamo aún no está en Supabase, se intenta en la próxima sincronización
@@ -134,6 +154,9 @@ class SincronizadorPrestamos(
         if (e.codigo == 401 || e.codigo == 404 || esTemporal(e.codigo)) throw e
         EstadoSincronizacion.ERROR
     }
+
+    private fun ActivityEntity.aRemoto() =
+        ActividadRemota(remoteId, title, description, location, fechas.aIso(scheduledAt), instructorId)
 
     private fun EquipmentEntity.aRemoto() = EquipoRemoto(remoteId, name, category, status.name)
 
@@ -174,12 +197,15 @@ class SincronizadorPrestamos(
         val equipos = remoto.equipos()
         val prestamos = remoto.prestamos(filtro)
         val devoluciones = remoto.devoluciones(filtro)
+        val actividades = remoto.actividades()
 
         return db.withTransaction {
             borrarEquiposQueYaNoExisten(equipos.map { it.id }.toSet()) +
                 equipos.sumOf { guardarEquipo(it) } +
                 prestamos.sumOf { guardarPrestamo(it) } +
-                devoluciones.sumOf { guardarDevolucion(it) }
+                devoluciones.sumOf { guardarDevolucion(it) } +
+                borrarActividadesQueYaNoExisten(actividades.map { it.id }.toSet()) +
+                actividades.sumOf { guardarActividad(it) }
         }
     }
 
@@ -210,6 +236,31 @@ class SincronizadorPrestamos(
             .filter { it.remoteId !in remotos && loanDao.estadosPorEquipo(it.id).isEmpty() }
             .onEach { equipmentDao.borrar(it.id) }
             .size
+
+    private suspend fun borrarActividadesQueYaNoExisten(remotas: Set<String>): Int =
+        activityDao.sincronizadas()
+            .filter { it.remoteId !in remotas }
+            .onEach { activityDao.borrar(it.id) }
+            .size
+
+    private suspend fun guardarActividad(r: ActividadRemota): Int {
+        val local = activityDao.obtenerPorRemoteId(r.id)
+        val entidad = ActivityEntity(
+            id = local?.id ?: 0,
+            remoteId = r.id,
+            title = r.titulo,
+            description = r.descripcion,
+            location = r.ambiente,
+            scheduledAt = fechas.desdeIso(r.fecha),
+            instructorId = r.instructorId,
+            syncStatus = EstadoSincronizacion.SINCRONIZADO
+        )
+        return when {
+            local == null -> { activityDao.insertar(entidad); 1 }
+            local.syncStatus != EstadoSincronizacion.SINCRONIZADO || local == entidad -> 0
+            else -> { activityDao.actualizar(entidad); 1 }
+        }
+    }
 
     private suspend fun guardarPrestamo(r: PrestamoRemoto): Int {
         val estado = EstadoSolicitud.entries.find { it.name == r.estado } ?: return 0

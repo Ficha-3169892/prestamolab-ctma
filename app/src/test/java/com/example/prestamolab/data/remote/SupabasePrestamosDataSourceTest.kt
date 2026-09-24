@@ -206,6 +206,40 @@ class SupabasePrestamosDataSourceTest {
     }
 
     @Test
+    fun `Las actividades se reciben con los nombres de columna de Supabase`() = runTest {
+        responder(
+            200,
+            """[{"id":"a1","title":"Práctica de osciloscopio","description":null,"location":"Laboratorio 302",
+                "scheduled_at":"2026-10-01T13:00:00+00:00","instructor_id":"i1"}]"""
+        )
+
+        val actividad = remoto.actividades().single()
+
+        assertEquals(ActividadRemota("a1", "Práctica de osciloscopio", "", "Laboratorio 302", "2026-10-01T13:00:00+00:00", "i1"), actividad)
+        assertTrue(rutaDecodificada().startsWith("/rest/v1/activities?select=id,title,description,location,scheduled_at,instructor_id"))
+    }
+
+    @Test
+    fun `Guardar una actividad hace upsert y eliminarla envia DELETE`() = runTest {
+        responder(201, "")
+        responder(204, "")
+
+        remoto.guardarActividad(ActividadRemota("a1", "Taller", "Soldadura", "Lab 1", "2026-10-05T14:00:00-05:00", "i1"))
+        remoto.eliminarActividad("a1")
+
+        val upsert = servidor.takeRequest()
+        assertEquals("/rest/v1/activities", upsert.path)
+        assertEquals("resolution=merge-duplicates,return=minimal", upsert.getHeader("Prefer"))
+        val cuerpo = JSONObject(upsert.body.readUtf8())
+        assertEquals("Lab 1", cuerpo.getString("location"))
+        assertEquals("2026-10-05T14:00:00-05:00", cuerpo.getString("scheduled_at"))
+        assertEquals("i1", cuerpo.getString("instructor_id"))
+        val borrado = servidor.takeRequest()
+        assertEquals("DELETE", borrado.method)
+        assertEquals("/rest/v1/activities?id=eq.a1", borrado.path)
+    }
+
+    @Test
     fun `El estado del equipo se envia con PATCH y solo la columna status`() = runTest {
         responder(204, "")
 

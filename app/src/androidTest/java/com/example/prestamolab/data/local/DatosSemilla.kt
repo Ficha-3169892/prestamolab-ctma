@@ -1,5 +1,6 @@
 package com.example.prestamolab.data.local
 
+import com.example.prestamolab.data.local.entity.ActivityEntity
 import com.example.prestamolab.data.local.entity.EquipmentEntity
 import com.example.prestamolab.data.local.entity.EstadoSincronizacion
 import com.example.prestamolab.data.local.entity.LoanEntity
@@ -13,6 +14,7 @@ import com.example.prestamolab.testutil.FakeUsuariosDataSource
  */
 object DatosSemilla {
     private val ESTUDIANTE = FakeUsuariosDataSource.ESTUDIANTE.usuario.id
+    private val INSTRUCTOR = FakeUsuariosDataSource.INSTRUCTOR.usuario.id
 
     val equipos = listOf(
         equipo(1, "Multímetro Digital", "Herramienta", EstadoEquipo.DISPONIBLE),
@@ -37,6 +39,14 @@ object DatosSemilla {
         )
     )
 
+    /** Fecha lejana: la actividad semilla nunca queda en el pasado al editarla. */
+    val actividades = listOf(
+        ActivityEntity(
+            1, "ac710000-0000-4000-8000-000000000001", "Práctica de osciloscopio", "Medición de señales",
+            "Laboratorio 302", "2030-01-15 08:00", INSTRUCTOR, EstadoSincronizacion.SINCRONIZADO
+        )
+    )
+
     private fun equipo(id: Int, nombre: String, categoria: String, estado: EstadoEquipo) = EquipmentEntity(
         id, CatalogoInicial.remoteIdPorIdLocal.getValue(id), nombre, categoria, estado, EstadoSincronizacion.SINCRONIZADO
     )
@@ -46,6 +56,7 @@ object DatosSemilla {
         // runInTransaction avisa al InvalidationTracker, así los Flow de los DAO vuelven a emitir
         db.runInTransaction {
             val sql = db.openHelper.writableDatabase
+            sql.execSQL("DELETE FROM activities")
             sql.execSQL("DELETE FROM returns")
             sql.execSQL("DELETE FROM loans")
             sql.execSQL("DELETE FROM equipments")
@@ -54,6 +65,16 @@ object DatosSemilla {
                 sql.execSQL(
                     "INSERT INTO equipments (id, remote_id, name, category, status, sync_status) VALUES (?, ?, ?, ?, ?, ?)",
                     arrayOf(it.id, it.remoteId, it.name, it.category, it.status.name, it.syncStatus.name)
+                )
+            }
+            actividades.forEach {
+                sql.execSQL(
+                    "INSERT INTO activities (id, remote_id, title, description, location, scheduled_at, instructor_id, " +
+                        "sync_status, deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)",
+                    arrayOf(
+                        it.id, it.remoteId, it.title, it.description, it.location, it.scheduledAt, it.instructorId,
+                        it.syncStatus.name
+                    )
                 )
             }
             prestamos.forEach {

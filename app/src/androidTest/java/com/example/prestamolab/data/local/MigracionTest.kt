@@ -116,4 +116,26 @@ class MigracionTest {
             assertEquals(0, c.getInt(1))
         }
     }
+
+    @Test
+    fun MigracionDeV4AV5CreaLaTablaDeActividades() {
+        helper.createDatabase(nombreBase, 4).apply {
+            execSQL(
+                "INSERT INTO equipments (id, remote_id, name, category, status, sync_status, deleted) " +
+                    "VALUES (1, 'e1', 'Multímetro Digital', 'Herramienta', 'DISPONIBLE', 'SINCRONIZADO', 0)"
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(nombreBase, 5, true, MIGRACION_4_5)
+
+        db.query("SELECT COUNT(*) FROM activities").use { c ->
+            c.moveToNext()
+            assertEquals(0, c.getInt(0))
+        }
+        db.query("SELECT name FROM equipments").use { c ->
+            c.moveToNext()
+            assertEquals("Multímetro Digital", c.getString(0))
+        }
+    }
 }

@@ -65,3 +65,16 @@ val MIGRACION_3_4 = object : Migration(3, 4) {
         db.execSQL("ALTER TABLE equipments ADD COLUMN deleted INTEGER NOT NULL DEFAULT 0")
     }
 }
+
+/** v4 → v5: actividades formativas (HU-11), copia local de public.activities. */
+val MIGRACION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `activities` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`remote_id` TEXT NOT NULL, `title` TEXT NOT NULL, `description` TEXT NOT NULL, " +
+                "`location` TEXT NOT NULL, `scheduled_at` TEXT NOT NULL, `instructor_id` TEXT NOT NULL, " +
+                "`sync_status` TEXT NOT NULL, `deleted` INTEGER NOT NULL)"
+        )
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_activities_remote_id` ON `activities` (`remote_id`)")
+    }
+}

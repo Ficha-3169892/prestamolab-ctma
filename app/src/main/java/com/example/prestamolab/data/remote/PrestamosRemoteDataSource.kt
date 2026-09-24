@@ -43,6 +43,16 @@ data class DevolucionRemota(
     val longitud: Double?
 )
 
+/** Fila de `public.activities` (HU-11); la fecha va en ISO-8601. */
+data class ActividadRemota(
+    val id: String,
+    val titulo: String,
+    val descripcion: String,
+    val ambiente: String,
+    val fecha: String,
+    val instructorId: String
+)
+
 /**
  * Acceso a las tablas remotas. Lanza [SupabaseHttpException] ante respuestas fuera de 2xx
  * e IOException ante fallos de red o tiempo de espera agotado.
@@ -64,6 +74,11 @@ interface PrestamosRemoteDataSource {
     suspend fun eliminarEquipo(id: String)
     suspend fun guardarPrestamo(prestamo: PrestamoRemoto)
     suspend fun guardarDevolucion(devolucion: DevolucionRemota)
+
+    /** HU-11: todos reciben las actividades; solo el instructor las crea, edita o elimina. */
+    suspend fun actividades(): List<ActividadRemota>
+    suspend fun guardarActividad(actividad: ActividadRemota)
+    suspend fun eliminarActividad(id: String)
 }
 
 class SupabasePrestamosDataSource(private val cliente: SupabaseRestClient) : PrestamosRemoteDataSource {
@@ -169,6 +184,32 @@ class SupabasePrestamosDataSource(private val cliente: SupabaseRestClient) : Pre
             .put("longitude", devolucion.longitud ?: JSONObject.NULL)
             .toString()
     )
+
+    override suspend fun actividades(): List<ActividadRemota> =
+        filas(cliente.get("activities?select=id,title,description,location,scheduled_at,instructor_id&order=scheduled_at")).map {
+            ActividadRemota(
+                id = it.getString("id"),
+                titulo = it.getString("title"),
+                descripcion = it.textoONulo("description").orEmpty(),
+                ambiente = it.textoONulo("location").orEmpty(),
+                fecha = it.getString("scheduled_at"),
+                instructorId = it.getString("instructor_id")
+            )
+        }
+
+    override suspend fun guardarActividad(actividad: ActividadRemota) = cliente.upsert(
+        "activities",
+        JSONObject()
+            .put("id", actividad.id)
+            .put("title", actividad.titulo)
+            .put("description", actividad.descripcion)
+            .put("location", actividad.ambiente)
+            .put("scheduled_at", actividad.fecha)
+            .put("instructor_id", actividad.instructorId)
+            .toString()
+    )
+
+    override suspend fun eliminarActividad(id: String) = cliente.delete("activities?id=eq.${codificar(id)}")
 
     private fun filas(json: String): List<JSONObject> {
         val arreglo = JSONArray(json)

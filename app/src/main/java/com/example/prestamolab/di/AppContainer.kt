@@ -15,7 +15,9 @@ import com.example.prestamolab.data.location.LocationProvider
 import com.example.prestamolab.data.remote.PrestamosRemoteDataSource
 import com.example.prestamolab.data.remote.SupabasePrestamosDataSource
 import com.example.prestamolab.data.remote.SupabaseRestClient
+import com.example.prestamolab.data.repository.ActividadRepository
 import com.example.prestamolab.data.repository.PrestamoRepository
+import com.example.prestamolab.data.repository.RoomActividadRepository
 import com.example.prestamolab.data.repository.RoomPrestamoRepository
 import com.example.prestamolab.data.sync.AvisosSincronizacion
 import com.example.prestamolab.data.sync.CoordinadorSincronizacion
@@ -56,6 +58,10 @@ class AppContainer(context: Context) {
 
     val prestamoRepository: PrestamoRepository by lazy {
         RoomPrestamoRepository(database, alCambiarLocalmente = { programadorSincronizacion.sincronizarAhora() })
+    }
+
+    val actividadRepository: ActividadRepository by lazy {
+        RoomActividadRepository(database, alCambiarLocalmente = { programadorSincronizacion.sincronizarAhora() })
     }
 
     var locationProvider: LocationProvider = FusedLocationProvider(appContext)

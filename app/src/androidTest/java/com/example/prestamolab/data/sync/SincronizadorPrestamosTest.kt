@@ -7,13 +7,17 @@ import com.example.prestamolab.data.local.CatalogoInicial
 import com.example.prestamolab.data.local.DatosSemilla
 import com.example.prestamolab.data.local.PrestamoLabDatabase
 import com.example.prestamolab.data.local.entity.EstadoSincronizacion
+import com.example.prestamolab.data.remote.ActividadRemota
 import com.example.prestamolab.data.remote.DevolucionRemota
 import com.example.prestamolab.data.remote.EquipoRemoto
 import com.example.prestamolab.data.remote.FechasSupabase
 import com.example.prestamolab.data.remote.PrestamoRemoto
 import com.example.prestamolab.data.remote.SupabaseHttpException
+import com.example.prestamolab.data.repository.RoomActividadRepository
 import com.example.prestamolab.data.repository.RoomPrestamoRepository
 import com.example.prestamolab.model.CondicionEquipo
+import com.example.prestamolab.model.DatosActividad
+import com.example.prestamolab.model.ReglasActividad
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.NuevaDevolucion
@@ -369,5 +373,59 @@ class SincronizadorPrestamosTest {
         // Los equipos 2 y 5 tienen préstamos: se conservan para no perder el historial
         assertNotNull(repository.obtenerEquipo(2))
         assertNotNull(repository.obtenerEquipo(5))
+    }
+
+    private fun actividades() = RoomActividadRepository(db, reloj = { fechaFija("2026-09-24 08:00") })
+
+    private fun fechaFija(texto: String) = ReglasActividad.aInstante(texto)!!
+
+    @Test
+    fun ElInstructorEnviaLaActividadNuevaConFechaIso() = runTest {
+        val repositorio = actividades()
+        val creada = repositorio.crear(
+            DatosActividad("Taller de soldadura", "SMD", "Lab 1", "2026-10-05 14:00"), instructor.id
+        ).getOrThrow()
+
+        sincronizador.sincronizar(instructor)
+
+        val enviada = remoto.actividades.single { it.titulo == "Taller de soldadura" }
+        assertEquals(fechas.aIso("2026-10-05 14:00"), enviada.fecha)
+        assertEquals(instructor.id, enviada.instructorId)
+        assertEquals(EstadoSincronizacion.SINCRONIZADO, db.activityDao().obtener(creada.id)?.syncStatus)
+    }
+
+    @Test
+    fun ElEstudianteNoEnviaActividades() = runTest {
+        // Una actividad pendiente en el teléfono del estudiante no debería existir; si existe, no se envía
+        db.activityDao().marcarEliminada(1)
+
+        sincronizador.sincronizar(estudiante)
+
+        assertTrue(remoto.actividadesEliminadas.isEmpty())
+    }
+
+    @Test
+    fun LaEliminacionDeUnaActividadSeEnviaYLaBorraDelTelefono() = runTest {
+        val remoteId = DatosSemilla.actividades.single().remoteId
+        actividades().eliminar(1).getOrThrow()
+
+        sincronizador.sincronizar(instructor)
+
+        assertEquals(listOf(remoteId), remoto.actividadesEliminadas)
+        assertNull(db.activityDao().obtenerPorRemoteId(remoteId))
+    }
+
+    @Test
+    fun ElEstudianteRecibeLasActividadesYSeBorranLasQueYaNoExisten() = runTest {
+        remoto.actividades += ActividadRemota(
+            "a-nueva", "Taller de redes", "", "Lab 5", "2026-10-10T13:00:00+00:00", instructor.id
+        )
+
+        sincronizador.sincronizar(estudiante)
+
+        val lista = actividades().actividades.first()
+        // La semilla (SINCRONIZADA) ya no está en Supabase: se borra; la nueva llega con hora local
+        assertEquals(listOf("Taller de redes"), lista.map { it.titulo })
+        assertEquals(fechas.desdeIso("2026-10-10T13:00:00+00:00"), lista.single().fecha)
     }
 }

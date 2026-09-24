@@ -13,7 +13,7 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | [HU-01](HU01.md) | Consultar equipos disponibles | Alta | 6 | 5 | 1 |
 | [HU-02](HU02.md) | Consultar detalle de un equipo | Alta | 6 | 4 | 4 |
 | [HU-06](HU06.md) | Conservar datos localmente sin conexión | Alta | 6 | 5 | 3 |
-| [HU-11](HU11.md) | Gestionar actividades formativas (instructor) | Media | 6 | 5 | 0 |
+| [HU-11](HU11.md) | Gestionar actividades formativas (instructor) | Media | 6 | 5 | 5 |
 | [HU-12](HU12.md) | Gestionar inventario de equipos (instructor) | Media | 6 | 5 | 5 |
 | [HU-03](HU03.md) | Solicitar préstamo | Alta | 7 | 8 | 8 |
 | [HU-04](HU04.md) | Consultar mis préstamos activos | Alta | 7 | 6 | 3 |
@@ -22,7 +22,7 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | [HU-08](HU08.md) | Adjuntar evidencia fotográfica | Media | 8 | 5 | 0 |
 | [HU-09](HU09.md) | Recibir recordatorio de devolución | Media | 9 | 4 | 0 |
 
-**Total:** 74 criterios, 74 casos de prueba, 48 ya automatizados.
+**Total:** 74 criterios, 74 casos de prueba, 53 ya automatizados.
 
 ## Matriz HU → CA → TC → prueba
 
@@ -82,11 +82,11 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU10 | CA-HU10-05 | TC-HU10-05 | Unitaria | `SesionViewModelTest.TC-HU10-05; LoginUiTest.TC_HU10_05_CerrarSesion_VuelveAlLogin` |
 | HU10 | CA-HU10-06 | TC-HU10-06 | UI | `ControlAccesoTest.TC-HU10-06; LoginUiTest.TC_HU10_06_Estudiante_NoVeGestion` |
 | HU10 | CA-HU10-07 | TC-HU10-07 | UI | `ControlAccesoTest.TC-HU10-07; LoginUiTest.TC_HU10_07_Instructor_IniciaEnGestion` |
-| HU11 | CA-HU11-01 | TC-HU11-01 | Integración | Pendiente |
-| HU11 | CA-HU11-02 | TC-HU11-02 | Unitaria | Pendiente |
-| HU11 | CA-HU11-03 | TC-HU11-03 | Integración | Pendiente |
-| HU11 | CA-HU11-04 | TC-HU11-04 | UI | Pendiente |
-| HU11 | CA-HU11-05 | TC-HU11-05 | UI | Pendiente |
+| HU11 | CA-HU11-01 | TC-HU11-01 | Integración | `RoomActividadRepositoryTest.TC_HU11_01_CrearActividad_QuedaGuardadaYApareceEnLaLista; ActividadesViewModelTest.TC-HU11-01; ActividadesUiTest.TC_HU11_01_CrearActividad_ApareceEnLaLista` |
+| HU11 | CA-HU11-02 | TC-HU11-02 | Unitaria | `ReglasActividadTest.TC_HU11_02_TituloVacio_MuestraErrorDelCampo; ReglasActividadTest.TC_HU11_02_FechaPasada_MuestraErrorDelCampo; ActividadesUiTest.TC_HU11_02_TituloVacioYFechaPasada_MuestranErroresYNoSeGuarda` |
+| HU11 | CA-HU11-03 | TC-HU11-03 | Integración | `RoomActividadRepositoryTest.TC_HU11_03_EditarActividad_ReflejaLosCambios; ActividadesUiTest.TC_HU11_03_EditarActividad_SeReflejaEnLaLista` |
+| HU11 | CA-HU11-04 | TC-HU11-04 | UI | `ActividadesUiTest.TC_HU11_04_EliminarConConfirmacion_YCancelarLaConserva; RoomActividadRepositoryTest.TC_HU11_04_EliminarActividad_DesapareceYQuedaPendienteDeEnviar` |
+| HU11 | CA-HU11-05 | TC-HU11-05 | UI | `ActividadesUiTest.TC_HU11_05_ElEstudianteVeLasActividadesEnSoloLectura; ControlAccesoTest.TC-HU11-05; ActividadesViewModelTest.TC-HU11-05` |
 | HU12 | CA-HU12-01 | TC-HU12-01 | Integración | `RoomPrestamoRepositoryTest.TC_HU12_01_RegistrarEquipo_QuedaDisponibleEnElCatalogoYPendienteDeEnviar; InventarioViewModelTest.TC-HU12-01; InventarioUiTest.TC_HU12_01_RegistrarEquipo_ApareceDisponibleEnElCatalogo` |
 | HU12 | CA-HU12-02 | TC-HU12-02 | Unitaria | `ReglasInventarioTest.TC_HU12_02_NombreVacio_MuestraErrorDelCampo; InventarioViewModelTest.TC-HU12-02; InventarioUiTest.TC_HU12_02_CamposVacios_MuestranErroresYNoSeGuarda` |
 | HU12 | CA-HU12-03 | TC-HU12-03 | Integración | `RoomPrestamoRepositoryTest.TC_HU12_03_EditarEquipo_CambiaCatalogoYDetalle; InventarioUiTest.TC_HU12_03_EditarEquipo_SeVeEnElCatalogoYEnElDetalle` |

@@ -25,6 +25,10 @@ import androidx.navigation.navArgument
 import com.example.prestamolab.model.Usuario
 import com.example.prestamolab.ui.EventoPrestamo
 import com.example.prestamolab.ui.PrestamoViewModel
+import com.example.prestamolab.ui.actividades.ActividadFormularioScreen
+import com.example.prestamolab.ui.actividades.ActividadesScreen
+import com.example.prestamolab.ui.actividades.ActividadesViewModel
+import com.example.prestamolab.ui.actividades.EventoActividad
 import com.example.prestamolab.ui.auth.LoginScreen
 import com.example.prestamolab.ui.auth.LoginViewModel
 import com.example.prestamolab.ui.catalogo.CatalogScreen
@@ -82,6 +86,7 @@ private data class DestinoPrincipal(val etiqueta: String, val icono: String)
 private val DESTINOS = mapOf(
     Rutas.CATALOGO to DestinoPrincipal("Catálogo", "📦"),
     Rutas.MIS_SOLICITUDES to DestinoPrincipal("Mis Solicitudes", "📋"),
+    Rutas.ACTIVIDADES to DestinoPrincipal("Actividades", "📅"),
     Rutas.GESTION to DestinoPrincipal("Gestión", "🛠")
 )
 
@@ -89,6 +94,7 @@ private val DESTINOS = mapOf(
 private fun destinoPrincipalDe(ruta: String?): String? = when (ruta) {
     Rutas.DETALLE_EQUIPO, Rutas.SOLICITUD -> Rutas.CATALOGO
     Rutas.REVISAR_SOLICITUDES, Rutas.INVENTARIO, Rutas.NUEVO_EQUIPO, Rutas.EDITAR_EQUIPO -> Rutas.GESTION
+    Rutas.NUEVA_ACTIVIDAD, Rutas.EDITAR_ACTIVIDAD -> Rutas.ACTIVIDADES
     else -> ruta
 }
 
@@ -261,7 +267,8 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
                     RutaProtegida(Rutas.GESTION, usuario, onVolver = { navController.popBackStack() }) {
                         GestionScreen(
                             onRevisarSolicitudesClick = { navController.navigate(Rutas.REVISAR_SOLICITUDES) },
-                            onInventarioClick = { navController.navigate(Rutas.INVENTARIO) }
+                            onInventarioClick = { navController.navigate(Rutas.INVENTARIO) },
+                            onActividadesClick = { navController.irADestinoPrincipal(Rutas.ACTIVIDADES) }
                         )
                     }
                 }
@@ -292,6 +299,34 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
                         )
                     }
                 }
+                composable(Rutas.ACTIVIDADES) {
+                    RutaProtegida(Rutas.ACTIVIDADES, usuario, onVolver = { navController.popBackStack() }) {
+                        val viewModel: ActividadesViewModel = viewModel(factory = ActividadesViewModel.factory(usuario))
+                        val estado by viewModel.uiState.collectAsState()
+                        ActividadesScreen(
+                            actividades = estado.actividades,
+                            puedeGestionar = estado.puedeGestionar,
+                            mensajeError = estado.mensajeError,
+                            onNuevaClick = { navController.navigate(Rutas.NUEVA_ACTIVIDAD) },
+                            onEditarClick = { id -> navController.navigate(Rutas.editarActividad(id)) },
+                            onEliminarClick = viewModel::eliminarActividad
+                        )
+                    }
+                }
+                composable(Rutas.NUEVA_ACTIVIDAD) {
+                    RutaProtegida(Rutas.NUEVA_ACTIVIDAD, usuario, onVolver = { navController.popBackStack() }) {
+                        FormularioActividadRuta(usuario, actividadId = null, onVolver = { navController.popBackStack() })
+                    }
+                }
+                composable(
+                    route = Rutas.EDITAR_ACTIVIDAD,
+                    arguments = listOf(navArgument(Rutas.ARG_ACTIVIDAD_ID) { type = NavType.IntType })
+                ) { entrada ->
+                    val actividadId = entrada.arguments?.getInt(Rutas.ARG_ACTIVIDAD_ID) ?: -1
+                    RutaProtegida(Rutas.EDITAR_ACTIVIDAD, usuario, onVolver = { navController.popBackStack() }) {
+                        FormularioActividadRuta(usuario, actividadId, onVolver = { navController.popBackStack() })
+                    }
+                }
                 composable(Rutas.NUEVO_EQUIPO) {
                     RutaProtegida(Rutas.NUEVO_EQUIPO, usuario, onVolver = { navController.popBackStack() }) {
                         FormularioEquipoRuta(usuario, equipoId = null, onVolver = { navController.popBackStack() })
@@ -309,6 +344,33 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
             }
         }
     }
+}
+
+/** Formulario de actividad: [actividadId] null crea una nueva; al guardar vuelve a la lista. */
+@Composable
+private fun FormularioActividadRuta(usuario: Usuario, actividadId: Int?, onVolver: () -> Unit) {
+    val viewModel: ActividadesViewModel = viewModel(factory = ActividadesViewModel.factory(usuario))
+    val estado by viewModel.uiState.collectAsState()
+    LaunchedEffect(viewModel) {
+        actividadId?.let(viewModel::editarActividad)
+        viewModel.eventos.collect { evento ->
+            when (evento) {
+                EventoActividad.ActividadGuardada -> onVolver()
+            }
+        }
+    }
+    ActividadFormularioScreen(
+        formulario = estado.formulario,
+        esNueva = actividadId == null,
+        actividadNoEncontrada = estado.actividadNoEncontrada,
+        mensajeError = estado.mensajeError,
+        onTituloChange = viewModel::onTituloChanged,
+        onDescripcionChange = viewModel::onDescripcionChanged,
+        onAmbienteChange = viewModel::onAmbienteChanged,
+        onFechaChange = viewModel::onFechaChanged,
+        onGuardarClick = viewModel::guardar,
+        onAtrasClick = onVolver
+    )
 }
 
 /** Formulario de equipo: [equipoId] null registra uno nuevo; al guardar vuelve al inventario. */

@@ -10,15 +10,19 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-private data class SeccionGestion(val titulo: String, val detalle: String, val onClick: (() -> Unit)? = null)
+private data class SeccionGestion(val titulo: String, val detalle: String, val onClick: () -> Unit)
 
-/** Menú de gestión del instructor. Las secciones sin acción se implementan en el sprint indicado. */
+/** Menú de gestión del instructor. */
 @Composable
-fun GestionScreen(onRevisarSolicitudesClick: () -> Unit, onInventarioClick: () -> Unit) {
+fun GestionScreen(
+    onRevisarSolicitudesClick: () -> Unit,
+    onInventarioClick: () -> Unit,
+    onActividadesClick: () -> Unit
+) {
     val secciones = listOf(
         SeccionGestion("Revisar solicitudes", "Aprobar o rechazar préstamos pendientes", onRevisarSolicitudesClick),
         SeccionGestion("Inventario de equipos", "Registrar, editar y eliminar equipos", onInventarioClick),
-        SeccionGestion("Actividades formativas", "Próximamente: HU-11 · Sprint 6")
+        SeccionGestion("Actividades formativas", "Programar, editar y eliminar actividades", onActividadesClick)
     )
 
     Column(
@@ -37,8 +41,7 @@ fun GestionScreen(onRevisarSolicitudesClick: () -> Unit, onInventarioClick: () -
         )
         secciones.forEach { seccion ->
             Card(
-                onClick = { seccion.onClick?.invoke() },
-                enabled = seccion.onClick != null,
+                onClick = seccion.onClick,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F7FA))

@@ -10,7 +10,10 @@ class ControlAccesoTest {
     fun `TC-HU10-06 - El estudiante no puede acceder a la ruta de gestion`() {
         assertFalse(ControlAcceso.puedeAcceder(Rutas.GESTION, Rol.ESTUDIANTE))
         assertTrue(ControlAcceso.puedeAcceder(Rutas.CATALOGO, Rol.ESTUDIANTE))
-        assertEquals(listOf(Rutas.CATALOGO, Rutas.MIS_SOLICITUDES), ControlAcceso.destinosPrincipales(Rol.ESTUDIANTE))
+        assertEquals(
+            listOf(Rutas.CATALOGO, Rutas.MIS_SOLICITUDES, Rutas.ACTIVIDADES),
+            ControlAcceso.destinosPrincipales(Rol.ESTUDIANTE)
+        )
     }
 
     @Test
@@ -18,7 +21,7 @@ class ControlAccesoTest {
         assertTrue(ControlAcceso.puedeAcceder(Rutas.GESTION, Rol.INSTRUCTOR))
         assertTrue(ControlAcceso.puedeAcceder(Rutas.CATALOGO, Rol.INSTRUCTOR))
         assertTrue(ControlAcceso.puedeAcceder(Rutas.DETALLE_EQUIPO, Rol.INSTRUCTOR))
-        assertEquals(listOf(Rutas.CATALOGO, Rutas.GESTION), ControlAcceso.destinosPrincipales(Rol.INSTRUCTOR))
+        assertEquals(listOf(Rutas.CATALOGO, Rutas.ACTIVIDADES, Rutas.GESTION), ControlAcceso.destinosPrincipales(Rol.INSTRUCTOR))
     }
 
     @Test
@@ -34,6 +37,17 @@ class ControlAccesoTest {
             assertFalse(it, ControlAcceso.puedeAcceder(it, Rol.ESTUDIANTE))
         }
         assertEquals("gestion/inventario/7/editar", Rutas.editarEquipo(7))
+    }
+
+    @Test
+    fun `TC-HU11-05 - Ambos roles consultan actividades y solo el instructor las edita`() {
+        assertTrue(ControlAcceso.puedeAcceder(Rutas.ACTIVIDADES, Rol.ESTUDIANTE))
+        assertTrue(ControlAcceso.puedeAcceder(Rutas.ACTIVIDADES, Rol.INSTRUCTOR))
+        listOf(Rutas.NUEVA_ACTIVIDAD, Rutas.EDITAR_ACTIVIDAD).forEach {
+            assertTrue(it, ControlAcceso.puedeAcceder(it, Rol.INSTRUCTOR))
+            assertFalse(it, ControlAcceso.puedeAcceder(it, Rol.ESTUDIANTE))
+        }
+        assertEquals("actividades/4/editar", Rutas.editarActividad(4))
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.example.prestamolab.testutil
 
+import com.example.prestamolab.data.remote.ActividadRemota
 import com.example.prestamolab.data.remote.DevolucionRemota
 import com.example.prestamolab.data.remote.EquipoRemoto
 import com.example.prestamolab.data.remote.PrestamoRemoto
@@ -61,6 +62,26 @@ class FakePrestamosRemoteDataSource : PrestamosRemoteDataSource {
         errorAlEliminarEquipo?.let { throw it }
         equiposEliminados += id
         equipos.removeAll { it.id == id }
+    }
+
+    val actividades = mutableListOf<ActividadRemota>()
+    val actividadesEliminadas = mutableListOf<String>()
+
+    override suspend fun actividades(): List<ActividadRemota> {
+        lanzarSiHayError()
+        return actividades.toList()
+    }
+
+    override suspend fun guardarActividad(actividad: ActividadRemota) {
+        lanzarSiHayError()
+        actividades.removeAll { it.id == actividad.id }
+        actividades += actividad
+    }
+
+    override suspend fun eliminarActividad(id: String) {
+        lanzarSiHayError()
+        actividadesEliminadas += id
+        actividades.removeAll { it.id == id }
     }
 
     override suspend fun guardarPrestamo(prestamo: PrestamoRemoto) {
