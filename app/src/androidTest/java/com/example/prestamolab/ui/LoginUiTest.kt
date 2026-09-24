@@ -87,7 +87,7 @@ class LoginUiTest {
     @Test
     fun TC_HU03_08_Instructor_NoVeSolicitarPrestamo() {
         composeTestRule.iniciarSesionComoInstructor()
-        composeTestRule.onNodeWithText("Ver catálogo de equipos").performClick()
+        composeTestRule.onNodeWithText("Catálogo").performClick()
 
         composeTestRule.onNodeWithText("Multímetro Digital").performClick()
 

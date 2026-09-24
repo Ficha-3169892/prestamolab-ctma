@@ -2,6 +2,7 @@ package com.example.prestamolab.ui
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.prestamolab.MainActivity
 import org.junit.Before
@@ -136,6 +137,26 @@ class PrestamoUiTest {
     }
 
     @Test
+    fun TC17_AtrasDelSistema_DesdeElDetalle_VuelveAlCatalogo() {
+        composeTestRule.onNodeWithText("Multímetro Digital").performClick()
+        composeTestRule.onNodeWithText("Detalle del Equipo").assertIsDisplayed()
+
+        Espresso.pressBack()
+
+        composeTestRule.onNodeWithText("Catálogo de Equipos - PréstamoLab").assertIsDisplayed()
+    }
+
+    @Test
+    fun AtrasTrasSolicitar_VuelveAlCatalogoYNoAlFormulario() {
+        TC14_FlujoCompleto_CrearSolicitud()
+
+        Espresso.pressBack()
+
+        composeTestRule.onNodeWithText("Catálogo de Equipos - PréstamoLab").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Ambiente o Destino").assertDoesNotExist()
+    }
+
+    @Test
     fun TC18_Accesibilidad_SemanticaDeIconos() {
         composeTestRule.onNodeWithText("Catálogo").assertIsDisplayed()
         composeTestRule.onAllNodesWithText("Mis Solicitudes")[0].assertIsDisplayed()
@@ -156,7 +177,7 @@ class PrestamoUiTest {
         composeTestRule.onNodeWithText("Mis Solicitudes (2)").assertIsDisplayed()
 
         composeTestRule.onNodeWithText("Catálogo").performClick()
-        composeTestRule.onNodeWithText("PréstamoLab CTMA").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Multímetro Digital").assertIsDisplayed()
     }
 
     @Test

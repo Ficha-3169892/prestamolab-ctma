@@ -8,6 +8,7 @@ import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.Rol
 import com.example.prestamolab.model.Usuario
+import app.cash.turbine.test
 import com.example.prestamolab.testutil.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -40,26 +41,34 @@ class PrestamoViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.equipos.isEmpty())
         assertFalse(state.solicitudes.isEmpty())
-        assertEquals(SeccionApp.CATALOGO, state.seccionActual)
     }
 
     @Test
     fun `TC-02 - Seleccionar equipo valido actualiza el estado correctamente`() {
         val equipo = viewModel.uiState.value.equipos.first()
         viewModel.seleccionarEquipoParaDetalle(equipo)
-        
+
         val state = viewModel.uiState.value
         assertEquals(equipo, state.equipoSeleccionado)
-        assertEquals(SeccionApp.DETALLE_EQUIPO, state.seccionActual)
+        assertNull(state.equipoNoEncontrado)
     }
 
     @Test
     fun `TC-03 - Seleccionar equipo inexistente pone equipoSeleccionado como null`() {
         viewModel.seleccionarEquipoPorId(999)
-        
+
         val state = viewModel.uiState.value
         assertNull(state.equipoSeleccionado)
-        assertEquals(SeccionApp.DETALLE_EQUIPO, state.seccionActual)
+        // La ruta equipo/999 muestra "Equipo no encontrado" en lugar de quedarse cargando
+        assertEquals(999, state.equipoNoEncontrado)
+    }
+
+    @Test
+    fun `Seleccionar por id un equipo existente lo carga desde el repositorio`() {
+        viewModel.seleccionarEquipoPorId(4)
+
+        assertEquals("Fuente de Poder DC", viewModel.uiState.value.equipoSeleccionado?.nombre)
+        assertNull(viewModel.uiState.value.equipoNoEncontrado)
     }
 
     @Test
@@ -239,7 +248,7 @@ class PrestamoViewModelTest {
 
         val solicitud = viewModel.uiState.value.solicitudes.find { it.id == idSolicitud }
         assertEquals(EstadoSolicitud.CANCELADA, solicitud?.estado)
-        
+
         val equipo = viewModel.uiState.value.equipos.find { it.id == 2 }
         assertEquals(EstadoEquipo.DISPONIBLE, equipo?.estado)
     }
@@ -249,21 +258,27 @@ class PrestamoViewModelTest {
         val id = 1
         viewModel.cancelarSolicitud(id)
         val estadoIntermedio = viewModel.uiState.value.solicitudes.find { it.id == id }?.estado
-        
+
         viewModel.cancelarSolicitud(id)
-        
+
         val estadoFinal = viewModel.uiState.value.solicitudes.find { it.id == id }?.estado
         assertEquals(EstadoSolicitud.CANCELADA, estadoIntermedio)
         assertEquals(EstadoSolicitud.CANCELADA, estadoFinal)
     }
 
     @Test
-    fun `TC-17 - Navegar entre secciones actualiza seccionActual correctamente`() {
-        viewModel.navegarA(SeccionApp.MIS_SOLICITUDES)
-        assertEquals(SeccionApp.MIS_SOLICITUDES, viewModel.uiState.value.seccionActual)
-        
-        viewModel.navegarA(SeccionApp.CATALOGO)
-        assertEquals(SeccionApp.CATALOGO, viewModel.uiState.value.seccionActual)
+    fun `Solicitud valida emite SolicitudRegistrada para que el NavHost vaya a Mis Solicitudes`() = runTest {
+        viewModel.eventos.test {
+            viewModel.seleccionarEquipoParaDetalle(viewModel.uiState.value.equipos.first { it.id == 3 })
+            viewModel.onAmbienteChanged("Lab 305")
+            viewModel.onPropositoChanged("Practica de Redes")
+            viewModel.onDuracionChanged("4")
+
+            viewModel.guardarSolicitud()
+
+            val id = viewModel.uiState.value.solicitudes.last().id
+            assertEquals(EventoPrestamo.SolicitudRegistrada(id), awaitItem())
+        }
     }
 
     @Test
@@ -298,7 +313,8 @@ class PrestamoViewModelTest {
         val state = vm.uiState.value
         assertEquals("El equipo no está disponible", state.mensajeError)
         assertFalse(state.guardando)
-        assertNotEquals(SeccionApp.MIS_SOLICITUDES, state.seccionActual)
+        // Sin evento no hay navegación: el usuario sigue en el formulario
+        vm.eventos.test { expectNoEvents() }
     }
 
     @Test

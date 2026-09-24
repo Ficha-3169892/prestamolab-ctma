@@ -14,21 +14,26 @@ import com.example.prestamolab.model.NuevaSolicitud
 import com.example.prestamolab.model.Rol
 import com.example.prestamolab.model.SolicitudPrestamo
 import com.example.prestamolab.model.Usuario
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class SeccionApp {
-    CATALOGO, DETALLE_EQUIPO, FORMULARIO, MIS_SOLICITUDES
+/** Eventos de una sola vez que el NavHost convierte en navegación. */
+sealed interface EventoPrestamo {
+    data class SolicitudRegistrada(val solicitudId: Int) : EventoPrestamo
 }
 
 data class PrestamoUiState(
-    val seccionActual: SeccionApp = SeccionApp.CATALOGO,
     val equipos: List<Equipo> = emptyList(),
     val solicitudes: List<SolicitudPrestamo> = emptyList(),
     val equipoSeleccionado: Equipo? = null,
+    /** Id pedido por la ruta que no existe en el repositorio (CA-HU02-02). */
+    val equipoNoEncontrado: Int? = null,
     val ambiente: String = "",
     val proposito: String = "",
     val duracionHoras: String = "1",
@@ -51,6 +56,9 @@ class PrestamoViewModel(
 
     private val _uiState = MutableStateFlow(PrestamoUiState())
     val uiState: StateFlow<PrestamoUiState> = _uiState.asStateFlow()
+
+    private val _eventos = Channel<EventoPrestamo>(Channel.BUFFERED)
+    val eventos: Flow<EventoPrestamo> = _eventos.receiveAsFlow()
 
     init {
         cargarDatosIniciales()
@@ -82,33 +90,24 @@ class PrestamoViewModel(
 
     fun descartarAvisoSincronizacion() = avisos.descartar()
 
-    fun navegarA(seccion: SeccionApp) {
-        _uiState.update { it.copy(seccionActual = seccion) }
-    }
-
     fun seleccionarEquipoParaDetalle(equipo: Equipo) {
-        _uiState.update {
-            it.copy(
-                equipoSeleccionado = equipo,
-                seccionActual = SeccionApp.DETALLE_EQUIPO
-            )
-        }
+        _uiState.update { it.copy(equipoSeleccionado = equipo, equipoNoEncontrado = null) }
     }
 
+    /** Lo usan las rutas `equipo/{id}` y `equipo/{id}/solicitud`, que solo reciben el id. */
     fun seleccionarEquipoPorId(id: Int) {
+        if (_uiState.value.equipoSeleccionado?.id == id) return
         viewModelScope.launch {
             val equipo = repository.obtenerEquipo(id)
             _uiState.update {
-                it.copy(
-                    equipoSeleccionado = equipo,
-                    seccionActual = SeccionApp.DETALLE_EQUIPO
-                )
+                it.copy(equipoSeleccionado = equipo, equipoNoEncontrado = if (equipo == null) id else null)
             }
         }
     }
 
-    fun irAFormulario() {
-        _uiState.update { it.copy(seccionActual = SeccionApp.FORMULARIO, mensajeError = null) }
+    /** Al abrir el formulario no se arrastra el error de un intento anterior. */
+    fun limpiarMensajeError() {
+        _uiState.update { it.copy(mensajeError = null) }
     }
 
     fun onAmbienteChanged(nuevoAmbiente: String) {
@@ -189,10 +188,9 @@ class PrestamoViewModel(
 
         viewModelScope.launch {
             repository.crearSolicitud(nueva)
-                .onSuccess {
+                .onSuccess { solicitud ->
                     _uiState.update { state ->
                         state.copy(
-                            seccionActual = SeccionApp.MIS_SOLICITUDES,
                             equipoSeleccionado = null,
                             ambiente = "",
                             proposito = "",
@@ -203,6 +201,7 @@ class PrestamoViewModel(
                             guardando = false
                         )
                     }
+                    _eventos.send(EventoPrestamo.SolicitudRegistrada(solicitud.id))
                 }
                 .onFailure { error ->
                     _uiState.update {
