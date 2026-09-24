@@ -15,9 +15,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class LoginUiState(
-    val correo: String = "",
+    /** Correo institucional o número de documento. */
+    val identificador: String = "",
     val contrasena: String = "",
-    val errorCorreo: String? = null,
+    val errorIdentificador: String? = null,
     val errorContrasena: String? = null,
     val mensajeError: String? = null,
     val cargando: Boolean = false
@@ -28,8 +29,8 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    fun onCorreoChanged(correo: String) {
-        _uiState.update { it.copy(correo = correo, errorCorreo = null, mensajeError = null) }
+    fun onIdentificadorChanged(identificador: String) {
+        _uiState.update { it.copy(identificador = identificador, errorIdentificador = null, mensajeError = null) }
     }
 
     fun onContrasenaChanged(contrasena: String) {
@@ -44,21 +45,23 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
         val estado = _uiState.value
         if (estado.cargando) return
 
-        val correo = estado.correo.trim()
-        val errorCorreo = when {
-            correo.isEmpty() -> "El correo es obligatorio."
-            !FORMATO_CORREO.matches(correo) -> "Ingresa un correo válido."
+        val identificador = estado.identificador.trim()
+        val errorIdentificador = when {
+            identificador.isEmpty() -> "El correo o documento es obligatorio."
+            '@' in identificador && !FORMATO_CORREO.matches(identificador) -> "Ingresa un correo válido."
+            '@' !in identificador && !FORMATO_DOCUMENTO.matches(identificador) ->
+                "El documento debe tener entre 5 y 20 letras o números."
             else -> null
         }
         val errorContrasena = if (estado.contrasena.isEmpty()) "La contraseña es obligatoria." else null
-        if (errorCorreo != null || errorContrasena != null) {
-            _uiState.update { it.copy(errorCorreo = errorCorreo, errorContrasena = errorContrasena) }
+        if (errorIdentificador != null || errorContrasena != null) {
+            _uiState.update { it.copy(errorIdentificador = errorIdentificador, errorContrasena = errorContrasena) }
             return
         }
 
         _uiState.update { it.copy(cargando = true, mensajeError = null) }
         viewModelScope.launch {
-            val resultado = authRepository.iniciarSesion(correo, estado.contrasena)
+            val resultado = authRepository.iniciarSesion(identificador, estado.contrasena)
             _uiState.update { actual ->
                 resultado.fold(
                     onSuccess = { actual.copy(cargando = false, contrasena = "") },
@@ -77,6 +80,8 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     companion object {
         private val FORMATO_CORREO = Regex("""^[^@\s]+@[^@\s]+\.[^@\s]+$""")
+        // users.document es VARCHAR(20); se admiten letras para pasaporte o PPT
+        private val FORMATO_DOCUMENTO = Regex("""^[A-Za-z0-9]{5,20}$""")
 
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

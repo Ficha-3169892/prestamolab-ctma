@@ -1,9 +1,10 @@
 package com.example.prestamolab.ui.auth
 
 import com.example.prestamolab.data.auth.AuthRepository
-import com.example.prestamolab.data.auth.DemoAuthRepository
+import com.example.prestamolab.data.auth.UsuariosAuthRepository
 import com.example.prestamolab.model.Rol
 import com.example.prestamolab.testutil.FakeSessionStore
+import com.example.prestamolab.testutil.FakeUsuariosDataSource
 import com.example.prestamolab.testutil.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,17 +30,17 @@ class LoginViewModelTest {
     @Before
     fun setup() {
         store = FakeSessionStore()
-        viewModel = LoginViewModel(DemoAuthRepository(store))
+        viewModel = LoginViewModel(UsuariosAuthRepository(FakeUsuariosDataSource(), store))
     }
 
-    private fun escribir(correo: String, contrasena: String) {
-        viewModel.onCorreoChanged(correo)
+    private fun escribir(identificador: String, contrasena: String) {
+        viewModel.onIdentificadorChanged(identificador)
         viewModel.onContrasenaChanged(contrasena)
     }
 
     @Test
     fun `TC-HU10-01 - Credenciales validas inician sesion con el rol del usuario`() {
-        escribir(DemoAuthRepository.CORREO_ESTUDIANTE, DemoAuthRepository.CONTRASENA_ESTUDIANTE)
+        escribir(FakeUsuariosDataSource.CORREO_ESTUDIANTE, FakeUsuariosDataSource.CONTRASENA)
 
         viewModel.iniciarSesion()
 
@@ -51,30 +52,44 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `TC-HU10-02 - Credenciales incorrectas muestran mensaje y no inician sesion`() {
-        escribir(DemoAuthRepository.CORREO_ESTUDIANTE, "incorrecta")
+    fun `Login con documento inicia sesion con el rol del usuario`() {
+        escribir(FakeUsuariosDataSource.DOCUMENTO_INSTRUCTOR, FakeUsuariosDataSource.CONTRASENA)
 
         viewModel.iniciarSesion()
 
-        assertEquals("Correo o contraseña incorrectos", viewModel.uiState.value.mensajeError)
+        assertEquals(Rol.INSTRUCTOR, store.sesion.value?.usuario?.rol)
+        assertNull(viewModel.uiState.value.mensajeError)
+    }
+
+    @Test
+    fun `TC-HU10-02 - Credenciales incorrectas muestran mensaje y no inician sesion`() {
+        escribir(FakeUsuariosDataSource.CORREO_ESTUDIANTE, "incorrecta")
+
+        viewModel.iniciarSesion()
+
+        assertEquals("Usuario o contraseña incorrectos", viewModel.uiState.value.mensajeError)
         assertNull(store.sesion.value)
         assertFalse(viewModel.uiState.value.cargando)
     }
 
     @Test
-    fun `TC-HU10-03 - Campos vacios o correo invalido se validan sin llamar al servidor`() {
+    fun `TC-HU10-03 - Campos vacios, correo o documento invalidos se validan sin llamar al servidor`() {
         val auth = mockk<AuthRepository>(relaxed = true)
         val vm = LoginViewModel(auth)
 
         vm.iniciarSesion()
-        assertEquals("El correo es obligatorio.", vm.uiState.value.errorCorreo)
+        assertEquals("El correo o documento es obligatorio.", vm.uiState.value.errorIdentificador)
         assertEquals("La contraseña es obligatoria.", vm.uiState.value.errorContrasena)
 
-        vm.onCorreoChanged("correo-sin-arroba")
+        vm.onIdentificadorChanged("correo@sin-dominio")
         vm.onContrasenaChanged("clave")
         vm.iniciarSesion()
-        assertEquals("Ingresa un correo válido.", vm.uiState.value.errorCorreo)
+        assertEquals("Ingresa un correo válido.", vm.uiState.value.errorIdentificador)
         assertNull(vm.uiState.value.errorContrasena)
+
+        vm.onIdentificadorChanged("12-3")
+        vm.iniciarSesion()
+        assertEquals("El documento debe tener entre 5 y 20 letras o números.", vm.uiState.value.errorIdentificador)
 
         coVerify(exactly = 0) { auth.iniciarSesion(any(), any()) }
     }
@@ -82,9 +97,9 @@ class LoginViewModelTest {
     @Test
     fun `Editar un campo limpia su error`() {
         viewModel.iniciarSesion()
-        viewModel.onCorreoChanged("a")
+        viewModel.onIdentificadorChanged("a")
 
-        assertNull(viewModel.uiState.value.errorCorreo)
+        assertNull(viewModel.uiState.value.errorIdentificador)
         assertNotNull(viewModel.uiState.value.errorContrasena)
     }
 
@@ -96,7 +111,7 @@ class LoginViewModelTest {
             coEvery { iniciarSesion(any(), any()) } coAnswers { respuesta.await() }
         }
         val vm = LoginViewModel(auth)
-        vm.onCorreoChanged("a@b.co")
+        vm.onIdentificadorChanged("a@b.co")
         vm.onContrasenaChanged("clave")
 
         vm.iniciarSesion()
@@ -114,7 +129,7 @@ class LoginViewModelTest {
             coEvery { iniciarSesion(any(), any()) } returns Result.failure(IOException("timeout"))
         }
         val vm = LoginViewModel(auth)
-        vm.onCorreoChanged("a@b.co")
+        vm.onIdentificadorChanged("a@b.co")
         vm.onContrasenaChanged("clave")
 
         vm.iniciarSesion()

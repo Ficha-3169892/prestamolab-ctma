@@ -9,7 +9,5 @@ data class Usuario(
     val rol: Rol
 )
 
-data class Sesion(
-    val usuario: Usuario,
-    val token: String
-)
+/** Sesión activa: el usuario autenticado contra la tabla `users` de Supabase. */
+data class Sesion(val usuario: Usuario)

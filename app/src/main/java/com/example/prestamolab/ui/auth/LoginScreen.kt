@@ -14,13 +14,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.prestamolab.BuildConfig
-import com.example.prestamolab.data.auth.DemoAuthRepository
 
 @Composable
 fun LoginScreen(
     uiState: LoginUiState,
-    onCorreoChange: (String) -> Unit,
+    onIdentificadorChange: (String) -> Unit,
     onContrasenaChange: (String) -> Unit,
     onIngresarClick: () -> Unit
 ) {
@@ -47,11 +45,11 @@ fun LoginScreen(
         )
 
         OutlinedTextField(
-            value = uiState.correo,
-            onValueChange = onCorreoChange,
-            label = { Text("Correo institucional", fontFamily = FontFamily.SansSerif) },
-            isError = uiState.errorCorreo != null,
-            supportingText = uiState.errorCorreo?.let { { Text(it) } },
+            value = uiState.identificador,
+            onValueChange = onIdentificadorChange,
+            label = { Text("Correo o documento", fontFamily = FontFamily.SansSerif) },
+            isError = uiState.errorIdentificador != null,
+            supportingText = uiState.errorIdentificador?.let { { Text(it) } },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
             modifier = Modifier.fillMaxWidth(),
@@ -95,17 +93,6 @@ fun LoginScreen(
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.SansSerif,
                 color = Color.White
-            )
-        }
-
-        // Ayuda para la demostración; no se muestra en builds de release
-        if (BuildConfig.DEBUG) {
-            Text(
-                text = "Demo: ${DemoAuthRepository.CORREO_ESTUDIANTE} / ${DemoAuthRepository.CONTRASENA_ESTUDIANTE}\n" +
-                    "${DemoAuthRepository.CORREO_INSTRUCTOR} / ${DemoAuthRepository.CONTRASENA_INSTRUCTOR}",
-                style = MaterialTheme.typography.bodySmall,
-                fontFamily = FontFamily.SansSerif,
-                color = Color.Gray
             )
         }
     }

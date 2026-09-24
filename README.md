@@ -17,7 +17,7 @@ El incremento funcional actual implementa las siguientes características clave:
 La aplicación implementa el patrón arquitectónico **Model-View-ViewModel (MVVM)** en conjunto con el patrón Repository para desacoplar completamente las reglas de negocio de la interfaz de usuario:
 * **Capa UI (Jetpack Compose y Material 3):** Encargada de renderizar el estado observable y emitir eventos de usuario sin alterar directamente las fuentes de datos.
 * **Capa ViewModel:** Coordina el comportamiento de la pantalla, procesa las validaciones lógicas y expone un estado de solo lectura.
-* **Capa Repository:** Define la interfaz de acceso a datos (`PrestamoRepository`) y su implementación simulada en memoria (`InMemoryPrestamoRepository`) para garantizar consistencia durante la ejecución del incremento.
+* **Capa Repository:** Define la interfaz de acceso a datos (`PrestamoRepository`) implementada sobre Room (`RoomPrestamoRepository`), cuyas tablas `equipments`, `loans` y `returns` replican las de Supabase. El inicio de sesión (`UsuariosAuthRepository`) valida correo o documento y contraseña contra la tabla `users` de Supabase y guarda la sesión en DataStore.
 
 ## 4. Instrucciones de Ejecución
 1. Clonar el repositorio oficial del proyecto mediante Git.

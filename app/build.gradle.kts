@@ -10,6 +10,7 @@ if (localPropertiesFile.exists()) {
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -25,7 +26,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.example.prestamolab.PrestamoLabTestRunner"
 
         // Inyectar URL y KEY de Supabase desde local.properties a BuildConfig
         val supabaseUrl = localProperties.getProperty("SUPABASE_URL") ?: ""
@@ -46,10 +47,18 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    sourceSets {
+        // Esquemas exportados por Room: los usa MigrationTestHelper en las pruebas de migración
+        getByName("androidTest").assets.directories.add("$projectDir/schemas")
+    }
     buildFeatures {
         compose = true
         buildConfig = true // Habilitar la generación de BuildConfig
     }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
@@ -66,6 +75,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.play.services.location)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -76,6 +88,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.room.testing)
+    androidTestImplementation(libs.turbine)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

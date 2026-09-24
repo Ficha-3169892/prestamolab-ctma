@@ -12,7 +12,7 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | [HU-13](HU13.md) | Registrar geolocalización de las operaciones | Media | 5 | 6 | 3 |
 | [HU-01](HU01.md) | Consultar equipos disponibles | Alta | 6 | 5 | 1 |
 | [HU-02](HU02.md) | Consultar detalle de un equipo | Alta | 6 | 4 | 4 |
-| [HU-06](HU06.md) | Conservar datos localmente sin conexión | Alta | 6 | 5 | 0 |
+| [HU-06](HU06.md) | Conservar datos localmente sin conexión | Alta | 6 | 5 | 1 |
 | [HU-11](HU11.md) | Gestionar actividades formativas (instructor) | Media | 6 | 5 | 0 |
 | [HU-12](HU12.md) | Gestionar inventario de equipos (instructor) | Media | 6 | 5 | 0 |
 | [HU-03](HU03.md) | Solicitar préstamo | Alta | 7 | 8 | 8 |
@@ -22,7 +22,7 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | [HU-08](HU08.md) | Adjuntar evidencia fotográfica | Media | 8 | 5 | 0 |
 | [HU-09](HU09.md) | Recibir recordatorio de devolución | Media | 9 | 4 | 0 |
 
-**Total:** 74 criterios, 74 casos de prueba, 31 ya automatizados.
+**Total:** 74 criterios, 74 casos de prueba, 32 ya automatizados.
 
 ## Matriz HU → CA → TC → prueba
 
@@ -40,7 +40,7 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU03 | CA-HU03-01 | TC-HU03-01 | Unitaria | `PrestamoViewModelTest.Validacion Ambiente` |
 | HU03 | CA-HU03-02 | TC-HU03-02 | Unitaria | `PrestamoViewModelTest.TC-04..TC-07` |
 | HU03 | CA-HU03-03 | TC-HU03-03 | Unitaria | `PrestamoViewModelTest.TC-08..TC-11` |
-| HU03 | CA-HU03-04 | TC-HU03-04 | Unitaria | `PrestamoViewModelTest.TC-12; InMemoryPrestamoRepositoryTest.crear solicitud sobre equipo RESERVADO` |
+| HU03 | CA-HU03-04 | TC-HU03-04 | Unitaria | `PrestamoViewModelTest.TC-12; RoomPrestamoRepositoryTest.CrearSolicitudSobreEquipoReservado_FallaSinCrearRegistros` |
 | HU03 | CA-HU03-05 | TC-HU03-05 | Unitaria | `PrestamoViewModelTest.TC-13` |
 | HU03 | CA-HU03-06 | TC-HU03-06 | Unitaria + UI | `PrestamoViewModelTest.TC-14; PrestamoUiTest.TC14_FlujoCompleto_CrearSolicitud` |
 | HU03 | CA-HU03-07 | TC-HU03-07 | Unitaria | `PrestamoViewModelTest.Fallo del repositorio muestra mensaje de error` |
@@ -50,15 +50,15 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU04 | CA-HU04-03 | TC-HU04-03 | UI | `PrestamoUiTest.TC15_CancelarSolicitud_ActualizaLista` |
 | HU04 | CA-HU04-04 | TC-HU04-04 | UI | Pendiente |
 | HU04 | CA-HU04-05 | TC-HU04-05 | Unitaria | `PrestamoViewModelTest.TC-15` |
-| HU04 | CA-HU04-06 | TC-HU04-06 | Unitaria | `PrestamoViewModelTest.TC-16; InMemoryPrestamoRepositoryTest.cancelar es idempotente` |
+| HU04 | CA-HU04-06 | TC-HU04-06 | Unitaria | `PrestamoViewModelTest.TC-16; RoomPrestamoRepositoryTest.Cancelar_EsIdempotenteYLiberaElEquipo` |
 | HU05 | CA-HU05-01 | TC-HU05-01 | UI + Unitaria | `DevolucionUiTest.TC_HU05_01_SoloElPrestamoPrestadoOfreceRegistrarDevolucion; DevolucionViewModelTest.TC-HU05-01` |
 | HU05 | CA-HU05-02 | TC-HU05-02 | Unitaria (TDD) + UI | `DevolucionViewModelTest.TC-HU05-02; DevolucionUiTest.TC_HU05_02_DevolucionConUbicacion_CierraElPrestamo` |
-| HU05 | CA-HU05-03 | TC-HU05-03 | Unitaria | `DevolucionViewModelTest.TC-HU05-03` |
+| HU05 | CA-HU05-03 | TC-HU05-03 | Unitaria + Integración | `DevolucionViewModelTest.TC-HU05-03; RoomPrestamoRepositoryTest.TC_HU05_03_Devolucion_GuardaReturnEntityConCondicionFechaYUbicacion` |
 | HU05 | CA-HU05-04 | TC-HU05-04 | Unitaria + UI | `DevolucionViewModelTest.TC-HU05-04; DevolucionUiTest.TC_HU05_04_EquipoDanadoSinObservacion_MuestraError` |
-| HU05 | CA-HU05-05 | TC-HU05-05 | Unitaria (TDD) | `InMemoryPrestamoRepositoryTest.TC-HU05-05` |
+| HU05 | CA-HU05-05 | TC-HU05-05 | Unitaria (TDD) | `RoomPrestamoRepositoryTest.TC_HU05_05_DevolverUnPrestamoYaDevuelto_SeRechazaSinCambios` |
 | HU06 | CA-HU06-01 | TC-HU06-01 | Instrumentada | Pendiente |
 | HU06 | CA-HU06-02 | TC-HU06-02 | Integración | Pendiente |
-| HU06 | CA-HU06-03 | TC-HU06-03 | Integración | Pendiente |
+| HU06 | CA-HU06-03 | TC-HU06-03 | Integración | `RoomPrestamoRepositoryTest.TC_HU06_03_ElFlujoDeEquiposEmiteLosCambiosDeRoom` |
 | HU06 | CA-HU06-04 | TC-HU06-04 | Instrumentada | Pendiente |
 | HU06 | CA-HU06-05 | TC-HU06-05 | Integración | Pendiente |
 | HU07 | CA-HU07-01 | TC-HU07-01 | Integración | Pendiente |

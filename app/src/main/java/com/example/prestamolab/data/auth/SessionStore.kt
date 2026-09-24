@@ -12,7 +12,7 @@ import com.example.prestamolab.model.Usuario
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-/** Persistencia de la sesión activa (token y datos del usuario). */
+/** Persistencia de la sesión activa (id, correo y rol del usuario). */
 interface SessionStore {
     val sesion: Flow<Sesion?>
     suspend fun guardar(sesion: Sesion)
@@ -25,13 +25,9 @@ class DataStoreSessionStore(private val dataStore: DataStore<Preferences>) : Ses
 
     override val sesion: Flow<Sesion?> = dataStore.data.map { prefs ->
         val id = prefs[USUARIO_ID] ?: return@map null
-        val token = prefs[TOKEN] ?: return@map null
         // Un rol desconocido o corrupto se trata como sesión inválida
         val rol = Rol.entries.find { it.name == prefs[ROL] } ?: return@map null
-        Sesion(
-            usuario = Usuario(id, prefs[NOMBRE].orEmpty(), prefs[CORREO].orEmpty(), rol),
-            token = token
-        )
+        Sesion(Usuario(id, prefs[NOMBRE].orEmpty(), prefs[CORREO].orEmpty(), rol))
     }
 
     override suspend fun guardar(sesion: Sesion) {
@@ -40,7 +36,6 @@ class DataStoreSessionStore(private val dataStore: DataStore<Preferences>) : Ses
             prefs[NOMBRE] = sesion.usuario.nombre
             prefs[CORREO] = sesion.usuario.correo
             prefs[ROL] = sesion.usuario.rol.name
-            prefs[TOKEN] = sesion.token
         }
     }
 
@@ -53,6 +48,5 @@ class DataStoreSessionStore(private val dataStore: DataStore<Preferences>) : Ses
         val NOMBRE = stringPreferencesKey("nombre")
         val CORREO = stringPreferencesKey("correo")
         val ROL = stringPreferencesKey("rol")
-        val TOKEN = stringPreferencesKey("token")
     }
 }

@@ -18,7 +18,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/** Implementación en memoria; se reemplaza por Room en el Sprint 6. */
+/** Doble de pruebas unitarias con las mismas reglas que [RoomPrestamoRepository], sin SQLite. */
 class InMemoryPrestamoRepository(
     private val ahora: () -> String = { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date()) }
 ) : PrestamoRepository {
@@ -95,13 +95,6 @@ class InMemoryPrestamoRepository(
         cambiarEstadoSolicitud(solicitud.id, EstadoSolicitud.DEVUELTO)
         cambiarEstadoEquipo(solicitud.equipoId, EstadoEquipo.DISPONIBLE)
         Result.success(devolucion)
-    }
-
-    /** Restaura los datos semilla; lo usan las pruebas instrumentadas para aislar cada caso. */
-    fun reiniciar() {
-        _equipos.value = equiposIniciales()
-        _solicitudes.value = solicitudesIniciales()
-        _devoluciones.value = emptyList()
     }
 
     private fun cambiarEstadoSolicitud(id: Int, estado: EstadoSolicitud) {

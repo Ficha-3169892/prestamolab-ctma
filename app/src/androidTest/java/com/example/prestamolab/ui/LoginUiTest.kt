@@ -4,7 +4,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.prestamolab.MainActivity
-import com.example.prestamolab.data.auth.DemoAuthRepository
+import com.example.prestamolab.testutil.FakeUsuariosDataSource
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -22,15 +22,15 @@ class LoginUiTest {
         composeTestRule.cerrarSesionYEsperarLogin()
     }
 
-    private fun escribirCredenciales(correo: String, contrasena: String) {
-        composeTestRule.onNodeWithText("Correo institucional").performTextInput(correo)
+    private fun escribirCredenciales(identificador: String, contrasena: String) {
+        composeTestRule.onNodeWithText("Correo o documento").performTextInput(identificador)
         composeTestRule.onNodeWithText("Contraseña").performTextInput(contrasena)
         composeTestRule.onNodeWithText("Ingresar").performClick()
     }
 
     @Test
     fun TC_HU10_01_LoginValido_MuestraCatalogo() {
-        escribirCredenciales(DemoAuthRepository.CORREO_ESTUDIANTE, DemoAuthRepository.CONTRASENA_ESTUDIANTE)
+        escribirCredenciales(FakeUsuariosDataSource.CORREO_ESTUDIANTE, FakeUsuariosDataSource.CONTRASENA)
 
         composeTestRule.waitUntil(5_000) {
             composeTestRule.onAllNodesWithText("Multímetro Digital").fetchSemanticsNodes().isNotEmpty()
@@ -40,9 +40,9 @@ class LoginUiTest {
 
     @Test
     fun TC_HU10_02_LoginInvalido_MuestraErrorYSigueEnLogin() {
-        escribirCredenciales(DemoAuthRepository.CORREO_ESTUDIANTE, "incorrecta")
+        escribirCredenciales(FakeUsuariosDataSource.CORREO_ESTUDIANTE, "incorrecta")
 
-        composeTestRule.onNodeWithText("Correo o contraseña incorrectos").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Usuario o contraseña incorrectos").assertIsDisplayed()
         composeTestRule.onNodeWithText("Ingresar").assertIsDisplayed()
     }
 
@@ -50,7 +50,7 @@ class LoginUiTest {
     fun TC_HU10_03_CamposVacios_MuestranErrores() {
         composeTestRule.onNodeWithText("Ingresar").performClick()
 
-        composeTestRule.onNodeWithText("El correo es obligatorio.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("El correo o documento es obligatorio.").assertIsDisplayed()
         composeTestRule.onNodeWithText("La contraseña es obligatoria.").assertIsDisplayed()
     }
 
@@ -63,7 +63,7 @@ class LoginUiTest {
         composeTestRule.waitUntil(5_000) {
             composeTestRule.onAllNodesWithText("Ingresar").fetchSemanticsNodes().isNotEmpty()
         }
-        composeTestRule.onNodeWithText("Correo institucional").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Correo o documento").assertIsDisplayed()
     }
 
     @Test

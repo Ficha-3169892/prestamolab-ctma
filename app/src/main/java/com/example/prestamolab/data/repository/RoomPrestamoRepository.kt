@@ -1,0 +1,111 @@
+package com.example.prestamolab.data.repository
+
+import androidx.room.withTransaction
+import com.example.prestamolab.data.local.PrestamoLabDatabase
+import com.example.prestamolab.data.local.entity.EquipmentEntity
+import com.example.prestamolab.data.local.entity.LoanEntity
+import com.example.prestamolab.data.local.entity.ReturnEntity
+import com.example.prestamolab.data.local.entity.aDominio
+import com.example.prestamolab.model.Devolucion
+import com.example.prestamolab.model.Equipo
+import com.example.prestamolab.model.EstadoEquipo
+import com.example.prestamolab.model.EstadoSolicitud
+import com.example.prestamolab.model.NuevaDevolucion
+import com.example.prestamolab.model.NuevaSolicitud
+import com.example.prestamolab.model.SolicitudPrestamo
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.concurrent.TimeUnit
+
+/** Fuente de verdad local: la UI solo lee de Room mediante Flow (HU-06). */
+class RoomPrestamoRepository(
+    private val db: PrestamoLabDatabase,
+    private val reloj: () -> Long = System::currentTimeMillis
+) : PrestamoRepository {
+
+    private val equipmentDao = db.equipmentDao()
+    private val loanDao = db.loanDao()
+    private val returnDao = db.returnDao()
+
+    override val equipos: Flow<List<Equipo>> =
+        equipmentDao.observarTodos().map { lista -> lista.map(EquipmentEntity::aDominio) }
+    override val solicitudes: Flow<List<SolicitudPrestamo>> =
+        loanDao.observarTodos().map { lista -> lista.map(LoanEntity::aDominio) }
+    override val devoluciones: Flow<List<Devolucion>> =
+        returnDao.observarTodos().map { lista -> lista.map(ReturnEntity::aDominio) }
+
+    override suspend fun obtenerEquipo(id: Int): Equipo? = equipmentDao.obtener(id)?.aDominio()
+
+    override suspend fun crearSolicitud(nueva: NuevaSolicitud): Result<SolicitudPrestamo> = db.withTransaction {
+        val equipo = equipmentDao.obtener(nueva.equipoId)
+            ?: return@withTransaction Result.failure(NoSuchElementException("El equipo ${nueva.equipoId} no existe"))
+        // Evitar solicitud sobre equipo no disponible (TC-12)
+        if (equipo.status != EstadoEquipo.DISPONIBLE) {
+            return@withTransaction Result.failure(IllegalStateException("El equipo no está disponible"))
+        }
+
+        val inicio = reloj()
+        val prestamo = LoanEntity(
+            equipmentId = nueva.equipoId,
+            requesterName = nueva.solicitante,
+            environment = nueva.ambiente,
+            purpose = nueva.proposito,
+            durationHours = nueva.duracionHoras,
+            requestDate = formatear(inicio),
+            // loans.return_date es la fecha límite pactada, base de los recordatorios de HU-09
+            returnDate = formatear(inicio + TimeUnit.HOURS.toMillis(nueva.duracionHoras.toLong())),
+            status = EstadoSolicitud.SOLICITADA
+        )
+        val id = loanDao.insertar(prestamo).toInt()
+        // Cambiamos a RESERVADO según TC-14
+        equipmentDao.actualizarEstado(nueva.equipoId, EstadoEquipo.RESERVADO)
+        Result.success(prestamo.copy(id = id).aDominio())
+    }
+
+    override suspend fun cancelarSolicitud(id: Int): Result<Unit> = db.withTransaction {
+        val prestamo = loanDao.obtener(id)
+            ?: return@withTransaction Result.failure(NoSuchElementException("Solicitud no encontrada"))
+        if (prestamo.status == EstadoSolicitud.CANCELADA) return@withTransaction Result.success(Unit)
+        // Un equipo ya entregado no se libera cancelando: debe registrarse su devolución
+        if (prestamo.status != EstadoSolicitud.SOLICITADA) {
+            return@withTransaction Result.failure(
+                IllegalStateException("Solo se pueden cancelar solicitudes en estado SOLICITADA")
+            )
+        }
+
+        loanDao.actualizarEstado(id, EstadoSolicitud.CANCELADA)
+        // Al cancelar, el equipo vuelve a estar disponible (TC-15)
+        equipmentDao.actualizarEstado(prestamo.equipmentId, EstadoEquipo.DISPONIBLE)
+        Result.success(Unit)
+    }
+
+    override suspend fun registrarDevolucion(nueva: NuevaDevolucion): Result<Devolucion> = db.withTransaction {
+        val prestamo = loanDao.obtener(nueva.solicitudId)
+            ?: return@withTransaction Result.failure(NoSuchElementException("Préstamo no encontrado"))
+        // CA-HU05-05: un préstamo ya devuelto (o no entregado) no se puede devolver
+        if (prestamo.status != EstadoSolicitud.PRESTADO) {
+            return@withTransaction Result.failure(
+                IllegalStateException("Solo se pueden devolver préstamos en estado PRESTADO")
+            )
+        }
+
+        val devolucion = ReturnEntity(
+            loanId = prestamo.id,
+            equipmentCondition = nueva.condicion,
+            notes = nueva.observacion.trim(),
+            returnDate = formatear(reloj()),
+            latitude = nueva.ubicacion?.latitud,
+            longitude = nueva.ubicacion?.longitud
+        )
+        val id = returnDao.insertar(devolucion).toInt()
+        loanDao.actualizarEstado(prestamo.id, EstadoSolicitud.DEVUELTO)
+        equipmentDao.actualizarEstado(prestamo.equipmentId, EstadoEquipo.DISPONIBLE)
+        Result.success(devolucion.copy(id = id).aDominio())
+    }
+
+    private fun formatear(instante: Long): String =
+        SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(instante))
+}

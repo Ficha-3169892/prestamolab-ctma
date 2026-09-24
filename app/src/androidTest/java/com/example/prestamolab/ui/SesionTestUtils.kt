@@ -4,8 +4,7 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.test.core.app.ApplicationProvider
 import com.example.prestamolab.PrestamoLabApp
-import com.example.prestamolab.data.auth.DemoAuthRepository
-import com.example.prestamolab.data.repository.InMemoryPrestamoRepository
+import com.example.prestamolab.testutil.FakeUsuariosDataSource
 import kotlinx.coroutines.runBlocking
 
 private val app: PrestamoLabApp
@@ -13,15 +12,15 @@ private val app: PrestamoLabApp
 
 /** Restaura los datos semilla: el repositorio vive en la Application y se comparte entre pruebas. */
 fun reiniciarDatosSemilla() {
-    (app.container.prestamoRepository as InMemoryPrestamoRepository).reiniciar()
+    app.container.database.reiniciar()
 }
 
 fun ComposeTestRule.iniciarSesionComoEstudiante() = iniciarSesion(
-    DemoAuthRepository.CORREO_ESTUDIANTE, DemoAuthRepository.CONTRASENA_ESTUDIANTE
+    FakeUsuariosDataSource.CORREO_ESTUDIANTE, FakeUsuariosDataSource.CONTRASENA
 )
 
 fun ComposeTestRule.iniciarSesionComoInstructor() = iniciarSesion(
-    DemoAuthRepository.CORREO_INSTRUCTOR, DemoAuthRepository.CONTRASENA_INSTRUCTOR
+    FakeUsuariosDataSource.CORREO_INSTRUCTOR, FakeUsuariosDataSource.CONTRASENA
 )
 
 /** Inicia sesión directamente en el repositorio y espera a que se muestre el área autenticada. */

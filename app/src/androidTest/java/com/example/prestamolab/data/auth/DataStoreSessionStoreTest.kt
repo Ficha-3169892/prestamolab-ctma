@@ -25,7 +25,7 @@ class DataStoreSessionStoreTest {
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val nombreArchivo = "sesion-test-${UUID.randomUUID()}"
-    private val sesionPrueba = Sesion(Usuario("u-1", "Aprendiz", "a@ctma.edu.co", Rol.INSTRUCTOR), "token-123")
+    private val sesionPrueba = Sesion(Usuario("u-1", "Aprendiz", "a@ctma.edu.co", Rol.INSTRUCTOR))
 
     /** Crea un DataStore sobre el mismo archivo, como ocurre al reiniciar el proceso de la app. */
     private fun abrirStore(job: Job) = DataStoreSessionStore(

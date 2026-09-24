@@ -9,9 +9,10 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.example.prestamolab.MainActivity
 import com.example.prestamolab.PrestamoLabApp
 import com.example.prestamolab.data.location.LocationProvider
-import com.example.prestamolab.data.repository.InMemoryPrestamoRepository
 import com.example.prestamolab.model.CondicionEquipo
 import com.example.prestamolab.model.Ubicacion
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -86,7 +87,7 @@ class DevolucionUiTest {
         }
         composeTestRule.onNodeWithText("Registrar devolución").assertDoesNotExist()
 
-        val devolucion = (app.container.prestamoRepository as InMemoryPrestamoRepository).devoluciones.value.single()
+        val devolucion = runBlocking { app.container.prestamoRepository.devoluciones.first() }.single()
         assertEquals(CondicionEquipo.BUENO, devolucion.condicion)
         assertEquals(6.2518, devolucion.latitud!!, 0.0)
         assertEquals(-75.5636, devolucion.longitud!!, 0.0)

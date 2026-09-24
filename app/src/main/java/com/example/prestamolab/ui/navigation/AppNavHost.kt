@@ -45,7 +45,7 @@ fun AppNavHost() {
             val uiState by loginViewModel.uiState.collectAsState()
             LoginScreen(
                 uiState = uiState,
-                onCorreoChange = loginViewModel::onCorreoChanged,
+                onIdentificadorChange = loginViewModel::onIdentificadorChanged,
                 onContrasenaChange = loginViewModel::onContrasenaChanged,
                 onIngresarClick = loginViewModel::iniciarSesion
             )
