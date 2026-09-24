@@ -267,4 +267,59 @@ class RoomPrestamoRepositoryTest {
         assertEquals(EstadoSolicitud.SOLICITADA, db.loanDao().obtener(1)?.status)
         assertEquals(EstadoEquipo.RESERVADO, repository.obtenerEquipo(2)?.estado)
     }
+
+    @Test
+    fun TC_HU12_01_RegistrarEquipo_QuedaDisponibleEnElCatalogoYPendienteDeEnviar() = runTest {
+        val equipo = repository.registrarEquipo(" Proyector Epson ", "Audiovisual").getOrThrow()
+
+        assertEquals("Proyector Epson", equipo.nombre)
+        assertEquals(EstadoEquipo.DISPONIBLE, equipo.estado)
+        assertTrue(repository.equipos.first().any { it.id == equipo.id })
+        val entidad = db.equipmentDao().obtener(equipo.id)!!
+        assertEquals(EstadoSincronizacion.PENDIENTE, entidad.syncStatus)
+        assertEquals("uuid-1", entidad.remoteId)
+        assertEquals(1, cambiosLocales)
+    }
+
+    @Test
+    fun TC_HU12_02_DatosInvalidos_NoSeGuardan() = runTest {
+        assertTrue(repository.registrarEquipo("", "Audiovisual").isFailure)
+        assertTrue(repository.editarEquipo(1, "Multímetro", " ").isFailure)
+
+        assertEquals(5, repository.equipos.first().size)
+        assertEquals("Herramienta", repository.obtenerEquipo(1)?.categoria)
+        assertEquals(0, cambiosLocales)
+    }
+
+    @Test
+    fun TC_HU12_03_EditarEquipo_CambiaCatalogoYDetalle() = runTest {
+        repository.editarEquipo(1, "Multímetro Fluke", "Medición").getOrThrow()
+
+        assertEquals("Multímetro Fluke", repository.equipos.first().first { it.id == 1 }.nombre)
+        val detalle = repository.obtenerEquipo(1)!!
+        assertEquals("Medición", detalle.categoria)
+        assertEquals(EstadoEquipo.DISPONIBLE, detalle.estado)
+    }
+
+    @Test
+    fun TC_HU12_04_EliminarEquipoConPrestamoActivo_SeRechaza() = runTest {
+        // Equipo 2: solicitud #1 SOLICITADA; equipo 5: préstamo #2 PRESTADO
+        listOf(2, 5).forEach { id ->
+            val resultado = repository.eliminarEquipo(id)
+
+            assertEquals("No se puede eliminar: el equipo tiene un préstamo activo.", resultado.exceptionOrNull()?.message)
+            assertNotNull(repository.obtenerEquipo(id))
+        }
+    }
+
+    @Test
+    fun EliminarEquipoSinPrestamos_DesapareceYQuedaPendienteDeEnviar() = runTest {
+        repository.eliminarEquipo(3).getOrThrow()
+
+        assertNull(repository.obtenerEquipo(3))
+        assertTrue(repository.equipos.first().none { it.id == 3 })
+        val pendiente = db.equipmentDao().pendientes().single()
+        assertTrue(pendiente.deleted)
+        assertEquals(3, pendiente.id)
+    }
 }

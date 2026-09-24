@@ -14,10 +14,10 @@ private data class SeccionGestion(val titulo: String, val detalle: String, val o
 
 /** Menú de gestión del instructor. Las secciones sin acción se implementan en el sprint indicado. */
 @Composable
-fun GestionScreen(onRevisarSolicitudesClick: () -> Unit) {
+fun GestionScreen(onRevisarSolicitudesClick: () -> Unit, onInventarioClick: () -> Unit) {
     val secciones = listOf(
         SeccionGestion("Revisar solicitudes", "Aprobar o rechazar préstamos pendientes", onRevisarSolicitudesClick),
-        SeccionGestion("Inventario de equipos", "Próximamente: HU-12 · Sprint 6"),
+        SeccionGestion("Inventario de equipos", "Registrar, editar y eliminar equipos", onInventarioClick),
         SeccionGestion("Actividades formativas", "Próximamente: HU-11 · Sprint 6")
     )
 

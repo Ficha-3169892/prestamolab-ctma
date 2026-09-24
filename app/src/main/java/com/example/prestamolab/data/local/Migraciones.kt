@@ -58,3 +58,10 @@ val MIGRACION_2_3 = object : Migration(2, 3) {
         db.execSQL("ALTER TABLE loans ADD COLUMN rejection_reason TEXT")
     }
 }
+
+/** v3 → v4: marca local de equipos eliminados por el instructor (HU-12) hasta enviar el DELETE. */
+val MIGRACION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE equipments ADD COLUMN deleted INTEGER NOT NULL DEFAULT 0")
+    }
+}

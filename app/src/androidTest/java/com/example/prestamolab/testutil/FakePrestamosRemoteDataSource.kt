@@ -46,6 +46,23 @@ class FakePrestamosRemoteDataSource : PrestamosRemoteDataSource {
         equipos.replaceAll { if (it.id == id) it.copy(estado = estado) else it }
     }
 
+    /** Si no es null, eliminar un equipo lanza esta excepción (p. ej. la FK de loans en Supabase). */
+    var errorAlEliminarEquipo: Exception? = null
+    val equiposEliminados = mutableListOf<String>()
+
+    override suspend fun guardarEquipo(equipo: EquipoRemoto) {
+        lanzarSiHayError()
+        equipos.removeAll { it.id == equipo.id }
+        equipos += equipo
+    }
+
+    override suspend fun eliminarEquipo(id: String) {
+        lanzarSiHayError()
+        errorAlEliminarEquipo?.let { throw it }
+        equiposEliminados += id
+        equipos.removeAll { it.id == id }
+    }
+
     override suspend fun guardarPrestamo(prestamo: PrestamoRemoto) {
         lanzarSiHayError()
         if (prestamo.id == prestamoRechazado) errorDeRechazo?.let { throw it }

@@ -27,4 +27,12 @@ interface PrestamoRepository {
 
     /** HU-14: SOLICITADA → RECHAZADA con motivo y el equipo vuelve a DISPONIBLE. */
     suspend fun rechazarSolicitud(id: Int, instructorId: String, motivo: String): Result<Unit>
+
+    /** HU-12: el equipo nuevo queda DISPONIBLE. Falla si nombre o categoría no son válidos. */
+    suspend fun registrarEquipo(nombre: String, categoria: String): Result<Equipo>
+
+    suspend fun editarEquipo(id: Int, nombre: String, categoria: String): Result<Unit>
+
+    /** Falla si el equipo tiene préstamos (CA-HU12-04). */
+    suspend fun eliminarEquipo(id: Int): Result<Unit>
 }

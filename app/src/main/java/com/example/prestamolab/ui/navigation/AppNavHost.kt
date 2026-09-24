@@ -34,6 +34,10 @@ import com.example.prestamolab.ui.equipo.DetalleEquipoScreen
 import com.example.prestamolab.ui.equipo.EstadoDetalleEquipo
 import com.example.prestamolab.ui.gestion.GestionScreen
 import com.example.prestamolab.ui.gestion.RevisarSolicitudesScreen
+import com.example.prestamolab.ui.inventario.EquipoFormularioScreen
+import com.example.prestamolab.ui.inventario.EventoInventario
+import com.example.prestamolab.ui.inventario.InventarioScreen
+import com.example.prestamolab.ui.inventario.InventarioViewModel
 import com.example.prestamolab.ui.sesion.EstadoSesion
 import com.example.prestamolab.ui.sesion.SesionViewModel
 import com.example.prestamolab.ui.solicitud.SolicitudScreen
@@ -84,7 +88,7 @@ private val DESTINOS = mapOf(
 /** El detalle y el formulario pertenecen a la pestaña Catálogo. */
 private fun destinoPrincipalDe(ruta: String?): String? = when (ruta) {
     Rutas.DETALLE_EQUIPO, Rutas.SOLICITUD -> Rutas.CATALOGO
-    Rutas.REVISAR_SOLICITUDES -> Rutas.GESTION
+    Rutas.REVISAR_SOLICITUDES, Rutas.INVENTARIO, Rutas.NUEVO_EQUIPO, Rutas.EDITAR_EQUIPO -> Rutas.GESTION
     else -> ruta
 }
 
@@ -255,7 +259,10 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
                 }
                 composable(Rutas.GESTION) {
                     RutaProtegida(Rutas.GESTION, usuario, onVolver = { navController.popBackStack() }) {
-                        GestionScreen(onRevisarSolicitudesClick = { navController.navigate(Rutas.REVISAR_SOLICITUDES) })
+                        GestionScreen(
+                            onRevisarSolicitudesClick = { navController.navigate(Rutas.REVISAR_SOLICITUDES) },
+                            onInventarioClick = { navController.navigate(Rutas.INVENTARIO) }
+                        )
                     }
                 }
                 composable(Rutas.REVISAR_SOLICITUDES) {
@@ -271,9 +278,62 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
                         )
                     }
                 }
+                composable(Rutas.INVENTARIO) {
+                    RutaProtegida(Rutas.INVENTARIO, usuario, onVolver = { navController.popBackStack() }) {
+                        val viewModel: InventarioViewModel = viewModel(factory = InventarioViewModel.factory(usuario))
+                        val estado by viewModel.uiState.collectAsState()
+                        InventarioScreen(
+                            equipos = estado.equipos,
+                            mensajeError = estado.mensajeError,
+                            onNuevoClick = { navController.navigate(Rutas.NUEVO_EQUIPO) },
+                            onEditarClick = { id -> navController.navigate(Rutas.editarEquipo(id)) },
+                            onEliminarClick = viewModel::eliminarEquipo,
+                            onAtrasClick = { navController.popBackStack() }
+                        )
+                    }
+                }
+                composable(Rutas.NUEVO_EQUIPO) {
+                    RutaProtegida(Rutas.NUEVO_EQUIPO, usuario, onVolver = { navController.popBackStack() }) {
+                        FormularioEquipoRuta(usuario, equipoId = null, onVolver = { navController.popBackStack() })
+                    }
+                }
+                composable(
+                    route = Rutas.EDITAR_EQUIPO,
+                    arguments = listOf(navArgument(Rutas.ARG_EQUIPO_ID) { type = NavType.IntType })
+                ) { entrada ->
+                    val equipoId = entrada.arguments?.getInt(Rutas.ARG_EQUIPO_ID) ?: -1
+                    RutaProtegida(Rutas.EDITAR_EQUIPO, usuario, onVolver = { navController.popBackStack() }) {
+                        FormularioEquipoRuta(usuario, equipoId, onVolver = { navController.popBackStack() })
+                    }
+                }
             }
         }
     }
+}
+
+/** Formulario de equipo: [equipoId] null registra uno nuevo; al guardar vuelve al inventario. */
+@Composable
+private fun FormularioEquipoRuta(usuario: Usuario, equipoId: Int?, onVolver: () -> Unit) {
+    val viewModel: InventarioViewModel = viewModel(factory = InventarioViewModel.factory(usuario))
+    val estado by viewModel.uiState.collectAsState()
+    LaunchedEffect(viewModel) {
+        equipoId?.let(viewModel::editarEquipo)
+        viewModel.eventos.collect { evento ->
+            when (evento) {
+                EventoInventario.EquipoGuardado -> onVolver()
+            }
+        }
+    }
+    EquipoFormularioScreen(
+        formulario = estado.formulario,
+        esNuevo = equipoId == null,
+        equipoNoEncontrado = estado.equipoNoEncontrado,
+        mensajeError = estado.mensajeError,
+        onNombreChange = viewModel::onNombreChanged,
+        onCategoriaChange = viewModel::onCategoriaChanged,
+        onGuardarClick = viewModel::guardar,
+        onAtrasClick = onVolver
+    )
 }
 
 /** Bloquea el contenido si el rol no tiene permiso, aunque se llegue a la ruta directamente. */

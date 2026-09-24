@@ -28,6 +28,15 @@ class ControlAccesoTest {
     }
 
     @Test
+    fun `TC-HU12-05 - Solo el instructor entra al inventario`() {
+        listOf(Rutas.INVENTARIO, Rutas.NUEVO_EQUIPO, Rutas.EDITAR_EQUIPO).forEach {
+            assertTrue(it, ControlAcceso.puedeAcceder(it, Rol.INSTRUCTOR))
+            assertFalse(it, ControlAcceso.puedeAcceder(it, Rol.ESTUDIANTE))
+        }
+        assertEquals("gestion/inventario/7/editar", Rutas.editarEquipo(7))
+    }
+
+    @Test
     fun `Cada rol inicia en su pantalla principal`() {
         assertEquals(Rutas.GESTION, ControlAcceso.rutaInicio(Rol.INSTRUCTOR))
         assertEquals(Rutas.CATALOGO, ControlAcceso.rutaInicio(Rol.ESTUDIANTE))

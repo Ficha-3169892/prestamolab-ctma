@@ -14,7 +14,7 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | [HU-02](HU02.md) | Consultar detalle de un equipo | Alta | 6 | 4 | 4 |
 | [HU-06](HU06.md) | Conservar datos localmente sin conexión | Alta | 6 | 5 | 3 |
 | [HU-11](HU11.md) | Gestionar actividades formativas (instructor) | Media | 6 | 5 | 0 |
-| [HU-12](HU12.md) | Gestionar inventario de equipos (instructor) | Media | 6 | 5 | 0 |
+| [HU-12](HU12.md) | Gestionar inventario de equipos (instructor) | Media | 6 | 5 | 5 |
 | [HU-03](HU03.md) | Solicitar préstamo | Alta | 7 | 8 | 8 |
 | [HU-04](HU04.md) | Consultar mis préstamos activos | Alta | 7 | 6 | 3 |
 | [HU-14](HU14.md) | Revisar solicitudes de préstamo (instructor) | Alta | 7 | 4 | 4 |
@@ -22,7 +22,7 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | [HU-08](HU08.md) | Adjuntar evidencia fotográfica | Media | 8 | 5 | 0 |
 | [HU-09](HU09.md) | Recibir recordatorio de devolución | Media | 9 | 4 | 0 |
 
-**Total:** 74 criterios, 74 casos de prueba, 43 ya automatizados.
+**Total:** 74 criterios, 74 casos de prueba, 48 ya automatizados.
 
 ## Matriz HU → CA → TC → prueba
 
@@ -87,11 +87,11 @@ Para crear cada Issue en GitHub: **New issue**, pegar el título (primera línea
 | HU11 | CA-HU11-03 | TC-HU11-03 | Integración | Pendiente |
 | HU11 | CA-HU11-04 | TC-HU11-04 | UI | Pendiente |
 | HU11 | CA-HU11-05 | TC-HU11-05 | UI | Pendiente |
-| HU12 | CA-HU12-01 | TC-HU12-01 | Integración | Pendiente |
-| HU12 | CA-HU12-02 | TC-HU12-02 | Unitaria | Pendiente |
-| HU12 | CA-HU12-03 | TC-HU12-03 | Integración | Pendiente |
-| HU12 | CA-HU12-04 | TC-HU12-04 | Unitaria | Pendiente |
-| HU12 | CA-HU12-05 | TC-HU12-05 | UI | Pendiente |
+| HU12 | CA-HU12-01 | TC-HU12-01 | Integración | `RoomPrestamoRepositoryTest.TC_HU12_01_RegistrarEquipo_QuedaDisponibleEnElCatalogoYPendienteDeEnviar; InventarioViewModelTest.TC-HU12-01; InventarioUiTest.TC_HU12_01_RegistrarEquipo_ApareceDisponibleEnElCatalogo` |
+| HU12 | CA-HU12-02 | TC-HU12-02 | Unitaria | `ReglasInventarioTest.TC_HU12_02_NombreVacio_MuestraErrorDelCampo; InventarioViewModelTest.TC-HU12-02; InventarioUiTest.TC_HU12_02_CamposVacios_MuestranErroresYNoSeGuarda` |
+| HU12 | CA-HU12-03 | TC-HU12-03 | Integración | `RoomPrestamoRepositoryTest.TC_HU12_03_EditarEquipo_CambiaCatalogoYDetalle; InventarioUiTest.TC_HU12_03_EditarEquipo_SeVeEnElCatalogoYEnElDetalle` |
+| HU12 | CA-HU12-04 | TC-HU12-04 | Unitaria | `ReglasInventarioTest.TC_HU12_04_ConPrestamoActivo_LaEliminacionSeRechaza; RoomPrestamoRepositoryTest.TC_HU12_04_EliminarEquipoConPrestamoActivo_SeRechaza; InventarioUiTest.TC_HU12_04_EliminarEquipoConPrestamoActivo_MuestraElMotivo` |
+| HU12 | CA-HU12-05 | TC-HU12-05 | UI | `InventarioUiTest.TC_HU12_05_ElEstudianteNoVeOpcionesDeInventario; ControlAccesoTest.TC-HU12-05` |
 | HU13 | CA-HU13-01 | TC-HU13-01 | Manual | Pendiente |
 | HU13 | CA-HU13-02 | TC-HU13-02 | UI + Unitaria | `DevolucionUiTest.TC_HU13_02_CapturarUbicacion_MuestraCoordenadasYMensaje; DevolucionViewModelTest.TC-HU13-02` |
 | HU13 | CA-HU13-03 | TC-HU13-03 | Unitaria | Pendiente |

@@ -17,6 +17,10 @@ interface LoanDao {
     @Query("SELECT * FROM loans WHERE id = :id")
     suspend fun obtener(id: Int): LoanEntity?
 
+    /** Estados de los préstamos de un equipo: deciden si se puede eliminar (CA-HU12-04). */
+    @Query("SELECT status FROM loans WHERE equipment_id = :equipoId")
+    suspend fun estadosPorEquipo(equipoId: Int): List<EstadoSolicitud>
+
     @Query("SELECT * FROM loans WHERE remote_id = :remoteId")
     suspend fun obtenerPorRemoteId(remoteId: String): LoanEntity?
 

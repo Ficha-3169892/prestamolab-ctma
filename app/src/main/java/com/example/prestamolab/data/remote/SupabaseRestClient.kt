@@ -50,6 +50,14 @@ class SupabaseRestClient(
         }
     }
 
+    /** Borra las filas que cumplen el filtro de [recurso]; si no hay ninguna, no es un error. */
+    suspend fun delete(recurso: String) {
+        enviar(recurso) {
+            header("Prefer", "return=minimal")
+            delete()
+        }
+    }
+
     private suspend fun enviar(recurso: String, configurar: Request.Builder.() -> Request.Builder): String =
         withContext(ioDispatcher) {
             val url = "${baseUrl.trimEnd('/')}/rest/v1/$recurso".toHttpUrlOrNull()

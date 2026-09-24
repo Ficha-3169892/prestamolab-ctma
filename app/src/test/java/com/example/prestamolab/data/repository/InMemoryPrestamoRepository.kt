@@ -7,6 +7,7 @@ import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.NuevaDevolucion
 import com.example.prestamolab.model.NuevaSolicitud
+import com.example.prestamolab.model.ReglasInventario
 import com.example.prestamolab.model.ResultadoRevision
 import com.example.prestamolab.model.RevisionSolicitud
 import com.example.prestamolab.model.SolicitudPrestamo
@@ -121,6 +122,40 @@ class InMemoryPrestamoRepository(
             }
             cambiarEstadoEquipo(solicitud.equipoId, revision.estadoEquipo)
         }
+    }
+
+    override suspend fun registrarEquipo(nombre: String, categoria: String): Result<Equipo> = mutex.withLock {
+        errorDeDatos(nombre, categoria)?.let { return Result.failure(it) }
+        val equipo = Equipo(
+            id = (_equipos.value.maxOfOrNull { it.id } ?: 0) + 1,
+            nombre = nombre.trim(),
+            categoria = categoria.trim(),
+            estado = EstadoEquipo.DISPONIBLE
+        )
+        _equipos.update { it + equipo }
+        Result.success(equipo)
+    }
+
+    override suspend fun editarEquipo(id: Int, nombre: String, categoria: String): Result<Unit> = mutex.withLock {
+        errorDeDatos(nombre, categoria)?.let { return Result.failure(it) }
+        if (_equipos.value.none { it.id == id }) return Result.failure(NoSuchElementException("Equipo no encontrado"))
+        _equipos.update { lista ->
+            lista.map { if (it.id == id) it.copy(nombre = nombre.trim(), categoria = categoria.trim()) else it }
+        }
+        Result.success(Unit)
+    }
+
+    override suspend fun eliminarEquipo(id: Int): Result<Unit> = mutex.withLock {
+        if (_equipos.value.none { it.id == id }) return Result.failure(NoSuchElementException("Equipo no encontrado"))
+        val prestamos = _solicitudes.value.filter { it.equipoId == id }.map { it.estado }
+        ReglasInventario.validarEliminacion(prestamos).map {
+            _equipos.update { lista -> lista.filterNot { it.id == id } }
+        }
+    }
+
+    private fun errorDeDatos(nombre: String, categoria: String): IllegalArgumentException? {
+        val errores = ReglasInventario.validar(nombre, categoria)
+        return if (errores.hayErrores) IllegalArgumentException(errores.nombre ?: errores.categoria) else null
     }
 
     private fun cambiarEstadoSolicitud(id: Int, estado: EstadoSolicitud) {

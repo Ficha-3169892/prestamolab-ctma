@@ -177,6 +177,35 @@ class SupabasePrestamosDataSourceTest {
     }
 
     @Test
+    fun `El instructor guarda el equipo completo con title igual al nombre`() = runTest {
+        responder(201, "")
+
+        remoto.guardarEquipo(EquipoRemoto("e9", "Proyector Epson", "Audiovisual", "DISPONIBLE"))
+
+        val peticion = servidor.takeRequest()
+        assertEquals("POST", peticion.method)
+        assertEquals("/rest/v1/equipments", peticion.path)
+        assertEquals("resolution=merge-duplicates,return=minimal", peticion.getHeader("Prefer"))
+        val cuerpo = JSONObject(peticion.body.readUtf8())
+        assertEquals("Proyector Epson", cuerpo.getString("name"))
+        // equipments.title es NOT NULL en Supabase
+        assertEquals("Proyector Epson", cuerpo.getString("title"))
+        assertEquals("Audiovisual", cuerpo.getString("category"))
+        assertEquals("DISPONIBLE", cuerpo.getString("status"))
+    }
+
+    @Test
+    fun `Eliminar un equipo envia DELETE filtrado por id`() = runTest {
+        responder(204, "")
+
+        remoto.eliminarEquipo("e9")
+
+        val peticion = servidor.takeRequest()
+        assertEquals("DELETE", peticion.method)
+        assertEquals("/rest/v1/equipments?id=eq.e9", peticion.path)
+    }
+
+    @Test
     fun `El estado del equipo se envia con PATCH y solo la columna status`() = runTest {
         responder(204, "")
 

@@ -3,6 +3,7 @@ package com.example.prestamolab.data.repository
 import androidx.room.withTransaction
 import com.example.prestamolab.data.local.PrestamoLabDatabase
 import com.example.prestamolab.data.local.entity.EquipmentEntity
+import com.example.prestamolab.data.local.entity.EstadoSincronizacion
 import com.example.prestamolab.data.local.entity.LoanEntity
 import com.example.prestamolab.data.local.entity.ReturnEntity
 import com.example.prestamolab.data.local.entity.aDominio
@@ -12,6 +13,7 @@ import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.NuevaDevolucion
 import com.example.prestamolab.model.NuevaSolicitud
+import com.example.prestamolab.model.ReglasInventario
 import com.example.prestamolab.model.ResultadoRevision
 import com.example.prestamolab.model.RevisionSolicitud
 import com.example.prestamolab.model.SolicitudPrestamo
@@ -142,6 +144,43 @@ class RoomPrestamoRepository(
             equipmentDao.actualizarEstado(prestamo.equipmentId, revision.estadoEquipo)
         }
     }.also { if (it.isSuccess) alCambiarLocalmente() }
+
+    override suspend fun registrarEquipo(nombre: String, categoria: String): Result<Equipo> {
+        errorDeDatos(nombre, categoria)?.let { return Result.failure(it) }
+        val equipo = EquipmentEntity(
+            remoteId = generarRemoteId(),
+            name = nombre.trim(),
+            category = categoria.trim(),
+            status = EstadoEquipo.DISPONIBLE,
+            syncStatus = EstadoSincronizacion.PENDIENTE
+        )
+        val id = equipmentDao.insertar(equipo).toInt()
+        alCambiarLocalmente()
+        return Result.success(equipo.copy(id = id).aDominio())
+    }
+
+    override suspend fun editarEquipo(id: Int, nombre: String, categoria: String): Result<Unit> {
+        errorDeDatos(nombre, categoria)?.let { return Result.failure(it) }
+        return db.withTransaction {
+            equipmentDao.obtener(id)
+                ?: return@withTransaction Result.failure(NoSuchElementException("Equipo no encontrado"))
+            equipmentDao.editar(id, nombre.trim(), categoria.trim())
+            Result.success(Unit)
+        }.also { if (it.isSuccess) alCambiarLocalmente() }
+    }
+
+    override suspend fun eliminarEquipo(id: Int): Result<Unit> = db.withTransaction {
+        equipmentDao.obtener(id)
+            ?: return@withTransaction Result.failure(NoSuchElementException("Equipo no encontrado"))
+        ReglasInventario.validarEliminacion(loanDao.estadosPorEquipo(id)).map {
+            equipmentDao.marcarEliminado(id)
+        }
+    }.also { if (it.isSuccess) alCambiarLocalmente() }
+
+    private fun errorDeDatos(nombre: String, categoria: String): IllegalArgumentException? {
+        val errores = ReglasInventario.validar(nombre, categoria)
+        return if (errores.hayErrores) IllegalArgumentException(errores.nombre ?: errores.categoria) else null
+    }
 
     private fun formatear(instante: Long): String =
         SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(instante))

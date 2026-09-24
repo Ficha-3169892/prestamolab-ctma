@@ -97,4 +97,23 @@ class MigracionTest {
             assertTrue(c.isNull(3))
         }
     }
+
+    @Test
+    fun MigracionDeV3AV4ConservaLosEquiposVisibles() {
+        helper.createDatabase(nombreBase, 3).apply {
+            execSQL(
+                "INSERT INTO equipments (id, remote_id, name, category, status, sync_status) " +
+                    "VALUES (1, 'e1', 'Multímetro Digital', 'Herramienta', 'DISPONIBLE', 'SINCRONIZADO')"
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(nombreBase, 4, true, MIGRACION_3_4)
+
+        db.query("SELECT name, deleted FROM equipments").use { c ->
+            c.moveToNext()
+            assertEquals("Multímetro Digital", c.getString(0))
+            assertEquals(0, c.getInt(1))
+        }
+    }
 }

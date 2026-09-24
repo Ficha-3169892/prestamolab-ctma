@@ -160,7 +160,8 @@ class SincronizadorPrestamosTest {
         assertEquals("RECHAZADA", enviado.estado)
         assertEquals(instructor.id, enviado.revisadoPor)
         assertEquals("Equipo en calibración", enviado.motivoRechazo)
-        assertEquals("DISPONIBLE", remoto.estadosEnviados[CatalogoInicial.remoteIdPorIdLocal.getValue(2)])
+        // El instructor envía el equipo completo (upsert), no solo el estado
+        assertEquals("DISPONIBLE", remoto.equipos.single { it.id == CatalogoInicial.remoteIdPorIdLocal.getValue(2) }.estado)
         assertEquals(EstadoSincronizacion.SINCRONIZADO, db.loanDao().obtener(1)?.syncStatus)
     }
 
@@ -302,5 +303,71 @@ class SincronizadorPrestamosTest {
         assertEquals(CondicionEquipo.CON_NOVEDAD, devolucion.condicion)
         assertEquals(6.25, devolucion.latitud!!, 0.0)
         assertEquals("2026-09-03 11:30", devolucion.fechaDevolucion)
+    }
+
+    @Test
+    fun ElInstructorEnviaElEquipoNuevoCompleto() = runTest {
+        val nuevo = repository.registrarEquipo("Proyector Epson", "Audiovisual").getOrThrow()
+        val remoteId = db.equipmentDao().obtener(nuevo.id)!!.remoteId
+
+        sincronizador.sincronizar(instructor)
+
+        assertTrue(remoto.equipos.contains(EquipoRemoto(remoteId, "Proyector Epson", "Audiovisual", "DISPONIBLE")))
+        assertEquals(EstadoSincronizacion.SINCRONIZADO, db.equipmentDao().obtener(nuevo.id)?.syncStatus)
+    }
+
+    @Test
+    fun ElEstudianteSoloEnviaElEstadoDelEquipo() = runTest {
+        solicitar(1)
+
+        sincronizador.sincronizar(estudiante)
+
+        assertEquals("RESERVADO", remoto.estadosEnviados[CatalogoInicial.remoteIdPorIdLocal.getValue(1)])
+        // No se usó el upsert completo, que podría revertir un cambio de nombre del instructor
+        assertTrue(remoto.equipos.none { it.id == CatalogoInicial.remoteIdPorIdLocal.getValue(1) })
+    }
+
+    @Test
+    fun LaEliminacionSeEnviaYBorraElEquipoLocal() = runTest {
+        val remoteId = CatalogoInicial.remoteIdPorIdLocal.getValue(3)
+        remoto.equipos += equipoRemoto(3, EstadoEquipo.DISPONIBLE)
+        repository.eliminarEquipo(3).getOrThrow()
+
+        sincronizador.sincronizar(instructor)
+
+        assertEquals(listOf(remoteId), remoto.equiposEliminados)
+        assertNull(db.equipmentDao().obtenerPorRemoteId(remoteId))
+    }
+
+    @Test
+    fun SiSupabaseRechazaLaEliminacion_ElEquipoVuelve() = runTest {
+        remoto.equipos += equipoRemoto(3, EstadoEquipo.DISPONIBLE, "Cautín Estación de Soldadura")
+        remoto.errorAlEliminarEquipo = SupabaseHttpException(409, "loans_equipment_id_fkey")
+        repository.eliminarEquipo(3).getOrThrow()
+
+        val resultado = sincronizador.sincronizar(instructor)
+
+        assertEquals(1, (resultado as ResultadoSincronizacion.Exito).rechazados)
+        assertNotNull(repository.obtenerEquipo(3))
+    }
+
+    @Test
+    fun UnEquipoEliminadoEnSupabaseDesapareceDelTelefono() = runTest {
+        // Supabase solo conserva los equipos 1, 2, 4 y 5: el 3 lo eliminó otro dispositivo
+        listOf(1, 2, 4, 5).forEach { remoto.equipos += equipoRemoto(it, EstadoEquipo.DISPONIBLE) }
+
+        sincronizador.sincronizar(estudiante)
+
+        assertNull(repository.obtenerEquipo(3))
+        assertEquals(listOf(1, 2, 4, 5), repository.equipos.first().map { it.id })
+    }
+
+    @Test
+    fun UnEquipoConPrestamosNoSeBorraAunqueFalteEnSupabase() = runTest {
+        sincronizador.sincronizar(estudiante)
+
+        // Los equipos 2 y 5 tienen préstamos: se conservan para no perder el historial
+        assertNotNull(repository.obtenerEquipo(2))
+        assertNotNull(repository.obtenerEquipo(5))
     }
 }

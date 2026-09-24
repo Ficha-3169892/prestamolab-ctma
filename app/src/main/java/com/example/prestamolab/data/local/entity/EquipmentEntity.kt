@@ -16,9 +16,11 @@ data class EquipmentEntity(
     val name: String,
     val category: String,
     val status: EstadoEquipo,
-    // El catálogo llega de Supabase ya sincronizado; solo cambia al reservar, cancelar o devolver
+    // El catálogo llega de Supabase ya sincronizado; cambia al reservar, devolver o editar el inventario
     @ColumnInfo(name = "sync_status", defaultValue = "'SINCRONIZADO'")
-    val syncStatus: EstadoSincronizacion = EstadoSincronizacion.SINCRONIZADO
+    val syncStatus: EstadoSincronizacion = EstadoSincronizacion.SINCRONIZADO,
+    /** Solo local: eliminado por el instructor (HU-12); se borra al confirmar el DELETE en Supabase. */
+    @ColumnInfo(defaultValue = "0") val deleted: Boolean = false
 )
 
 fun EquipmentEntity.aDominio() = Equipo(id, name, category, status)

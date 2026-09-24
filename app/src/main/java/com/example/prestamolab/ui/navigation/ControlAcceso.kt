@@ -13,10 +13,14 @@ object Rutas {
     const val DEVOLUCION = "devolucion/{$ARG_SOLICITUD_ID}"
     const val GESTION = "gestion"
     const val REVISAR_SOLICITUDES = "gestion/solicitudes"
+    const val INVENTARIO = "gestion/inventario"
+    const val NUEVO_EQUIPO = "gestion/inventario/nuevo"
+    const val EDITAR_EQUIPO = "gestion/inventario/{$ARG_EQUIPO_ID}/editar"
 
     fun detalleEquipo(equipoId: Int) = "equipo/$equipoId"
     fun solicitud(equipoId: Int) = "equipo/$equipoId/solicitud"
     fun devolucion(solicitudId: Int) = "devolucion/$solicitudId"
+    fun editarEquipo(equipoId: Int) = "gestion/inventario/$equipoId/editar"
 }
 
 /** Matriz de permisos por ruta (RBAC). Una ruta que no está aquí se niega a todos. */
@@ -31,7 +35,11 @@ object ControlAcceso {
         Rutas.MIS_SOLICITUDES to setOf(Rol.ESTUDIANTE),
         Rutas.DEVOLUCION to setOf(Rol.ESTUDIANTE),
         Rutas.GESTION to setOf(Rol.INSTRUCTOR),
-        Rutas.REVISAR_SOLICITUDES to setOf(Rol.INSTRUCTOR)
+        Rutas.REVISAR_SOLICITUDES to setOf(Rol.INSTRUCTOR),
+        // El inventario solo lo mantiene el instructor (CA-HU12-05)
+        Rutas.INVENTARIO to setOf(Rol.INSTRUCTOR),
+        Rutas.NUEVO_EQUIPO to setOf(Rol.INSTRUCTOR),
+        Rutas.EDITAR_EQUIPO to setOf(Rol.INSTRUCTOR)
     )
 
     fun puedeAcceder(ruta: String, rol: Rol): Boolean = rol in permisos[ruta].orEmpty()

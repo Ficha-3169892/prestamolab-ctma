@@ -55,8 +55,13 @@ interface PrestamosRemoteDataSource {
 
     suspend fun devoluciones(usuarioId: String?): List<DevolucionRemota>
 
-    /** La app no crea equipos (lo hace el instructor, HU-12): solo cambia su estado al reservar o devolver. */
+    /** Cambio de estado al reservar o devolver: el estudiante no envía nombre ni categoría. */
     suspend fun actualizarEstadoEquipo(id: String, estado: String)
+
+    /** HU-12: el instructor crea o edita el equipo completo. */
+    suspend fun guardarEquipo(equipo: EquipoRemoto)
+
+    suspend fun eliminarEquipo(id: String)
     suspend fun guardarPrestamo(prestamo: PrestamoRemoto)
     suspend fun guardarDevolucion(devolucion: DevolucionRemota)
 }
@@ -118,6 +123,20 @@ class SupabasePrestamosDataSource(private val cliente: SupabaseRestClient) : Pre
         "equipments?id=eq.${codificar(id)}",
         JSONObject().put("status", estado).toString()
     )
+
+    override suspend fun guardarEquipo(equipo: EquipoRemoto) = cliente.upsert(
+        "equipments",
+        JSONObject()
+            .put("id", equipo.id)
+            .put("name", equipo.nombre)
+            // equipments.title es NOT NULL y el upsert es un INSERT: se envía igual al nombre
+            .put("title", equipo.nombre)
+            .put("category", equipo.categoria)
+            .put("status", equipo.estado)
+            .toString()
+    )
+
+    override suspend fun eliminarEquipo(id: String) = cliente.delete("equipments?id=eq.${codificar(id)}")
 
     override suspend fun guardarPrestamo(prestamo: PrestamoRemoto) = cliente.upsert(
         "loans",

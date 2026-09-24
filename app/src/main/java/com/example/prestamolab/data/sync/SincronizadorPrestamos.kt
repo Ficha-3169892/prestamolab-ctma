@@ -52,7 +52,7 @@ class SincronizadorPrestamos(
     private val returnDao = db.returnDao()
 
     override suspend fun sincronizar(usuario: Usuario): ResultadoSincronizacion = try {
-        val envio = enviarPendientes()
+        val envio = enviarPendientes(usuario)
         val recibidos = recibir(usuario)
         ResultadoSincronizacion.Exito(envio.enviados, recibidos, envio.rechazados)
     } catch (e: CancellationException) {
@@ -80,11 +80,25 @@ class SincronizadorPrestamos(
         }
     }
 
-    private suspend fun enviarPendientes(): ResumenEnvio {
+    private suspend fun enviarPendientes(usuario: Usuario): ResumenEnvio {
         val resumen = ResumenEnvio()
+        val esInstructor = usuario.rol == Rol.INSTRUCTOR
         for (equipo in equipmentDao.pendientes()) {
-            val resultado = enviar { remoto.actualizarEstadoEquipo(equipo.remoteId, equipo.status.name) }
-            equipmentDao.marcarEnviado(equipo.id, equipo.status, resultado)
+            if (equipo.deleted) {
+                // Solo el instructor elimina equipos (HU-12)
+                if (!esInstructor) continue
+                val resultado = enviar { remoto.eliminarEquipo(equipo.remoteId) }
+                if (resultado == EstadoSincronizacion.SINCRONIZADO) equipmentDao.borrar(equipo.id)
+                else equipmentDao.restaurar(equipo.id)
+                resumen.contar(resultado)
+                continue
+            }
+            // El estudiante solo envía el estado: así no revierte un cambio de nombre que aún no ha recibido
+            val resultado = enviar {
+                if (esInstructor) remoto.guardarEquipo(equipo.aRemoto())
+                else remoto.actualizarEstadoEquipo(equipo.remoteId, equipo.status.name)
+            }
+            equipmentDao.marcarEnviado(equipo.id, equipo.status, equipo.name, equipo.category, resultado)
             resumen.contar(resultado)
         }
         for (prestamo in loanDao.pendientes()) {
@@ -120,6 +134,8 @@ class SincronizadorPrestamos(
         if (e.codigo == 401 || e.codigo == 404 || esTemporal(e.codigo)) throw e
         EstadoSincronizacion.ERROR
     }
+
+    private fun EquipmentEntity.aRemoto() = EquipoRemoto(remoteId, name, category, status.name)
 
     private suspend fun LoanEntity.aRemoto(): PrestamoRemoto? {
         val dueno = userId ?: return null
@@ -160,7 +176,8 @@ class SincronizadorPrestamos(
         val devoluciones = remoto.devoluciones(filtro)
 
         return db.withTransaction {
-            equipos.sumOf { guardarEquipo(it) } +
+            borrarEquiposQueYaNoExisten(equipos.map { it.id }.toSet()) +
+                equipos.sumOf { guardarEquipo(it) } +
                 prestamos.sumOf { guardarPrestamo(it) } +
                 devoluciones.sumOf { guardarDevolucion(it) }
         }
@@ -183,6 +200,16 @@ class SincronizadorPrestamos(
             else -> { equipmentDao.actualizar(entidad); 1 }
         }
     }
+
+    /**
+     * Otro dispositivo del instructor eliminó el equipo en Supabase. Solo se borra si no tiene
+     * cambios locales ni préstamos: así nadie solicita un equipo que ya no existe (HU-12).
+     */
+    private suspend fun borrarEquiposQueYaNoExisten(remotos: Set<String>): Int =
+        equipmentDao.sincronizados()
+            .filter { it.remoteId !in remotos && loanDao.estadosPorEquipo(it.id).isEmpty() }
+            .onEach { equipmentDao.borrar(it.id) }
+            .size
 
     private suspend fun guardarPrestamo(r: PrestamoRemoto): Int {
         val estado = EstadoSolicitud.entries.find { it.name == r.estado } ?: return 0
