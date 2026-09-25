@@ -16,3 +16,6 @@ local.properties
 .idea/
 .idea/gradle.xml
 .idea/inspectionProfiles/
+
+# Documentos privados: credenciales de demostración y la guía del curso (no se suben a GitHub)
+/privado/
