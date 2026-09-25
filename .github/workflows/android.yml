@@ -1,6 +1,6 @@
 name: Android CI
 
-# Compila la app y ejecuta las pruebas unitarias en cada push y pull request.
+# Quality gates en cada push y pull request: pruebas unitarias, compilación y lint.
 # Las pruebas instrumentadas (Room, WorkManager, UI con Compose) necesitan un dispositivo:
 # se ejecutan en el teléfono de pruebas (ver docs/PLAN_PRUEBAS.md); aquí solo se compilan.
 on:
@@ -38,6 +38,10 @@ jobs:
       - name: Compilar la app y las pruebas instrumentadas
         run: ./gradlew assembleDebug assembleDebugAndroidTest --console=plain
 
+      # Quality gate: la compilación falla si lint encuentra errores (las advertencias quedan en el reporte)
+      - name: Lint
+        run: ./gradlew lintDebug --console=plain
+
       - name: Publicar reportes de pruebas
         if: always()
         uses: actions/upload-artifact@v4
@@ -46,6 +50,7 @@ jobs:
           path: |
             app/build/reports/tests/testDebugUnitTest/
             app/build/test-results/testDebugUnitTest/
+            app/build/reports/lint-results-debug.html
           if-no-files-found: ignore
 
       - name: Publicar APK de depuración
