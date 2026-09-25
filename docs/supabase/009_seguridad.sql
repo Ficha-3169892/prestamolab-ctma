@@ -110,6 +110,32 @@ revoke all on function public.usuario_actual(), public.rol_actual(), public.sesi
 grant execute on function public.usuario_actual(), public.rol_actual(), public.sesion_valida(),
     public.iniciar_sesion(text, text), public.cerrar_sesion() to anon;
 
+-- ═══ 2b. Solo las políticas de este script ═══════════════════════════════════
+-- Las políticas se combinan con OR: basta una política permisiva creada a mano (p. ej. desde el panel de
+-- Supabase, "Enable read access for all users") para anular todas las de abajo. Encontrado al verificar:
+-- con una así, un estudiante pudo borrar un equipo. Se eliminan todas las que este script no define.
+do $$
+declare
+    p record;
+begin
+    for p in
+        select tablename, policyname from pg_policies
+        where schemaname = 'public'
+          and tablename in ('users', 'equipments', 'loans', 'returns', 'evidences', 'activities', 'sesiones')
+          and policyname not in (
+              'users_con_sesion',
+              'equipments_ver', 'equipments_crear', 'equipments_cambiar', 'equipments_eliminar',
+              'loans_ver', 'loans_crear', 'loans_cambiar',
+              'returns_ver', 'returns_escribir', 'returns_cambiar',
+              'evidences_ver', 'evidences_escribir', 'evidences_cambiar',
+              'activities_ver', 'activities_crear', 'activities_cambiar', 'activities_eliminar'
+          )
+    loop
+        execute format('drop policy %I on public.%I', p.policyname, p.tablename);
+        raise notice 'Política eliminada: %.%', p.tablename, p.policyname;
+    end loop;
+end $$;
+
 -- ═══ 3. users deja de ser legible (R-03) ═════════════════════════════════════
 -- Solo id y nombre, y solo con sesión: los necesita "Solicitante" en los préstamos que ve el instructor.
 revoke select on public.users from anon;
