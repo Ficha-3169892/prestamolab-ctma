@@ -35,10 +35,20 @@ class UsuariosAuthRepository(
         val rol = Rol.entries.find { it.name == encontrado.rol }
             ?: return Result.failure(IllegalStateException("Rol no reconocido: ${encontrado.rol}"))
 
-        val sesion = Sesion(Usuario(encontrado.id, encontrado.nombre, encontrado.email, rol))
+        val sesion = Sesion(Usuario(encontrado.id, encontrado.nombre, encontrado.email, rol), encontrado.token)
         sessionStore.guardar(sesion)
         return Result.success(sesion)
     }
 
-    override suspend fun cerrarSesion() = sessionStore.limpiar()
+    override suspend fun cerrarSesion() {
+        // Mejor esfuerzo: sin red el token vence solo (7 días); la sesión local se borra igual
+        try {
+            remoto.cerrarSesion()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // Se ignora a propósito
+        }
+        sessionStore.limpiar()
+    }
 }

@@ -59,6 +59,8 @@ class SincronizadorPrestamos(
     private val evidenceDao = db.evidenceDao()
 
     override suspend fun sincronizar(usuario: Usuario): ResultadoSincronizacion = try {
+        // Sin esta pregunta, una sesión vencida recibiría listas vacías y borraría el catálogo local
+        if (!remoto.sesionActiva()) throw SupabaseHttpException(401, "La sesión venció o se cerró en el servidor")
         val envio = enviarPendientes(usuario)
         val recibidos = recibir(usuario)
         ResultadoSincronizacion.Exito(envio.enviados, recibidos, envio.rechazados)

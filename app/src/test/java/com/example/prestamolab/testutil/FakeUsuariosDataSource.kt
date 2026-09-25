@@ -30,7 +30,16 @@ class FakeUsuariosDataSource(
                 CampoIdentificador.DOCUMENTO -> fila.documento == valor
             }
             coincide && fila.contrasenaHash == contrasenaHash
-        }?.usuario
+        }?.usuario?.copy(token = "token-${++sesionesEmitidas}")
+    }
+
+    /** Tokens emitidos y sesiones cerradas en el "servidor". */
+    var sesionesEmitidas = 0
+    var sesionesCerradas = 0
+
+    override suspend fun cerrarSesion() {
+        error?.let { throw it }
+        sesionesCerradas++
     }
 
     companion object {

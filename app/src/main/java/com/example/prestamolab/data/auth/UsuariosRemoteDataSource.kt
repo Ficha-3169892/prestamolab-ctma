@@ -2,16 +2,17 @@ package com.example.prestamolab.data.auth
 
 import com.example.prestamolab.data.remote.SupabaseRestClient
 import org.json.JSONArray
-import java.net.URLEncoder
+import org.json.JSONObject
 
 enum class CampoIdentificador(val columna: String) { CORREO("email"), DOCUMENTO("document") }
 
-/** Fila de `public.users` sin password_hash, que nunca se descarga. */
+/** Usuario autenticado; la contraseña nunca se descarga. [token] identifica la sesión en el servidor. */
 data class UsuarioRemoto(
     val id: String,
     val email: String,
     val nombre: String,
-    val rol: String
+    val rol: String,
+    val token: String? = null
 )
 
 interface UsuariosRemoteDataSource {
@@ -20,9 +21,15 @@ interface UsuariosRemoteDataSource {
      * Lanza IOException sin red y SupabaseHttpException ante respuestas fuera de 2xx.
      */
     suspend fun buscarPorCredenciales(campo: CampoIdentificador, valor: String, contrasenaHash: String): UsuarioRemoto?
+
+    /** Invalida en el servidor el token de la sesión activa. */
+    suspend fun cerrarSesion() {}
 }
 
-/** Consulta la tabla `users` mediante la API REST de Supabase (PostgREST). */
+/**
+ * Login mediante la función iniciar_sesion() de docs/supabase/009_seguridad.sql: el servidor compara el
+ * SHA-256 recibido contra bcrypt (R-01, R-02) y la tabla users ya no es legible con la anon key (R-03).
+ */
 class SupabaseUsuariosDataSource(private val cliente: SupabaseRestClient) : UsuariosRemoteDataSource {
 
     override suspend fun buscarPorCredenciales(
@@ -30,13 +37,11 @@ class SupabaseUsuariosDataSource(private val cliente: SupabaseRestClient) : Usua
         valor: String,
         contrasenaHash: String
     ): UsuarioRemoto? {
-        // El hash solo se usa como filtro: el select no lo incluye en la respuesta
+        // El servidor distingue correo y documento con la misma regla que la app ("@")
         val filas = JSONArray(
-            cliente.get(
-                "users?select=id,email,full_name,role" +
-                    "&${campo.columna}=eq.${codificar(valor)}" +
-                    "&password_hash=eq.${codificar(contrasenaHash)}" +
-                    "&limit=1"
+            cliente.rpc(
+                "iniciar_sesion",
+                JSONObject().put("p_identificador", valor).put("p_hash", contrasenaHash).toString()
             )
         )
         if (filas.length() == 0) return null
@@ -45,9 +50,12 @@ class SupabaseUsuariosDataSource(private val cliente: SupabaseRestClient) : Usua
             id = fila.getString("id"),
             email = fila.optString("email"),
             nombre = fila.optString("full_name"),
-            rol = fila.optString("role")
+            rol = fila.optString("role"),
+            token = fila.getString("token")
         )
     }
 
-    private fun codificar(valor: String) = URLEncoder.encode(valor, "UTF-8")
+    override suspend fun cerrarSesion() {
+        cliente.rpc("cerrar_sesion")
+    }
 }

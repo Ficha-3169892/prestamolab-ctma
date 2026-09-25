@@ -20,7 +20,9 @@ class SupabaseRestClient(
     private val baseUrl: String,
     private val anonKey: String,
     tiempoEsperaMs: Long = 10_000,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    /** Token de la sesión activa (R-04): las políticas RLS del servidor lo leen de la cabecera x-sesion. */
+    private val tokenSesion: suspend () -> String? = { null }
 ) {
     private val http = OkHttpClient.Builder()
         .connectTimeout(tiempoEsperaMs, TimeUnit.MILLISECONDS)
@@ -55,6 +57,10 @@ class SupabaseRestClient(
         }
     }
 
+    /** Llama una función de la base (`/rest/v1/rpc/<funcion>`) con sus parámetros en JSON; devuelve el JSON crudo. */
+    suspend fun rpc(funcion: String, json: String = "{}"): String =
+        enviar("rpc/$funcion") { post(json.toRequestBody(JSON)) }
+
     /** Borra las filas que cumplen el filtro de [recurso]; si no hay ninguna, no es un error. */
     suspend fun delete(recurso: String) {
         enviar(recurso) {
@@ -85,8 +91,9 @@ class SupabaseRestClient(
         ruta: String,
         cliente: OkHttpClient,
         configurar: Request.Builder.() -> Request.Builder
-    ): String =
-        withContext(ioDispatcher) {
+    ): String {
+        val token = tokenSesion()
+        return withContext(ioDispatcher) {
             val url = "${baseUrl.trimEnd('/')}/$ruta".toHttpUrlOrNull()
                 ?: throw IOException("SUPABASE_URL no está configurada en local.properties")
             val peticion = Request.Builder()
@@ -94,6 +101,7 @@ class SupabaseRestClient(
                 .header("apikey", anonKey)
                 .header("Authorization", "Bearer $anonKey")
                 .header("Accept", "application/json")
+                .apply { if (token != null) header(CABECERA_SESION, token) }
                 .configurar()
                 .build()
             cliente.newCall(peticion).execute().use { respuesta ->
@@ -102,9 +110,12 @@ class SupabaseRestClient(
                 cuerpo
             }
         }
+    }
 
-    private companion object {
-        const val TIEMPO_ARCHIVOS_S = 60L
-        val JSON = "application/json; charset=utf-8".toMediaType()
+    companion object {
+        /** Debe coincidir con la que lee usuario_actual() en docs/supabase/009_seguridad.sql. */
+        const val CABECERA_SESION = "x-sesion"
+        private const val TIEMPO_ARCHIVOS_S = 60L
+        private val JSON = "application/json; charset=utf-8".toMediaType()
     }
 }

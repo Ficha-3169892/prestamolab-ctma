@@ -39,6 +39,7 @@ import com.example.prestamolab.data.sync.SincronizadorPrestamos
 import com.example.prestamolab.data.sync.WorkManagerProgramador
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -50,7 +51,9 @@ import kotlinx.coroutines.launch
 class AppContainer(context: Context) {
     private val appContext = context.applicationContext
 
-    private val supabase by lazy { SupabaseRestClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_KEY) }
+    private val supabase by lazy {
+        SupabaseRestClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_KEY) { sessionStore.sesion.first()?.token }
+    }
 
     val database: PrestamoLabDatabase by lazy { PrestamoLabDatabase.construir(appContext) }
     val sessionStore: SessionStore by lazy { DataStoreSessionStore(appContext.sesionDataStore) }

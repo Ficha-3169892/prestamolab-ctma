@@ -312,6 +312,16 @@ class SupabasePrestamosDataSourceTest {
     }
 
     @Test
+    fun `sesion_valida responde si el servidor reconoce el token`() = runTest {
+        responder(200, "true")
+        responder(200, "false")
+
+        assertTrue(remoto.sesionActiva())
+        assertFalse(remoto.sesionActiva())
+        assertEquals("/rest/v1/rpc/sesion_valida", servidor.takeRequest().path)
+    }
+
+    @Test
     fun `El estado del equipo se envia con PATCH y solo la columna status`() = runTest {
         responder(204, "")
 

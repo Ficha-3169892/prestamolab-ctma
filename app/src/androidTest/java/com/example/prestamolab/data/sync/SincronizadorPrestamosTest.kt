@@ -565,4 +565,18 @@ class SincronizadorPrestamosTest {
         assertEquals("PRESTADO", enviado.estado)
         assertEquals(6.2518, enviado.latitud!!, 0.0)
     }
+
+    @Test
+    fun ConLaSesionVencida_NoAutorizadoSinEnviarNiBorrarNada() = runTest {
+        solicitar(1)
+        remoto.sesionActiva = false
+
+        val resultado = sincronizador.sincronizar(estudiante)
+
+        assertEquals(ResultadoSincronizacion.NoAutorizado, resultado)
+        // Con RLS las listas remotas vendrían vacías: el catálogo local no debe borrarse
+        assertEquals(5, repository.equipos.first().size)
+        assertTrue(remoto.prestamos.isEmpty())
+        assertEquals(1, db.loanDao().pendientes().size)
+    }
 }

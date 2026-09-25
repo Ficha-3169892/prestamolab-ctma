@@ -72,6 +72,12 @@ data class EvidenciaRemota(
  * e IOException ante fallos de red o tiempo de espera agotado.
  */
 interface PrestamosRemoteDataSource {
+    /**
+     * false si el servidor ya no reconoce el token (vencido o cerrado). Con RLS, leer sin sesión válida
+     * devuelve listas vacías en vez de un error: hay que preguntarlo antes de recibir.
+     */
+    suspend fun sesionActiva(): Boolean
+
     suspend fun equipos(): List<EquipoRemoto>
 
     /** [usuarioId] null trae los préstamos de todos (instructor); si no, solo los de ese usuario. */
@@ -100,6 +106,8 @@ interface PrestamosRemoteDataSource {
 }
 
 class SupabasePrestamosDataSource(private val cliente: SupabaseRestClient) : PrestamosRemoteDataSource {
+
+    override suspend fun sesionActiva(): Boolean = cliente.rpc("sesion_valida").trim() == "true"
 
     override suspend fun equipos(): List<EquipoRemoto> =
         filas(cliente.get("equipments?select=id,name,category,status&order=name")).map {

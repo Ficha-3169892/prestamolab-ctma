@@ -27,7 +27,7 @@ class DataStoreSessionStore(private val dataStore: DataStore<Preferences>) : Ses
         val id = prefs[USUARIO_ID] ?: return@map null
         // Un rol desconocido o corrupto se trata como sesión inválida
         val rol = Rol.entries.find { it.name == prefs[ROL] } ?: return@map null
-        Sesion(Usuario(id, prefs[NOMBRE].orEmpty(), prefs[CORREO].orEmpty(), rol))
+        Sesion(Usuario(id, prefs[NOMBRE].orEmpty(), prefs[CORREO].orEmpty(), rol), prefs[TOKEN])
     }
 
     override suspend fun guardar(sesion: Sesion) {
@@ -36,6 +36,7 @@ class DataStoreSessionStore(private val dataStore: DataStore<Preferences>) : Ses
             prefs[NOMBRE] = sesion.usuario.nombre
             prefs[CORREO] = sesion.usuario.correo
             prefs[ROL] = sesion.usuario.rol.name
+            if (sesion.token == null) prefs.remove(TOKEN) else prefs[TOKEN] = sesion.token
         }
     }
 
@@ -49,5 +50,6 @@ class DataStoreSessionStore(private val dataStore: DataStore<Preferences>) : Ses
         val NOMBRE = stringPreferencesKey("full_name")
         val CORREO = stringPreferencesKey("email")
         val ROL = stringPreferencesKey("role")
+        val TOKEN = stringPreferencesKey("session_token")
     }
 }

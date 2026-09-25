@@ -31,7 +31,7 @@ class UsuariosAuthRepositoryTest {
         ).getOrThrow()
 
         assertEquals(
-            Sesion(Usuario("uuid-instructor", "Instructor CTMA", "instructor@sena.edu.co", Rol.INSTRUCTOR)),
+            Sesion(Usuario("uuid-instructor", "Instructor CTMA", "instructor@sena.edu.co", Rol.INSTRUCTOR), token = "token-1"),
             sesion
         )
         assertEquals(sesion, store.sesion.value)
@@ -98,6 +98,44 @@ class UsuariosAuthRepositoryTest {
         repository.iniciarSesion(FakeUsuariosDataSource.CORREO_ESTUDIANTE, FakeUsuariosDataSource.CONTRASENA)
 
         repository.cerrarSesion()
+
+        assertNull(store.sesion.value)
+    }
+
+    @Test
+    fun `R-04 - La sesion guarda el token que emite el servidor`() = runTest {
+        val remoto = FakeUsuariosDataSource()
+        val store = FakeSessionStore()
+        val repo = UsuariosAuthRepository(remoto, store)
+
+        val sesion = repo.iniciarSesion(FakeUsuariosDataSource.CORREO_ESTUDIANTE, FakeUsuariosDataSource.CONTRASENA).getOrThrow()
+
+        assertEquals("token-1", sesion.token)
+        assertEquals("token-1", store.sesion.value?.token)
+    }
+
+    @Test
+    fun `Cerrar sesion invalida el token en el servidor y borra la sesion local`() = runTest {
+        val remoto = FakeUsuariosDataSource()
+        val store = FakeSessionStore()
+        val repo = UsuariosAuthRepository(remoto, store)
+        repo.iniciarSesion(FakeUsuariosDataSource.CORREO_ESTUDIANTE, FakeUsuariosDataSource.CONTRASENA).getOrThrow()
+
+        repo.cerrarSesion()
+
+        assertEquals(1, remoto.sesionesCerradas)
+        assertNull(store.sesion.value)
+    }
+
+    @Test
+    fun `Sin red la sesion local se cierra igual`() = runTest {
+        val remoto = FakeUsuariosDataSource()
+        val store = FakeSessionStore()
+        val repo = UsuariosAuthRepository(remoto, store)
+        repo.iniciarSesion(FakeUsuariosDataSource.CORREO_ESTUDIANTE, FakeUsuariosDataSource.CONTRASENA).getOrThrow()
+        remoto.error = java.io.IOException("Sin conexión")
+
+        repo.cerrarSesion()
 
         assertNull(store.sesion.value)
     }

@@ -22,6 +22,14 @@ class FakePrestamosRemoteDataSource : PrestamosRemoteDataSource {
 
     val filtrosDePrestamos = mutableListOf<String?>()
 
+    /** false simula un token vencido o cerrado en el servidor (docs/supabase/009_seguridad.sql). */
+    var sesionActiva = true
+
+    override suspend fun sesionActiva(): Boolean {
+        lanzarSiHayError()
+        return sesionActiva
+    }
+
     override suspend fun equipos(): List<EquipoRemoto> {
         lanzarSiHayError()
         return equipos.toList()

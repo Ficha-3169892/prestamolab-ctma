@@ -9,5 +9,9 @@ data class Usuario(
     val rol: Rol
 )
 
-/** Sesión activa: el usuario autenticado contra la tabla `users` de Supabase. */
-data class Sesion(val usuario: Usuario)
+/**
+ * Sesión activa: el usuario autenticado contra la tabla `users` de Supabase. [token] lo emite
+ * iniciar_sesion() en el servidor (R-04) y viaja en la cabecera x-sesion; null en sesiones anteriores a
+ * docs/supabase/009_seguridad.sql, que el servidor rechaza y obligan a iniciar sesión de nuevo.
+ */
+data class Sesion(val usuario: Usuario, val token: String? = null)
