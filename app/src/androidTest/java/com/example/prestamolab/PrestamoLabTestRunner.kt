@@ -3,6 +3,7 @@ package com.example.prestamolab
 import android.Manifest
 import android.app.Application
 import android.os.Build
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.AndroidJUnitRunner
 import com.example.prestamolab.testutil.FakeNotificador
 import com.example.prestamolab.testutil.FakePrestamosRemoteDataSource
@@ -23,7 +24,9 @@ class PrestamoLabTestRunner : AndroidJUnitRunner() {
         }
         // El estudiante semilla tiene un préstamo entregado: sin esto, el diálogo del sistema que pide
         // el permiso (CA-HU09-04) taparía la app en las pruebas de UI. Revocarlo mataría el proceso.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        // PermisoNotificacionesUiTest necesita el permiso sin conceder: se ejecuta con -e concederNotificaciones false
+        val concederNotificaciones = InstrumentationRegistry.getArguments().getString("concederNotificaciones") != "false"
+        if (concederNotificaciones && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             uiAutomation.grantRuntimePermission(app.packageName, Manifest.permission.POST_NOTIFICATIONS)
         }
         super.callApplicationOnCreate(app)

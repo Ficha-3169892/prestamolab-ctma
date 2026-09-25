@@ -79,15 +79,29 @@ omiten (`assumeTrue`). Revocar un permiso mata el proceso de prueba, así que se
 |---|---|---|
 | TC-HU08-01 y 03 (cámara) | `adb shell pm revoke com.example.prestamolab android.permission.CAMERA` | Corre en la suite completa (ninguna otra prueba concede la cámara) |
 | TC-HU13-01 (ubicación) | `adb shell pm revoke com.example.prestamolab android.permission.ACCESS_FINE_LOCATION` y lo mismo con `ACCESS_COARSE_LOCATION` | Aparte, porque `DevolucionUiTest` concede la ubicación durante la suite: `adb shell am instrument -w -r -e class com.example.prestamolab.ui.PermisoUbicacionUiTest com.example.prestamolab.test/com.example.prestamolab.PrestamoLabTestRunner` |
+| TC-HU09-04 (notificaciones) | `adb shell pm revoke com.example.prestamolab android.permission.POST_NOTIFICATIONS`; al terminar, `pm grant` | Aparte y con `-e concederNotificaciones false`, porque el runner concede el permiso para el resto de la suite: `adb shell am instrument -w -r -e concederNotificaciones false -e class com.example.prestamolab.ui.PermisoNotificacionesUiTest com.example.prestamolab.test/com.example.prestamolab.PrestamoLabTestRunner`. **Pendiente de una ejecución completa:** en el intento del 24 de septiembre el diálogo apareció, pero el teléfono se bloqueó antes de terminar |
+
+## 7b. Prueba de punta a punta contra Supabase real
+
+`SupabaseRealE2ETest` usa las clases reales de la app (login por RPC, Room, repositorios y sincronización) contra
+el servidor real, sin UI. Como instructor crea, edita y elimina un equipo (HU-12) y crea y elimina una actividad
+(HU-11); como estudiante recibe la actividad y el servidor le rechaza crear otra (RLS de `009`). Elimina todo lo
+que crea, aunque falle. Solo corre si se pide:
+
+```
+adb shell am instrument -w -r -e e2e true -e class com.example.prestamolab.e2e.SupabaseRealE2ETest com.example.prestamolab.test/com.example.prestamolab.PrestamoLabTestRunner
+```
+
+Resultado del 24 de septiembre de 2026: **aprobada**, y el servidor quedó sin restos de la prueba.
 
 ## 8. Pruebas manuales
 
 | Caso | Pasos | Estado |
 |---|---|---|
 | Foto real de evidencia (HU-08) | Estudiante → Mis Solicitudes → préstamo PRESTADO → Evidencias → tomar foto → sincronizar; comprobar la fila en `evidences` y que la URL pública abre la imagen | Aprobado (foto JPEG de 2,7 MB en el bucket `evidencias`) |
-| Diálogo de notificaciones (HU-09) | `adb shell pm revoke com.example.prestamolab android.permission.POST_NOTIFICATIONS`; entrar como estudiante con un préstamo PRESTADO: aparece el diálogo; negarlo no bloquea nada | Pendiente de registrar |
+| Diálogo de notificaciones (HU-09) | Automatizada con `PermisoNotificacionesUiTest` (sección 7) | Pendiente de una ejecución completa con el teléfono desbloqueado |
 | Punta a punta con seguridad (HU-03, HU-14, HU-13, R-04) | Con `009` aplicado: estudiante inicia sesión y solicita el Multímetro; instructor lo aprueba; estudiante lo ve PRESTADO. Consultar `loans` en Supabase | Aprobado: préstamo PRESTADO con solicitante y revisor correctos, equipo PRESTADO y coordenadas GPS reales de la solicitud. Encontró BUG-13 |
-| Inventario y actividades contra Supabase real (HU-12, HU-11) | Hacer la acción como instructor, sincronizar y consultar la tabla en Supabase | Pendiente de registrar |
+| Inventario y actividades contra Supabase real (HU-12, HU-11) | Automatizada con `SupabaseRealE2ETest` (sección 7b) | Aprobado |
 
 ## 9. Riesgos del plan
 
