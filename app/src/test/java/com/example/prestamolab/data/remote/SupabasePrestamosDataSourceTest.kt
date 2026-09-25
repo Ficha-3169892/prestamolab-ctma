@@ -23,7 +23,10 @@ class SupabasePrestamosDataSourceTest {
     fun setup() {
         servidor = MockWebServer()
         servidor.start()
-        val cliente = SupabaseRestClient(servidor.url("/").toString(), "anon-key", tiempoEsperaMs = 500)
+        // Margen amplio: con 500 ms estas pruebas fallaban por timeout cuando Gradle compilaba y
+        // ejecutaba lint en paralelo (prueba inestable; ver docs/PRUEBAS_INESTABLES.md).
+        // Solo TC-HU07-05 usa un tiempo de espera corto, con su propio cliente.
+        val cliente = SupabaseRestClient(servidor.url("/").toString(), "anon-key", tiempoEsperaMs = 10_000)
         remoto = SupabasePrestamosDataSource(cliente)
     }
 
@@ -376,8 +379,9 @@ class SupabasePrestamosDataSourceTest {
     @Test
     fun `TC-HU07-05 - Una respuesta mas lenta que el tiempo de espera lanza IOException`() = runTest {
         servidor.enqueue(MockResponse().setBody("[]").setHeadersDelay(2, TimeUnit.SECONDS))
+        val clienteImpaciente = SupabaseRestClient(servidor.url("/").toString(), "anon-key", tiempoEsperaMs = 500)
 
-        val error = runCatching { remoto.equipos() }.exceptionOrNull()
+        val error = runCatching { SupabasePrestamosDataSource(clienteImpaciente).equipos() }.exceptionOrNull()
 
         assertTrue(error is IOException)
     }
