@@ -502,4 +502,31 @@ class SincronizadorPrestamosTest {
         assertEquals(1, (resultado as ResultadoSincronizacion.Exito).rechazados)
         assertEquals(EstadoSincronizacion.ERROR, db.evidenceDao().obtener(evidencia.id)!!.syncStatus)
     }
+
+    @Test
+    fun LaUbicacionDeLaEvidenciaLlegaASupabase() = runTest {
+        val evidencia = evidenciaDelPrestamo2()
+        RoomEvidenciaRepository(db).agregarUbicacion(evidencia.id, Ubicacion(6.2518, -75.5636, 12f))
+
+        sincronizadorConFotos().sincronizar(estudiante)
+
+        val remota = remoto.evidencias.single()
+        assertEquals(6.2518, remota.latitud!!, 0.0)
+        assertEquals(-75.5636, remota.longitud!!, 0.0)
+        assertEquals(EstadoSincronizacion.SINCRONIZADO, db.evidenceDao().obtener(evidencia.id)!!.syncStatus)
+    }
+
+    @Test
+    fun SiLaUbicacionLlegaDespuesDeEnviar_SeVuelveAEnviar() = runTest {
+        val evidencia = evidenciaDelPrestamo2()
+        sincronizadorConFotos().sincronizar(estudiante)
+        assertNull(remoto.evidencias.single().latitud)
+
+        RoomEvidenciaRepository(db).agregarUbicacion(evidencia.id, Ubicacion(6.2518, -75.5636, 12f))
+        sincronizadorConFotos().sincronizar(estudiante)
+
+        assertEquals(6.2518, remoto.evidencias.single().latitud!!, 0.0)
+        // La foto no se vuelve a subir: ya tenía su URL
+        assertEquals(1, remoto.fotos.size)
+    }
 }

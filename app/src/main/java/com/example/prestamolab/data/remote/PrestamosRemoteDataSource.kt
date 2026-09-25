@@ -59,7 +59,9 @@ data class EvidenciaRemota(
     val prestamoId: String,
     val etapa: String,
     val urlFoto: String,
-    val fecha: String
+    val fecha: String,
+    val latitud: Double? = null,
+    val longitud: Double? = null
 )
 
 /**
@@ -235,6 +237,8 @@ class SupabasePrestamosDataSource(private val cliente: SupabaseRestClient) : Pre
             .put("stage", evidencia.etapa)
             .put("photo_url", evidencia.urlFoto)
             .put("taken_at", evidencia.fecha)
+            .put("latitude", evidencia.latitud ?: JSONObject.NULL)
+            .put("longitude", evidencia.longitud ?: JSONObject.NULL)
             .toString()
     )
 

@@ -6,6 +6,7 @@ import com.example.prestamolab.data.local.entity.aDominio
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.EtapaEvidencia
 import com.example.prestamolab.model.Evidencia
+import com.example.prestamolab.model.Ubicacion
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
@@ -19,6 +20,9 @@ interface EvidenciaRepository {
 
     /** CA-HU08-02: asocia la foto ya guardada al préstamo. Solo un préstamo PRESTADO admite evidencias. */
     suspend fun registrar(solicitudId: Int, etapa: EtapaEvidencia, uriLocal: String): Result<Evidencia>
+
+    /** Agrega el GPS a una evidencia ya guardada: la ubicación puede tardar varios segundos. */
+    suspend fun agregarUbicacion(evidenciaId: Int, ubicacion: Ubicacion)
 }
 
 class RoomEvidenciaRepository(
@@ -50,5 +54,10 @@ class RoomEvidenciaRepository(
         val id = dao.insertar(evidencia).toInt()
         alCambiarLocalmente()
         return Result.success(evidencia.copy(id = id).aDominio())
+    }
+
+    override suspend fun agregarUbicacion(evidenciaId: Int, ubicacion: Ubicacion) {
+        dao.guardarUbicacion(evidenciaId, ubicacion.latitud, ubicacion.longitud)
+        alCambiarLocalmente()
     }
 }

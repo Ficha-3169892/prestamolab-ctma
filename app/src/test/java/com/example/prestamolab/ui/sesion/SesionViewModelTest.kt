@@ -1,6 +1,7 @@
 package com.example.prestamolab.ui.sesion
 
 import com.example.prestamolab.data.auth.UsuariosAuthRepository
+import com.example.prestamolab.data.recordatorios.AperturasPendientes
 import com.example.prestamolab.model.Rol
 import com.example.prestamolab.model.Sesion
 import com.example.prestamolab.model.Usuario
@@ -43,5 +44,17 @@ class SesionViewModelTest {
 
         assertNull(store.sesion.value)
         assertEquals(EstadoSesion.SinSesion, vm.estado.value)
+    }
+
+    @Test
+    fun `TC-HU09-02 - La apertura de una notificacion llega por el ViewModel y se consume una vez`() {
+        val aperturas = AperturasPendientes()
+        val vm = SesionViewModel(authCon(FakeSessionStore(Sesion(usuario))), aperturas)
+
+        aperturas.abrir(2)
+        assertEquals(2, vm.aperturaPendiente.value)
+
+        vm.consumirApertura()
+        assertNull(vm.aperturaPendiente.value)
     }
 }

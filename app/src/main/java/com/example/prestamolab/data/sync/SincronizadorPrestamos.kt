@@ -161,14 +161,14 @@ class SincronizadorPrestamos(
                 val bytes = leerFoto(evidencia.localUri)
                 if (bytes == null) {
                     // El archivo se borró del teléfono: no hay nada que subir
-                    evidenceDao.marcarEnviada(evidencia.id, EstadoSincronizacion.ERROR)
+                    evidenceDao.marcarEnviada(evidencia.id, evidencia.latitude, evidencia.longitude, EstadoSincronizacion.ERROR)
                     resumen.contar(EstadoSincronizacion.ERROR)
                     return@run null
                 }
                 var subida: String? = null
                 val resultado = enviar { subida = remoto.subirFoto("${prestamo.remoteId}/${evidencia.remoteId}.jpg", bytes) }
                 if (resultado != EstadoSincronizacion.SINCRONIZADO) {
-                    evidenceDao.marcarEnviada(evidencia.id, resultado)
+                    evidenceDao.marcarEnviada(evidencia.id, evidencia.latitude, evidencia.longitude, resultado)
                     resumen.contar(resultado)
                     return@run null
                 }
@@ -177,10 +177,13 @@ class SincronizadorPrestamos(
 
             val resultado = enviar {
                 remoto.guardarEvidencia(
-                    EvidenciaRemota(evidencia.remoteId, prestamo.remoteId, evidencia.stage.name, url, fechas.aIso(evidencia.takenAt))
+                    EvidenciaRemota(
+                        evidencia.remoteId, prestamo.remoteId, evidencia.stage.name, url, fechas.aIso(evidencia.takenAt),
+                        evidencia.latitude, evidencia.longitude
+                    )
                 )
             }
-            evidenceDao.marcarEnviada(evidencia.id, resultado)
+            evidenceDao.marcarEnviada(evidencia.id, evidencia.latitude, evidencia.longitude, resultado)
             resumen.contar(resultado)
         }
     }

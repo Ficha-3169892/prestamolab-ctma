@@ -25,6 +25,9 @@ interface AlmacenFotos {
 
     /** Bytes de la foto para subirla a Storage; null si el archivo ya no existe. */
     fun leer(uri: String): ByteArray?
+
+    /** Miniatura reducida para la lista; null si la foto no se puede leer. */
+    fun miniatura(uri: String): Bitmap?
 }
 
 class FileProviderAlmacenFotos(private val contexto: Context) : AlmacenFotos {
@@ -47,8 +50,8 @@ class FileProviderAlmacenFotos(private val contexto: Context) : AlmacenFotos {
         null
     }
 
-    /** Miniatura reducida para la lista; null si la foto no se puede leer. */
-    fun miniatura(uri: String, ladoMaximo: Int = 256): Bitmap? = try {
+    override fun miniatura(uri: String): Bitmap? = try {
+        val ladoMaximo = 256
         val opciones = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         contexto.contentResolver.openInputStream(Uri.parse(uri))?.use { BitmapFactory.decodeStream(it, null, opciones) }
         var muestreo = 1

@@ -167,4 +167,35 @@ class MigracionTest {
             assertTrue(c.isNull(1))
         }
     }
+
+    @Test
+    fun MigracionDeV6AV7AgregaLaUbicacionDeLasEvidencias() {
+        helper.createDatabase(nombreBase, 6).apply {
+            execSQL(
+                "INSERT INTO equipments (id, remote_id, name, category, status, sync_status, deleted) " +
+                    "VALUES (5, 'e5', 'Kit Arduino Uno', 'Herramienta', 'PRESTADO', 'SINCRONIZADO', 0)"
+            )
+            execSQL(
+                "INSERT INTO loans (id, remote_id, equipment_id, user_id, requester_name, environment, purpose, " +
+                    "duration_hours, request_date, return_date, status, sync_status) VALUES " +
+                    "(2, 'l2', 5, 'u1', 'Andrés Vargas', 'Lab', 'IoT', 4, '2026-09-03 08:00', '2026-09-03 12:00', " +
+                    "'PRESTADO', 'SINCRONIZADO')"
+            )
+            execSQL(
+                "INSERT INTO evidences (remote_id, loan_id, stage, local_uri, photo_url, taken_at, sync_status) " +
+                    "VALUES ('ev1', 2, 'ENTREGA', 'content://x/1.jpg', 'https://x/1.jpg', '2026-09-25 10:00', 'SINCRONIZADO')"
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(nombreBase, 7, true, MIGRACION_6_7)
+
+        db.query("SELECT photo_url, sync_status, latitude, longitude FROM evidences").use { c ->
+            c.moveToNext()
+            assertEquals("https://x/1.jpg", c.getString(0))
+            assertEquals("SINCRONIZADO", c.getString(1))
+            assertTrue(c.isNull(2))
+            assertTrue(c.isNull(3))
+        }
+    }
 }

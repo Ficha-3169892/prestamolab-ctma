@@ -22,7 +22,7 @@ CA-HUxx-nn tiene exactamente un caso TC-HUxx-nn.
 | Unitarias de ViewModel | Validaciones, estados de la UI, control por rol, eventos de navegación | JUnit, Turbine, MockK, `MainDispatcherRule`, repositorios en memoria | `app/src/test/.../ui/` |
 | Contrato HTTP | Nombres de columna, filtros, métodos y cabeceras que se envían a Supabase | MockWebServer | `SupabasePrestamosDataSourceTest` |
 | Integración con Room | Repositorios, transacciones y consultas sobre una base en memoria con datos semilla | Room in-memory, `DatosSemilla` | `app/src/androidTest/.../data/` |
-| Migraciones | Cada migración 1→2 … 5→6 conserva los datos y deja el esquema exportado exacto | `MigrationTestHelper` | `MigracionTest` |
+| Migraciones | Cada migración 1→2 … 6→7 conserva los datos y deja el esquema exportado exacto | `MigrationTestHelper` | `MigracionTest` |
 | Sincronización | Envío de pendientes, recepción, conflictos, errores 401/404/4xx/5xx, fotos a Storage | Room in-memory, `FakePrestamosRemoteDataSource` | `SincronizadorPrestamosTest` |
 | WorkManager | Reintento exponencial, programación y cancelación de recordatorios | `TestListenableWorkerBuilder`, WorkManager real con retrasos largos | `SincronizacionWorkerTest`, `WorkManagerRecordatoriosTest` |
 | UI de extremo a extremo en el dispositivo | Flujos completos por rol sobre la app real | Compose UI Test, `PrestamoLabTestRunner` | `app/src/androidTest/.../ui/` |
@@ -65,8 +65,8 @@ CA-HUxx-nn tiene exactamente un caso TC-HUxx-nn.
 
 | Suite | Pruebas | Resultado |
 |---|---|---|
-| Unitarias (`testDebugUnitTest`) | 160 | En verde |
-| Instrumentadas y de UI (Xiaomi) | 137 | En verde |
+| Unitarias (`testDebugUnitTest`) | 165 | En verde (también en el CI) |
+| Instrumentadas y de UI (Xiaomi) | 141 | En verde |
 | Criterios automatizados | 62 de 74 (83 %) | Ver matriz |
 
 ## 7. Pruebas manuales
@@ -80,7 +80,7 @@ CA-HUxx-nn tiene exactamente un caso TC-HUxx-nn.
 
 ## 8. Criterios pendientes
 
-De los 12 criterios sin prueba automatizada, 5 requieren también implementar la funcionalidad:
+De los 12 criterios sin prueba automatizada, 6 requieren también implementar la funcionalidad:
 
 | Criterio | Qué falta |
 |---|---|
@@ -88,7 +88,8 @@ De los 12 criterios sin prueba automatizada, 5 requieren también implementar la
 | CA-HU01-03 | **Funcionalidad:** filtro "Solo disponibles" y por categoría, y su prueba |
 | CA-HU01-04 | **Funcionalidad:** conservar el filtro en DataStore, y su prueba |
 | CA-HU01-05 | **Funcionalidad:** mensaje "No hay equipos para mostrar", y su prueba |
-| CA-HU04-01, 02, 04 | Pruebas de Mis Solicitudes: solo las del usuario, campos visibles, mensaje sin solicitudes (ya implementado) |
+| CA-HU04-01, 04 | Pruebas de Mis Solicitudes: solo las del usuario y mensaje sin solicitudes (ya implementado) |
+| CA-HU04-02 | **Funcionalidad:** mostrar el ambiente y la fecha límite en cada tarjeta, y su prueba |
 | CA-HU06-01 | Prueba de reinicio en modo avión (Room ya es la fuente de verdad) |
 | CA-HU06-05 | **Funcionalidad:** consulta con `@Relation` (préstamo con su equipo y evidencias), y su prueba |
 | CA-HU13-01 | Registro de la prueba manual del diálogo de ubicación |

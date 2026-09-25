@@ -25,6 +25,14 @@ interface EvidenceDao {
     @Query("UPDATE evidences SET photo_url = :url WHERE id = :id")
     suspend fun guardarUrl(id: Int, url: String)
 
-    @Query("UPDATE evidences SET sync_status = :resultado WHERE id = :id AND sync_status = 'PENDIENTE'")
-    suspend fun marcarEnviada(id: Int, resultado: EstadoSincronizacion)
+    /** La ubicación llega después de la foto: la evidencia vuelve a quedar pendiente de enviar. */
+    @Query("UPDATE evidences SET latitude = :latitud, longitude = :longitud, sync_status = 'PENDIENTE' WHERE id = :id")
+    suspend fun guardarUbicacion(id: Int, latitud: Double, longitud: Double)
+
+    /** Solo si la ubicación no cambió mientras se enviaba; si cambió, sigue PENDIENTE. */
+    @Query(
+        "UPDATE evidences SET sync_status = :resultado WHERE id = :id AND sync_status = 'PENDIENTE' " +
+            "AND latitude IS :latitud AND longitude IS :longitud"
+    )
+    suspend fun marcarEnviada(id: Int, latitud: Double?, longitud: Double?, resultado: EstadoSincronizacion)
 }

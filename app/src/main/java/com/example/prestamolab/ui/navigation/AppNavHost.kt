@@ -21,7 +21,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.prestamolab.PrestamoLabApp
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.EtapaEvidencia
 import com.example.prestamolab.ui.evidencias.EvidenciasRoute
@@ -29,7 +28,7 @@ import com.example.prestamolab.ui.evidencias.EvidenciasViewModel
 import com.example.prestamolab.model.Rol
 import com.example.prestamolab.model.Usuario
 import com.example.prestamolab.ui.recordatorios.PedirPermisoNotificaciones
-import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import com.example.prestamolab.ui.EventoPrestamo
 import com.example.prestamolab.ui.PrestamoViewModel
@@ -80,7 +79,12 @@ fun AppNavHost() {
 
         // La clave descarta la navegación del usuario anterior al cambiar de cuenta
         is EstadoSesion.Autenticado -> key(sesion.usuario.id) {
-            AreaAutenticada(usuario = sesion.usuario, onCerrarSesion = sesionViewModel::cerrarSesion)
+            AreaAutenticada(
+                usuario = sesion.usuario,
+                aperturaPendiente = sesionViewModel.aperturaPendiente,
+                onAperturaConsumida = sesionViewModel::consumirApertura,
+                onCerrarSesion = sesionViewModel::cerrarSesion
+            )
         }
     }
 }
@@ -123,7 +127,12 @@ private fun NavHostController.irADestinoPrincipal(ruta: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
+private fun AreaAutenticada(
+    usuario: Usuario,
+    aperturaPendiente: StateFlow<Int?>,
+    onAperturaConsumida: () -> Unit,
+    onCerrarSesion: () -> Unit
+) {
     val navController = rememberNavController()
     val rutaActual = navController.currentBackStackEntryAsState().value?.destination?.route
 
@@ -136,10 +145,9 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
     val puedeSolicitar = ControlAcceso.puedeSolicitarPrestamo(usuario.rol)
 
     // CA-HU09-02: la notificación de recordatorio abre la pantalla del préstamo
-    val aperturas = (LocalContext.current.applicationContext as PrestamoLabApp).container.aperturas
-    LaunchedEffect(aperturas) {
-        aperturas.solicitudId.filterNotNull().collect { solicitudId ->
-            aperturas.consumir()
+    LaunchedEffect(aperturaPendiente) {
+        aperturaPendiente.filterNotNull().collect { solicitudId ->
+            onAperturaConsumida()
             if (ControlAcceso.puedeAcceder(Rutas.DEVOLUCION, usuario.rol)) {
                 navController.navigate(Rutas.devolucion(solicitudId)) { launchSingleTop = true }
             }

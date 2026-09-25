@@ -26,7 +26,10 @@ data class EvidenceEntity(
     @ColumnInfo(name = "photo_url") val photoUrl: String? = null,
     /** "yyyy-MM-dd HH:mm" en hora del dispositivo; en Supabase es timestamptz. */
     @ColumnInfo(name = "taken_at") val takenAt: String,
-    @ColumnInfo(name = "sync_status") val syncStatus: EstadoSincronizacion = EstadoSincronizacion.PENDIENTE
+    @ColumnInfo(name = "sync_status") val syncStatus: EstadoSincronizacion = EstadoSincronizacion.PENDIENTE,
+    /** GPS al tomar la foto; mismas columnas que evidences en Supabase. */
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )
 
-fun EvidenceEntity.aDominio() = Evidencia(id, loanId, stage, localUri, photoUrl, takenAt)
+fun EvidenceEntity.aDominio() = Evidencia(id, loanId, stage, localUri, photoUrl, takenAt, latitude, longitude)

@@ -8,6 +8,7 @@ import com.example.prestamolab.data.local.PrestamoLabDatabase
 import com.example.prestamolab.data.local.entity.EstadoSincronizacion
 import com.example.prestamolab.data.repository.RoomEvidenciaRepository
 import com.example.prestamolab.model.EtapaEvidencia
+import com.example.prestamolab.model.Ubicacion
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -86,5 +87,18 @@ class EvidenciasDatosTest {
         assertTrue(repository.registrar(1, EtapaEvidencia.ENTREGA, "content://x/1.jpg").isFailure)
         assertTrue(repository.evidencias(1).first().isEmpty())
         assertEquals(0, cambiosLocales)
+    }
+
+    @Test
+    fun LaUbicacionSeAgregaALaEvidenciaYQuedaPendienteDeEnviar() = runTest {
+        val evidencia = repository.registrar(2, EtapaEvidencia.DEVOLUCION, "content://x/1.jpg").getOrThrow()
+        db.evidenceDao().marcarEnviada(evidencia.id, null, null, EstadoSincronizacion.SINCRONIZADO)
+
+        repository.agregarUbicacion(evidencia.id, Ubicacion(6.2518, -75.5636, 12f))
+
+        val guardada = repository.evidencias(2).first().single()
+        assertEquals(6.2518, guardada.latitud!!, 0.0)
+        assertEquals(-75.5636, guardada.longitud!!, 0.0)
+        assertEquals(EstadoSincronizacion.PENDIENTE, db.evidenceDao().obtener(evidencia.id)!!.syncStatus)
     }
 }

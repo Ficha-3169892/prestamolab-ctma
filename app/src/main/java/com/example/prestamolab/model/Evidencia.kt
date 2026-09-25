@@ -15,5 +15,8 @@ data class Evidencia(
     val uriLocal: String,
     /** URL pública en Supabase Storage; null mientras no se sube (CA-HU08-05). */
     val urlRemota: String?,
-    val fecha: String
+    val fecha: String,
+    /** Dónde se tomó; null si el estudiante no ha concedido la ubicación. */
+    val latitud: Double? = null,
+    val longitud: Double? = null
 )

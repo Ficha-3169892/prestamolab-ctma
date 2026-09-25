@@ -1,62 +1,80 @@
-# Informe Ejecutivo de Calidad - PréstamoLab CTMA
+# Informe ejecutivo de calidad - PréstamoLab CTMA (Parte 2)
 
-**Proyecto:** PréstamoLab CTMA  
-**Build Evaluada:** 0.1.0  
-**Fecha de Evaluación:** Septiembre de 2026  
-**Programa:** Análisis y Desarrollo de Software (ADSO) - CTMA  
-**Caso Integrador:** Aplicación móvil educativa para préstamos de equipos de laboratorio
-
----
-
-## 1. Alcance Construido y Probado
-Se diseñó, construyó y evaluó el incremento funcional correspondiente al MVP de PréstamoLab CTMA[cite: 2]:
-* **Incluido en el incremento:** Consulta de catálogo con disponibilidad síncrona[cite: 2], navegación por ID[cite: 2], registro de solicitudes con validación estricta de reglas[cite: 2], lista "Mis solicitudes"[cite: 2], flujo de cancelación en estado `SOLICITADA`[cite: 2], control de doble guardado[cite: 2], manejo de IDs inexistentes[cite: 2] y soporte de accesibilidad con fuentes aumentadas[cite: 2].
-* **Excluido del incremento:** Autenticación real de usuarios, integración con backend/API externa y persistencia en base de datos física (se utilizó un repositorio simulado en memoria)[cite: 2].
+**Proyecto:** PréstamoLab CTMA
+**Versión evaluada:** 1.0 (rama `andres-vargas`)
+**Periodo:** semanas 5 a 9, septiembre de 2026
+**Programa:** Análisis y Desarrollo de Software (ADSO), CTMA
+**Dispositivo de prueba:** Xiaomi 25078RA3EL, Android 15 (HyperOS), contra el proyecto Supabase real
 
 ---
 
-## 2. Métricas de Ejecución de QA
+## 1. Alcance construido y probado
+
+- **Incluido:** inicio de sesión contra la tabla `users` con SHA-256 y control por rol (INSTRUCTOR / ESTUDIANTE);
+  catálogo y detalle; solicitud, aprobación o rechazo, cancelación y devolución de préstamos; devolución con GPS
+  (Fused Location Provider); evidencia fotográfica con cámara, FileProvider y Supabase Storage; inventario de equipos
+  y actividades formativas del instructor; recordatorio de devolución con WorkManager y notificaciones;
+  persistencia local con Room (v7, migraciones probadas) y sesión en DataStore; sincronización offline-first con
+  Supabase.
+- **Incompleto:** filtros del catálogo y su persistencia (CA-HU01-03 a 05), ambiente y fecha límite en Mis
+  Solicitudes (CA-HU04-02), consulta con `@Relation` (CA-HU06-05) y GPS al solicitar un préstamo (CA-HU13-03).
+- **Fuera de alcance de esta versión:** Supabase Auth y políticas de seguridad por rol en el servidor (ver sección 5).
+
+## 2. Métricas de ejecución de QA
 
 | Métrica | Resultado |
-| :--- | :--- |
-| **Historias de Usuario (PBIs) Seleccionadas** | 7[cite: 2] |
-| **Historias de Usuario Cumplidas (Done)** | 7[cite: 2] |
-| **Casos de Prueba Planificados** | 18[cite: 2] |
-| **Casos de Prueba Ejecutados** | 18[cite: 2] |
-| **Resultados PASS / FAIL / BLOCKED** | 18 PASS / 0 FAIL / 0 BLOCKED (Post-correcciones)[cite: 2] |
-| **Defectos Críticos / Altos Abiertos** | 0[cite: 2] |
+|---|---|
+| Historias del backlog | 14 |
+| Historias terminadas / parciales | 10 / 4 |
+| Criterios de aceptación y casos de prueba (1:1) | 74 |
+| Criterios con prueba automatizada | 62 (83 %) |
+| Pruebas unitarias | 165, todas en verde (local y en GitHub Actions) |
+| Pruebas instrumentadas y de UI en el dispositivo | 141, todas en verde |
+| Verificación manual contra Supabase real | Login, sincronización, devolución con GPS, revisión de una solicitud y evidencia con foto |
+| Defectos registrados en la Parte 2 | 9 (BUG-04 a BUG-12), todos cerrados |
+| Defectos Críticos o Altos abiertos | 0 |
 
----
+## 3. Principales defectos y gestión de calidad
 
-## 3. Principales Defectos y Gestión de Calidad
+Detalle, causa raíz y pruebas de confirmación en `DEFECTOS.md`.
 
-* **BUG-03 (Severidad Alta / Prioridad Alta):** La doble pulsación rápida en "Guardar" creaba dos solicitudes activas para el mismo equipo[cite: 2].
-    * **Acción:** Se implementó bloqueo en la UI (`guardando = true`) e idempotencia en el ViewModel[cite: 2].
-    * **Verificación:** Caso `TC-13` re-ejecutado con resultado **PASS**, seguido de pruebas de regresión en catálogo y cancelación (`TC-01`, `TC-14`, `TC-15`)[cite: 2].
+- **BUG-05 (Crítica):** el login contra Supabase fallaba siempre por falta del permiso INTERNET. Las pruebas no lo
+  detectaron porque usan dobles del servidor; se encontró en la prueba manual en el dispositivo.
+- **BUG-06 a BUG-09 (Altas):** diferencias entre el esquema local y el real de Supabase (columnas NOT NULL), pérdida
+  silenciosa de cambios rechazados y cierre de la app por una devolución duplicada. Todas con prueba de confirmación
+  automatizada.
+- **Lección aprendida:** las pruebas con dobles no sustituyen la verificación contra el servidor real; desde entonces
+  cada historia que toca Supabase se valida también con consultas de solo lectura al proyecto real.
 
----
+## 4. Evaluación de la Definition of Done
 
-## 4. Evaluacion de Definition of Done (DoD)
+| Criterio (ver `SCRUM.md`) | Estado |
+|---|---|
+| 1. Compila y CI en verde | Cumple |
+| 2. Criterios implementados y registrados en la matriz | Parcial: 6 criterios sin implementar |
+| 3. UI → ViewModel (`StateFlow`) → Repository | Cumple |
+| 4. Room como fuente de verdad, migraciones probadas | Cumple |
+| 5. Sincronización sin duplicados | Cumple |
+| 6. Permisos en el momento de uso, sin bloquear la app | Cumple |
+| 7. Suites unitaria e instrumentada en verde | Cumple |
+| 8. Defectos Altos o Críticos corregidos con confirmación y regresión | Cumple |
+| 9. Repositorio sin credenciales, cambios de BD versionados | Cumple |
+| 10. Demostración en la Sprint Review | Pendiente de registrar |
 
-Se verificó el cumplimiento de los **10 criterios** de la Definition of Done del proyecto[cite: 2]:
-1. [x] Compilación limpia en el ambiente configurado[cite: 2].
-2. [x] Criterios de aceptación verificados y aprobados[cite: 2].
-3. [x] UI Compose desacoplada de la fuente de datos directa[cite: 2].
-4. [x] ViewModel expone `UiState` / `StateFlow` de solo lectura[cite: 2].
-5. [x] Navegación por IDs con control de IDs inexistentes[cite: 2].
-6. [x] Suite de pruebas ejecutada con datos sintéticos[cite: 2].
-7. [x] Defectos de severidad Alta/Crítica corregidos[cite: 2].
-8. [x] Pruebas de confirmación y regresión documentadas[cite: 2].
-9. [x] Repositorio Git estructurado y limpio[cite: 2].
-10. [x] Incremento demostrable y sustentable[cite: 2].
+## 5. Riesgo residual
 
----
+Detalle y plan de verificación en `docs/RIESGOS.md`:
 
-## 5. Riesgo Residual y Limites del Incremneto
-* **Riesgo Residual:** Al ser un repositorio en memoria (`InMemoryRepository`), los datos se reinician al cerrar la app[cite: 2]. Las pruebas de concurrencia de red y persistencia real deberán cubrirse en el siguiente incremento[cite: 2].
+- **Seguridad del servidor (R-01 a R-05):** la anon key va dentro del APK y las políticas RLS permiten leer y
+  escribir a cualquiera que la tenga; el control por rol solo existe en la app. El SHA-256 sin sal permite
+  autenticarse con el hash. Las fotos de evidencia son públicas con solo conocer su URL.
+- **Pruebas de seguridad del Sprint 9 (OWASP ZAP / MASVS):** planificadas, no ejecutadas.
+- **Dependencia del dispositivo:** las pruebas de UI se ejecutan en un solo teléfono; el CI solo corre las
+  unitarias.
 
----
+## 6. Recomendación y dictamen
 
-## 6. Recomendacion y Dictamen
-**Dictamen:** **DONE / ACEPTABLE**[cite: 2]  
-El incremento cumple con el Sprint Goal, todas las reglas de negocio críticas están validadas y los defectos de alta prioridad fueron resueltos[cite: 2]. Se recomienda el pase a sustentación individual e integración final del paquete de entregables[cite: 2].
+**Dictamen: ACEPTABLE CON OBSERVACIONES.** La funcionalidad principal está completa, probada en el dispositivo y
+verificada contra Supabase, sin defectos graves abiertos. Antes de la entrega final se recomienda: implementar los 6
+criterios faltantes, cerrar los riesgos de seguridad del servidor (RLS por rol y login mediante una función que
+valide la contraseña), ejecutar la prueba con OWASP ZAP y registrar las Sprint Reviews.

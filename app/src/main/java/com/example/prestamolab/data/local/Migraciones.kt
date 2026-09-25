@@ -92,3 +92,11 @@ val MIGRACION_5_6 = object : Migration(5, 6) {
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_evidences_remote_id` ON `evidences` (`remote_id`)")
     }
 }
+
+/** v6 → v7: ubicación de las evidencias (HU-08 con GPS), mismas columnas que public.evidences. */
+val MIGRACION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE evidences ADD COLUMN latitude REAL")
+        db.execSQL("ALTER TABLE evidences ADD COLUMN longitude REAL")
+    }
+}

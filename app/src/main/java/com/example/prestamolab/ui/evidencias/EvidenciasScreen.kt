@@ -26,12 +26,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.example.prestamolab.PrestamoLabApp
-import com.example.prestamolab.data.evidencias.FileProviderAlmacenFotos
 import com.example.prestamolab.model.EtapaEvidencia
 import com.example.prestamolab.model.Evidencia
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import java.util.Locale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /** Conecta la pantalla con la cámara: el permiso se pide solo al tocar "Adjuntar evidencia" (CA-HU08-01). */
@@ -56,6 +53,7 @@ fun EvidenciasRoute(viewModel: EvidenciasViewModel, solicitudId: Int, etapa: Eta
         solicitudId = solicitudId,
         etapa = etapa,
         uiState = uiState,
+        cargarMiniatura = viewModel::miniatura,
         onAdjuntarClick = {
             val concedido = ContextCompat.checkSelfPermission(contexto, Manifest.permission.CAMERA) ==
                 PackageManager.PERMISSION_GRANTED
@@ -70,6 +68,7 @@ fun EvidenciasScreen(
     solicitudId: Int,
     etapa: EtapaEvidencia,
     uiState: EvidenciasUiState,
+    cargarMiniatura: suspend (String) -> Bitmap?,
     onAdjuntarClick: () -> Unit,
     onVolver: () -> Unit
 ) {
@@ -103,21 +102,21 @@ fun EvidenciasScreen(
             Text("Aún no hay evidencias en este préstamo.", fontFamily = FontFamily.SansSerif)
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(uiState.evidencias, key = { it.id }) { FilaEvidencia(it) }
+                items(uiState.evidencias, key = { it.id }) { FilaEvidencia(it, cargarMiniatura) }
             }
         }
     }
 }
 
 @Composable
-private fun FilaEvidencia(evidencia: Evidencia) {
+private fun FilaEvidencia(evidencia: Evidencia, cargarMiniatura: suspend (String) -> Bitmap?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F7FA))
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Miniatura(evidencia.uriLocal)
+            Miniatura(evidencia.uriLocal, cargarMiniatura)
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(
@@ -130,18 +129,22 @@ private fun FilaEvidencia(evidencia: Evidencia) {
                     if (evidencia.urlRemota != null) "Subida a Supabase" else "Pendiente de subir",
                     style = MaterialTheme.typography.bodySmall
                 )
+                Text(
+                    if (evidencia.latitud != null && evidencia.longitud != null) {
+                        String.format(Locale.US, "Ubicación: %.5f, %.5f", evidencia.latitud, evidencia.longitud)
+                    } else {
+                        "Sin ubicación"
+                    },
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
         }
     }
 }
 
 @Composable
-private fun Miniatura(uri: String) {
-    val contexto = LocalContext.current
-    val almacen = (contexto.applicationContext as PrestamoLabApp).container.almacenFotos
-    val imagen by produceState<Bitmap?>(null, uri) {
-        value = withContext(Dispatchers.IO) { (almacen as? FileProviderAlmacenFotos)?.miniatura(uri) }
-    }
+private fun Miniatura(uri: String, cargarMiniatura: suspend (String) -> Bitmap?) {
+    val imagen by produceState<Bitmap?>(null, uri) { value = cargarMiniatura(uri) }
     val modificador = Modifier
         .size(64.dp)
         .clip(RoundedCornerShape(8.dp))

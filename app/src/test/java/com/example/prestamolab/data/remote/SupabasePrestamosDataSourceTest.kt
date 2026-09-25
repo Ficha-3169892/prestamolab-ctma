@@ -268,6 +268,22 @@ class SupabasePrestamosDataSourceTest {
         assertEquals("ENTREGA", cuerpo.getString("stage"))
         assertEquals("https://x/e1.jpg", cuerpo.getString("photo_url"))
         assertEquals("2026-09-25T10:00:00-05:00", cuerpo.getString("taken_at"))
+        // Sin ubicación se envía null, no se omite
+        assertTrue(cuerpo.isNull("latitude"))
+        assertTrue(cuerpo.isNull("longitude"))
+    }
+
+    @Test
+    fun `La evidencia con GPS envia latitud y longitud`() = runTest {
+        responder(201, "")
+
+        remoto.guardarEvidencia(
+            EvidenciaRemota("e1", "l1", "DEVOLUCION", "https://x/e1.jpg", "2026-09-25T10:00:00-05:00", 6.2518, -75.5636)
+        )
+
+        val cuerpo = JSONObject(servidor.takeRequest().body.readUtf8())
+        assertEquals(6.2518, cuerpo.getDouble("latitude"), 0.0)
+        assertEquals(-75.5636, cuerpo.getDouble("longitude"), 0.0)
     }
 
     @Test

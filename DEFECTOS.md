@@ -1,39 +1,57 @@
-# Registro de Defectos, Confirmación y Regresión (PréstamoLab CTMA)
+# Registro de defectos, confirmación y regresión (PréstamoLab CTMA)
 
-## Reporte de Defecto: BUG-03
+Formato de cada defecto: plantilla `.github/ISSUE_TEMPLATE/bug.md`. La numeración continúa la de la Parte 1
+(BUG-03). Todos los defectos de la Parte 2 están **cerrados**; ninguno de severidad Alta o Crítica queda abierto.
 
-* **ID Defecto:** `BUG-03`
-* **Título:** Doble pulsación rápida en el botón "Guardar" crea solicitudes duplicadas para el mismo equipo.
-* **Build Detectada:** 0.1.0
-* **Severidad:** **Alta** (Rompe la regla de disponibilidad del dominio).
-* **Prioridad:** **Alta** (Afecta directamente el Sprint Goal y la Definition of Done).
-* **Caso de Prueba Origen:** `TC-13`
+## Parte 2 (semanas 5 a 9)
 
-### Pasos para Reproducir
-1. Abrir la aplicación y seleccionar un equipo en estado `DISPONIBLE`.
-2. Presionar el botón "Solicitar".
-3. Llenar el formulario con datos válidos (Ambiente "Lab 302", Propósito "Práctica de Sensores", Duración "2").
-4. Pulsar el botón **"Guardar"** dos o tres veces muy rápidamente.
+| Id | Defecto | Severidad | Cómo se detectó | Corrección (commit) | Prueba de confirmación |
+|---|---|---|---|---|---|
+| BUG-04 | Cancelar un préstamo ya entregado (PRESTADO) liberaba el equipo | Alta | Desarrollo de HU-05 (devolución) | `de7f2f4` | `RoomPrestamoRepositoryTest.CancelarUnPrestamoPrestado_FallaYNoLiberaElEquipo` |
+| BUG-05 | El login contra Supabase siempre fallaba con "No se pudo iniciar sesión" | Crítica | Prueba manual en el Xiaomi contra Supabase | `22342ae` | Manual en el dispositivo (las pruebas usan una tabla `users` simulada) |
+| BUG-06 | Enviar el estado de un equipo fallaba con 23502 (`equipments.title` NOT NULL) | Alta | Prueba manual de sincronización contra Supabase | `2795f7a` | `SupabasePrestamosDataSourceTest`: "El estado del equipo se envia con PATCH…" y "El instructor guarda el equipo completo con title igual al nombre" |
+| BUG-07 | Supabase rechazaba los préstamos por `loans.user_role` NOT NULL | Alta | Prueba manual de sincronización | `2795f7a` | `SupabasePrestamosDataSourceTest`: "TC-HU07-01 - Guardar un prestamo hace upsert…" |
+| BUG-08 | Un cambio rechazado por el servidor (ERROR) se perdía sin aviso al recibir la versión remota | Alta | Prueba manual de sincronización contra Supabase | `2795f7a` | `SincronizadorPrestamosTest.UnRegistroEnErrorNoSePisaConLaVersionRemota` |
+| BUG-09 | Registrar la devolución de un préstamo ya devuelto en otro dispositivo cerraba la app (índice único) | Alta | Prueba manual contra Supabase | `2795f7a` | `RoomPrestamoRepositoryTest.DevolucionYaRecibidaDeOtroDispositivo_SeRechazaSinCerrarLaApp` |
+| BUG-10 | "Confirmar devolución" quedaba debajo de la barra de navegación del sistema y no se podía pulsar | Alta | Prueba manual en el Xiaomi (edge-to-edge) | `2795f7a` | `DevolucionUiTest.TC_HU05_02_DevolucionConUbicacion_CierraElPrestamo` |
+| BUG-11 | Tras solicitar, tocar la pestaña Catálogo dejaba al usuario en Mis Solicitudes | Media | `PrestamoUiTest.TC12` falló en el Xiaomi | `3922d36` | `PrestamoUiTest.TC12_BotonSolicitarDeshabilitado_SiEquipoEstaReservado` y `Navegacion_BottomBar_CicloCompleto` |
+| BUG-12 | "Mis Solicitudes" mostraba el id local del equipo en vez de su nombre | Baja | Prueba manual | `2795f7a` | `PrestamoUiTest.TC14_FlujoCompleto_CrearSolicitud` ("Equipo: Multímetro Digital") |
 
-### Resultado Obtenido
-Se registraban dos instancias distintas de `SolicitudPrestamo` asociadas al mismo `equipoId`, provocando inconsistencia de disponibilidad.
+### Detalle y causa raíz
 
-### Resultado Esperado
-Se debe procesar únicamente la primera solicitud, deshabilitar la interfaz durante la petición y registrar un solo elemento.
+- **BUG-04:** `cancelarSolicitud` no comprobaba el estado. **Solución:** solo se cancela una solicitud SOLICITADA;
+  un préstamo entregado se cierra con la devolución.
+- **BUG-05:** faltaba `android.permission.INTERNET` en el manifiesto. Las pruebas no lo detectaron porque el runner
+  reemplaza Supabase por dobles. **Solución:** permiso agregado; verificado en el teléfono con ambos roles.
+- **BUG-06:** el envío del estado era un upsert (`INSERT … ON CONFLICT`), que exige todas las columnas NOT NULL.
+  **Solución:** el estudiante envía solo `status` con PATCH; el instructor envía el equipo completo con
+  `title = name` (HU-12).
+- **BUG-07:** `loans.user_role` es NOT NULL en Supabase y la app no lo enviaba. **Solución:** se envía
+  `ESTUDIANTE`, único rol que solicita préstamos (CA-HU03-08).
+- **BUG-08:** la recepción solo protegía los registros PENDIENTE. **Solución:** los registros en ERROR también se
+  conservan y la app avisa cuántos cambios rechazó el servidor.
+- **BUG-09:** la devolución remota ya estaba en Room y el índice único de `returns.loan_id` lanzaba una excepción.
+  **Solución:** se rechaza con el mensaje "Este préstamo ya tiene una devolución registrada".
+- **BUG-10:** la app dibuja de borde a borde y la pantalla no reservaba el espacio de las barras del sistema.
+  **Solución:** `safeDrawingPadding` y `consumeWindowInsets` en las pantallas afectadas.
+- **BUG-11:** con `saveState`/`restoreState`, Navigation 2.7 asociaba la pila guardada de Mis Solicitudes a la
+  ruta de inicio y la restauraba. **Solución:** la pestaña de inicio se alcanza regresando a su entrada.
+- **BUG-12:** la tarjeta mostraba `equipoId`, que no coincide entre dispositivos. **Solución:** se muestra el
+  nombre del equipo.
 
----
+### Regresión
 
-## Solución Aplicada y Prueba de Confirmación
+Después de cada corrección se ejecutaron las suites completas: unitaria (`testDebugUnitTest`) e instrumentada en el
+Xiaomi. Resultado actual: **165 unitarias y 141 instrumentadas en verde**; el CI de GitHub Actions repite las
+unitarias en cada push.
 
-* **Solución Técnica:** Se añadió la propiedad `guardando: Boolean = false` dentro del `PrestamoUiState`. Al hacer clic en Guardar, el estado pasa inmediatamente a `guardando = true`, lo que deshabilita el botón en la UI Compose e ignora clics subsecuentes en el ViewModel.
-* **Prueba de Confirmación (`TC-13`):** Se repitió el escenario pulsando repetidamente el botón. **Resultado: PASS** (Solo se generó 1 solicitud).
+## Parte 1 (histórico)
 
----
+### BUG-03: doble pulsación en "Guardar" creaba solicitudes duplicadas
 
-## Pruebas de Regresión Ejecutadas
-
-Tras corregir el `BUG-03`, se ejecutaron las siguientes pruebas para descartar impactos colaterales:
-
-1. **`TC-14` (Creación normal):** Guardar una solicitud de forma normal. -> **PASS**
-2. **`TC-01` (Actualización de catálogo):** Verificar que el equipo cambie a `RESERVADO` en la lista general. -> **PASS**
-3. **`TC-15` (Cancelación):** Cancelar la solicitud creada para asegurar que el estado vuelva a `DISPONIBLE`. -> **PASS**
+- **Severidad / prioridad:** Alta / Alta (rompía la regla de disponibilidad). **Caso de origen:** TC-13.
+- **Pasos:** seleccionar un equipo DISPONIBLE → "Solicitar" → datos válidos → pulsar "Guardar" dos o tres veces
+  rápido. **Obtenido:** dos solicitudes para el mismo equipo. **Esperado:** una sola solicitud.
+- **Solución:** `guardando = true` en el `UiState` deshabilita el botón y el ViewModel ignora los clics siguientes.
+- **Confirmación:** TC-13 (hoy TC-HU03-05) en verde. **Regresión:** TC-14 (creación normal), TC-01 (catálogo en
+  RESERVADO) y TC-15 (cancelación libera el equipo) en verde.
