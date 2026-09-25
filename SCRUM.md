@@ -59,19 +59,120 @@ commits de la rama `andres-vargas`; cada commit indica las historias que cubre y
    (`DEFECTOS.md`).
 9. Repositorio limpio y sin credenciales: la clave de Supabase vive en `local.properties`, fuera de git; los
    cambios de base de datos quedan versionados en `docs/supabase/`.
-10. El incremento se demostró en la Sprint Review.
+10. El incremento se demostró y quedó registrado en la revisión del sprint (sección 6).
 
 ## 6. Eventos: Sprint Review y Retrospectiva
 
-Registro a completar por el equipo en cada sprint (no hay actas de la Parte 2 en el repositorio):
+**Cómo se redactaron estas actas.** No hubo reuniones formales registradas. Cada acta es una *revisión del
+incremento* construida con evidencia verificable: los commits de la rama `andres-vargas`, las suites de pruebas
+ejecutadas en el Xiaomi y las verificaciones contra el proyecto Supabase real. La implementación de la Parte 2 se
+concentró entre el 23 y el 24 de septiembre de 2026 (fechas reales del historial de git), por eso cada acta indica
+la fecha de su último commit. Las mejoras de las retrospectivas son **propuestas** que salen de defectos y
+situaciones reales del proyecto; el equipo las confirma o ajusta.
 
-| Sprint | Fecha de la Review | Qué se demostró | Retroalimentación | Mejora acordada en la Retrospectiva |
-|---|---|---|---|---|
-| 5 | | | | |
-| 6 | | | | |
-| 7 | | | | |
-| 8 | | | | |
-| 9 | | | | |
+### Sprint 5: acceso por rol y devolución con GPS
+
+- **Fecha del incremento:** 24 de septiembre de 2026 (último commit `22342ae`).
+- **Historias revisadas:** HU-10 (login y roles), HU-05 (devolución), HU-13 (GPS en la devolución).
+- **Qué se demostró:** en el Xiaomi, contra Supabase: el instructor entra por correo a Gestión, el estudiante
+  entra por documento al Catálogo, una clave incorrecta muestra "Usuario o contraseña incorrectos" y la sesión se
+  conserva al reabrir la app. Con pruebas de UI en el teléfono: la devolución registra el estado del equipo y la
+  ubicación del Fused Location Provider, pidiendo el permiso solo al tocar "Capturar ubicación actual".
+- **Pruebas al cierre:** 58 unitarias y 44 instrumentadas en verde.
+- **Resultado:** incremento aceptado tras corregir BUG-05 (sin el permiso INTERNET el login fallaba siempre) y
+  BUG-04 (cancelar un préstamo entregado liberaba el equipo).
+- **Adaptación del backlog:** login contra la tabla `users` sin Supabase Auth y contraseña en SHA-256 calculado en
+  la app (decisión del equipo); los riesgos de esa decisión se registraron en `docs/RIESGOS.md` (R-01 a R-05).
+
+**Retrospectiva (propuesta)**
+- *Qué salió bien:* criterios Dado/cuando/entonces con un caso de prueba 1:1 desde el inicio del sprint.
+- *Qué mejorar:* BUG-05 pasó todas las pruebas porque usan un servidor simulado.
+- *Mejora:* toda historia que use la red se verifica también en el teléfono contra Supabase real antes de
+  darla por terminada.
+
+### Sprint 6: catálogo e inventario persistentes sin conexión
+
+- **Fecha del incremento:** 24 de septiembre de 2026 (último commit `ca16808`).
+- **Historias revisadas:** HU-01 (catálogo y filtros), HU-02 (detalle), HU-06 (Room sin conexión), HU-11
+  (actividades), HU-12 (inventario).
+- **Qué se demostró:** Room como fuente de verdad con migraciones probadas de la versión 1 a la 8; el catálogo y
+  los préstamos siguen visibles al reiniciar sin red (CA-HU06-01); filtros del catálogo que se conservan al
+  reabrir la app; el instructor mantiene inventario y actividades y el estudiante las ve en solo lectura.
+- **Pruebas al cierre:** 177 unitarias y 153 instrumentadas en verde.
+- **Resultado:** incremento aceptado. HU-11 y HU-12 quedan pendientes de una prueba manual contra Supabase real
+  (sus pruebas automatizadas usan el servidor simulado).
+- **Adaptación del backlog:** un equipo con préstamos cerrados tampoco se elimina, para conservar su historial.
+
+**Retrospectiva (propuesta)**
+- *Qué salió bien:* BUG-11 (la pestaña Catálogo llevaba a Mis Solicitudes) lo detectó una prueba de UI en el
+  teléfono físico, no un usuario.
+- *Qué mejorar:* los chips de filtro con desplazamiento horizontal rompieron 11 pruebas de UI y ocultaban
+  categorías en pantallas pequeñas.
+- *Mejora:* ejecutar la suite de UI completa en el teléfono real antes de cada commit que cambie una pantalla.
+
+### Sprint 7: ciclo completo del préstamo
+
+- **Fecha del incremento:** 24 de septiembre de 2026 (último commit `ca16808`).
+- **Historias revisadas:** HU-03 (solicitar), HU-04 (mis préstamos), HU-14 (aprobar o rechazar).
+- **Qué se demostró:** reglas de revisión en el dominio con TDD (solo una solicitud SOLICITADA se revisa; rechazar
+  exige motivo); lista de pendientes del instructor; tarjetas de Mis Solicitudes con equipo, ambiente, fechas y
+  estado. En la prueba de punta a punta del Sprint 9, el ciclo solicitar → aprobar quedó verificado en Supabase
+  real con solicitante y revisor correctos.
+- **Pruebas al cierre:** 177 unitarias y 153 instrumentadas en verde.
+- **Resultado:** incremento aceptado después de una auditoría de criterios que encontró funcionalidad faltante en
+  HU-04 (CA-HU04-02), completada en `ca16808`.
+
+**Retrospectiva (propuesta)**
+- *Qué salió bien:* la matriz de trazabilidad permitió auditar criterio por criterio.
+- *Qué mejorar:* se informó que las 14 historias estaban completas cuando la auditoría mostró 6 criterios sin la
+  funcionalidad implementada (HU-01, HU-04, HU-06 y HU-13).
+- *Mejora:* una historia es "Hecho" solo cuando todas sus filas de `docs/MATRIZ_TRAZABILIDAD.md` tienen prueba en
+  verde, no cuando su pantalla principal funciona.
+
+### Sprint 8: sincronización y evidencia fotográfica
+
+- **Fecha del incremento:** 24 de septiembre de 2026 (último commit `8f16c69`).
+- **Historias revisadas:** HU-07 (sincronización con Supabase), HU-08 (evidencia fotográfica).
+- **Qué se demostró:** en el Xiaomi contra Supabase: inicio de sesión del estudiante, recepción de sus préstamos
+  y devolución con GPS real enviada al servidor, con todos los registros locales en SINCRONIZADO. El estudiante
+  tomó una foto de evidencia desde Mis Solicitudes; la imagen (JPEG de 2,7 MB) quedó en el bucket `evidencias` y
+  su fila en la tabla `evidences`.
+- **Pruebas al cierre:** 165 unitarias y 141 instrumentadas en verde; primer CI de GitHub Actions en verde.
+- **Resultado:** incremento aceptado tras corregir BUG-06 a BUG-10 y BUG-12, encontrados en la prueba manual
+  contra el esquema real de Supabase.
+- **Adaptación del backlog:** el estudiante envía solo el estado del equipo (PATCH) y el instructor el equipo
+  completo; se agregó GPS a las evidencias.
+
+**Retrospectiva (propuesta)**
+- *Qué salió bien:* una sola prueba manual contra el servidor real encontró 6 defectos antes de la entrega.
+- *Qué mejorar:* el código de sincronización asumió un esquema que no coincidía con el real (columnas NOT NULL
+  como `equipments.title` y `loans.user_role`).
+- *Mejora:* antes de escribir código contra una tabla, consultar sus columnas y restricciones reales en Supabase.
+
+### Sprint 9: recordatorios y seguridad
+
+- **Fecha del incremento:** 24 de septiembre de 2026 (último commit `ba85bb0`).
+- **Historias y trabajo revisados:** HU-09 (recordatorio de devolución) y seguridad del servidor (R-01 a R-05).
+- **Qué se demostró:** con pruebas instrumentadas en el teléfono, la programación del aviso 30 minutos antes de la
+  hora límite (WorkManager real), la notificación publicada en el sistema y la apertura del préstamo al tocarla;
+  `docs/seguridad/verificar_seguridad.py` superó 26 de 26 comprobaciones contra Supabase real actuando como un
+  atacante con la anon key; prueba de punta a punta con la seguridad activa: el estudiante solicitó el Multímetro,
+  el instructor lo aprobó y Supabase registró el préstamo PRESTADO con revisor y coordenadas GPS reales.
+- **Pruebas al cierre:** 187 unitarias, 154 instrumentadas y 26 de seguridad en verde; CI en verde.
+- **Resultado:** incremento aceptado tras corregir BUG-13 (propósito con salto de línea) y BUG-14 (fallas del
+  script de seguridad, entre ellas políticas ajenas que permitieron a un estudiante borrar un equipo, restaurado
+  de inmediato). Quedan como riesgos aceptados R-06 a R-09.
+- **Adaptación del backlog:** la revisión con OWASP ZAP se hace en modo pasivo sobre el tráfico de la app, sin
+  escanear activamente la infraestructura compartida de Supabase.
+
+**Retrospectiva (propuesta)**
+- *Qué salió bien:* verificar la seguridad atacando la base real encontró tres fallas que la lectura del script no
+  mostraba.
+- *Qué mejorar:* el script de reversión aparecía antes del de seguridad y casi se ejecutaron los dos; los datos que
+  dejan las pruebas automáticas en el teléfono se habrían subido a Supabase al iniciar sesión.
+- *Mejoras:* (1) los scripts de emergencia viven fuera de la secuencia numerada (`docs/supabase/emergencia/`);
+  (2) después de cada ejecución de pruebas instrumentadas se limpian los datos locales de la app antes de usarla con
+  el servidor real; (3) toda política RLS nueva se valida con `verificar_seguridad.py`.
 
 ## 7. Parte 1 (histórico)
 

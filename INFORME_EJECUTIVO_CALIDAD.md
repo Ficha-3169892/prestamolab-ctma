@@ -59,7 +59,7 @@ Detalle, causa raíz y pruebas de confirmación en `DEFECTOS.md`.
 | 7. Suites unitaria e instrumentada en verde | Cumple |
 | 8. Defectos Altos o Críticos corregidos con confirmación y regresión | Cumple |
 | 9. Repositorio sin credenciales, cambios de BD versionados | Cumple |
-| 10. Demostración en la Sprint Review | Pendiente de registrar |
+| 10. Demostración registrada en la revisión del sprint | Cumple (actas por evidencia en `SCRUM.md`, sección 6) |
 
 ## 5. Riesgo residual
 
@@ -79,5 +79,5 @@ verificados** con `docs/supabase/009_seguridad.sql`. Quedan aceptados, con su tr
 
 **Dictamen: DONE / ACEPTABLE.** Las 14 historias están completas, los 74 criterios tienen prueba automatizada,
 la seguridad del servidor está verificada contra la base real y no hay defectos graves abiertos. Pendientes antes
-de la entrega: registrar las Sprint Reviews y Retrospectivas (`SCRUM.md`) y, si la guía lo exige, la revisión
-pasiva con OWASP ZAP.
+de la entrega: que el equipo confirme las mejoras propuestas en las retrospectivas (`SCRUM.md`) y, si la guía lo
+exige, la revisión pasiva con OWASP ZAP.
