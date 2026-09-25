@@ -21,13 +21,17 @@ interface SessionStore {
 
 val Context.sesionDataStore: DataStore<Preferences> by preferencesDataStore(name = "sesion")
 
-class DataStoreSessionStore(private val dataStore: DataStore<Preferences>) : SessionStore {
+/** El token de sesión se guarda cifrado con [cifrador]; el resto de datos no es secreto. */
+class DataStoreSessionStore(
+    private val dataStore: DataStore<Preferences>,
+    private val cifrador: CifradorToken
+) : SessionStore {
 
     override val sesion: Flow<Sesion?> = dataStore.data.map { prefs ->
         val id = prefs[USUARIO_ID] ?: return@map null
         // Un rol desconocido o corrupto se trata como sesión inválida
         val rol = Rol.entries.find { it.name == prefs[ROL] } ?: return@map null
-        Sesion(Usuario(id, prefs[NOMBRE].orEmpty(), prefs[CORREO].orEmpty(), rol), prefs[TOKEN])
+        Sesion(Usuario(id, prefs[NOMBRE].orEmpty(), prefs[CORREO].orEmpty(), rol), prefs[TOKEN]?.let(cifrador::descifrar))
     }
 
     override suspend fun guardar(sesion: Sesion) {
@@ -36,7 +40,7 @@ class DataStoreSessionStore(private val dataStore: DataStore<Preferences>) : Ses
             prefs[NOMBRE] = sesion.usuario.nombre
             prefs[CORREO] = sesion.usuario.correo
             prefs[ROL] = sesion.usuario.rol.name
-            if (sesion.token == null) prefs.remove(TOKEN) else prefs[TOKEN] = sesion.token
+            if (sesion.token == null) prefs.remove(TOKEN) else prefs[TOKEN] = cifrador.cifrar(sesion.token)
         }
     }
 
@@ -50,6 +54,6 @@ class DataStoreSessionStore(private val dataStore: DataStore<Preferences>) : Ses
         val NOMBRE = stringPreferencesKey("full_name")
         val CORREO = stringPreferencesKey("email")
         val ROL = stringPreferencesKey("role")
-        val TOKEN = stringPreferencesKey("session_token")
+        val TOKEN = stringPreferencesKey("session_token_cifrado")
     }
 }

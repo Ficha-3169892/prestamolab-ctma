@@ -30,12 +30,14 @@ class DataStoreSessionStoreTest {
         token = "5a0e0000-0000-4000-8000-000000000001"
     )
 
+    private val cifrador = KeystoreCifradorToken(alias = "prestamolab-token-prueba")
+
+    private fun abrirDataStore(job: Job) = PreferenceDataStoreFactory.create(scope = CoroutineScope(Dispatchers.IO + job)) {
+        context.preferencesDataStoreFile(nombreArchivo)
+    }
+
     /** Crea un DataStore sobre el mismo archivo, como ocurre al reiniciar el proceso de la app. */
-    private fun abrirStore(job: Job) = DataStoreSessionStore(
-        PreferenceDataStoreFactory.create(scope = CoroutineScope(Dispatchers.IO + job)) {
-            context.preferencesDataStoreFile(nombreArchivo)
-        }
-    )
+    private fun abrirStore(job: Job) = DataStoreSessionStore(abrirDataStore(job), cifrador)
 
     @After
     fun borrarArchivo() {
@@ -69,5 +71,40 @@ class DataStoreSessionStoreTest {
         segundaEjecucion.cancelAndJoin()
 
         assertNull(leida)
+    }
+
+    @Test
+    fun ElTokenSeGuardaCifrado_NuncaEnTextoPlano() = runTest {
+        val ejecucion = Job()
+        val dataStore = abrirDataStore(ejecucion)
+        DataStoreSessionStore(dataStore, cifrador).guardar(sesionPrueba)
+
+        // Lo que queda en el archivo: ni el token ni un fragmento de él
+        val guardado = dataStore.data.first().asMap().values.joinToString(" ")
+        ejecucion.cancelAndJoin()
+
+        assertFalse(guardado.contains(sesionPrueba.token!!))
+        assertFalse(guardado.contains("5a0e0000"))
+    }
+
+    @Test
+    fun CifrarYDescifrar_RecuperaElMismoToken_ConUnIvDistintoCadaVez() {
+        val token = "5a0e0000-0000-4000-8000-000000000001"
+
+        val primero = cifrador.cifrar(token)
+        val segundo = cifrador.cifrar(token)
+
+        assertNotEquals("GCM usa un IV nuevo en cada cifrado", primero, segundo)
+        assertEquals(token, cifrador.descifrar(primero))
+        assertEquals(token, cifrador.descifrar(segundo))
+    }
+
+    @Test
+    fun UnValorAlteradoOIlegible_NoDevuelveToken() {
+        val cifrado = cifrador.cifrar("5a0e0000-0000-4000-8000-000000000001")
+        val alterado = cifrado.dropLast(4) + "AAAA"
+
+        assertNull(cifrador.descifrar(alterado))
+        assertNull(cifrador.descifrar("no-es-base64-valido!"))
     }
 }

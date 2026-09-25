@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.prestamolab.BuildConfig
 import com.example.prestamolab.data.auth.AuthRepository
 import com.example.prestamolab.data.auth.DataStoreSessionStore
+import com.example.prestamolab.data.auth.KeystoreCifradorToken
 import com.example.prestamolab.data.auth.SessionStore
 import com.example.prestamolab.data.auth.SupabaseUsuariosDataSource
 import com.example.prestamolab.data.auth.UsuariosAuthRepository
@@ -56,7 +57,7 @@ class AppContainer(context: Context) {
     }
 
     val database: PrestamoLabDatabase by lazy { PrestamoLabDatabase.construir(appContext) }
-    val sessionStore: SessionStore by lazy { DataStoreSessionStore(appContext.sesionDataStore) }
+    val sessionStore: SessionStore by lazy { DataStoreSessionStore(appContext.sesionDataStore, KeystoreCifradorToken()) }
 
     var usuariosRemoteDataSource: UsuariosRemoteDataSource = SupabaseUsuariosDataSource(supabase)
     val authRepository: AuthRepository by lazy { UsuariosAuthRepository(usuariosRemoteDataSource, sessionStore) }
