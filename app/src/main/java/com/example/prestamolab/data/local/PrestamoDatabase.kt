@@ -21,9 +21,6 @@ abstract class PrestamoDatabase : RoomDatabase() {
                     PrestamoDatabase::class.java,
                     "prestamolab_database"
                 )
-                    // Permitimos consultas en el hilo principal SOLO para la semana 6.
-                    // En la semana 7 (Fase 3) refactorizaremos esto con Corrutinas.
-                    .allowMainThreadQueries()
                     .build()
                 INSTANCE = instance
                 instance

@@ -4,33 +4,41 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PrestamoDao {
 
-    // Operaciones para Equipos
+    // Lecturas reactivas
     @Query("SELECT * FROM equipos")
-    fun obtenerTodosLosEquipos(): List < EquipmentEntity >
+    fun obtenerTodosLosEquipos(): Flow < List < EquipmentEntity > >
 
     @Query("SELECT * FROM equipos WHERE id = :id")
-    fun obtenerEquipoPorId(id: Int): EquipmentEntity?
+    fun obtenerEquipoPorId(id: Int): Flow < EquipmentEntity? >
 
-    @Insert
-    fun insertarEquipos(equipos: List < EquipmentEntity >)
-
-    @Update
-    fun actualizarEquipo(equipo: EquipmentEntity)
-
-    // Operaciones para Solicitudes
     @Query("SELECT * FROM solicitudes")
-    fun obtenerTodasLasSolicitudes(): List < LoanEntity >
+    fun obtenerTodasLasSolicitudes(): Flow < List < LoanEntity > >
 
     @Query("SELECT * FROM solicitudes WHERE id = :id")
-    fun obtenerSolicitudPorId(id: Int): LoanEntity?
+    fun obtenerSolicitudPorId(id: Int): Flow < LoanEntity? >
 
+    // Escrituras asíncronas
     @Insert
-    fun insertarSolicitud(solicitud: LoanEntity): Long
+    suspend fun insertarEquipos(equipos: List < EquipmentEntity >)
 
     @Update
-    fun actualizarSolicitud(solicitud: LoanEntity)
+    suspend fun actualizarEquipo(equipo: EquipmentEntity)
+
+    @Insert
+    suspend fun insertarSolicitud(solicitud: LoanEntity): Long
+
+    @Update
+    suspend fun actualizarSolicitud(solicitud: LoanEntity)
+
+    // Lecturas directas de una sola vez (necesarias para el repositorio)
+    @Query("SELECT * FROM equipos WHERE id = :id")
+    suspend fun obtenerEquipoSync(id: Int): EquipmentEntity?
+
+    @Query("SELECT * FROM solicitudes WHERE id = :id")
+    suspend fun obtenerSolicitudSync(id: Int): LoanEntity?
 }

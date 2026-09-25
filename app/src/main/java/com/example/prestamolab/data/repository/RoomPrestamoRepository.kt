@@ -8,43 +8,44 @@ import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.SolicitudPrestamo
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class RoomPrestamoRepository(private val dao: PrestamoDao) : PrestamoRepository {
 
-    override fun obtenerEquipos(): List < Equipo > {
-        val entidades = dao.obtenerTodosLosEquipos()
-        return entidades.map { toDominio(it) }
+    override fun obtenerEquipos(): Flow < List < Equipo > > {
+        return dao.obtenerTodosLosEquipos().map { entidades ->
+            entidades.map { toDominio(it) }
+        }
     }
 
-    override fun obtenerEquipo(id: Int): Equipo? {
-        val entidad = dao.obtenerEquipoPorId(id)
-        return entidad?.let { toDominio(it) }
+    override fun obtenerEquipo(id: Int): Flow < Equipo? > {
+        return dao.obtenerEquipoPorId(id).map { entidad ->
+            entidad?.let { toDominio(it) }
+        }
     }
 
-    override fun obtenerSolicitudes(): List < SolicitudPrestamo > {
-        val entidades = dao.obtenerTodasLasSolicitudes()
-        return entidades.map { toDominio(it) }
+    override fun obtenerSolicitudes(): Flow < List < SolicitudPrestamo > > {
+        return dao.obtenerTodasLasSolicitudes().map { entidades ->
+            entidades.map { toDominio(it) }
+        }
     }
 
-    override fun obtenerSolicitud(id: Int): SolicitudPrestamo? {
-        val entidad = dao.obtenerSolicitudPorId(id)
-        return entidad?.let { toDominio(it) }
+    override fun obtenerSolicitud(id: Int): Flow < SolicitudPrestamo? > {
+        return dao.obtenerSolicitudPorId(id).map { entidad ->
+            entidad?.let { toDominio(it) }
+        }
     }
 
-    override fun crearSolicitud(solicitud: SolicitudPrestamo): Result < Unit > {
+    override suspend fun crearSolicitud(solicitud: SolicitudPrestamo): Result < Unit > {
         return try {
-            val equipoActual = dao.obtenerEquipoPorId(solicitud.equipoId)
+            val equipoActual = dao.obtenerEquipoSync(solicitud.equipoId)
             if (equipoActual == null || equipoActual.estado != EstadoEquipo.DISPONIBLE.name) {
                 return Result.failure(Exception("Equipo no disponible"))
             }
 
-            // 1. Insertamos la solicitud
-            val nuevaEntidad = toEntity(solicitud)
-            dao.insertarSolicitud(nuevaEntidad)
-
-            // 2. Actualizamos el equipo a RESERVADO
-            val equipoActualizado = equipoActual.copy(estado = EstadoEquipo.RESERVADO.name)
-            dao.actualizarEquipo(equipoActualizado)
+            dao.insertarSolicitud(toEntity(solicitud))
+            dao.actualizarEquipo(equipoActual.copy(estado = EstadoEquipo.RESERVADO.name))
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -52,24 +53,20 @@ class RoomPrestamoRepository(private val dao: PrestamoDao) : PrestamoRepository 
         }
     }
 
-    override fun cancelarSolicitud(id: Int): Result < Unit > {
+    override suspend fun cancelarSolicitud(id: Int): Result < Unit > {
         return try {
-            val solicitud = dao.obtenerSolicitudPorId(id)
+            val solicitud = dao.obtenerSolicitudSync(id)
                 ?: return Result.failure(Exception("Solicitud no encontrada"))
 
             if (solicitud.estado != EstadoSolicitud.SOLICITADA.name) {
                 return Result.failure(Exception("Solo se pueden cancelar solicitudes en estado SOLICITADA"))
             }
 
-            // 1. Cancelar la solicitud
-            val solicitudCancelada = solicitud.copy(estado = EstadoSolicitud.CANCELADA.name)
-            dao.actualizarSolicitud(solicitudCancelada)
+            dao.actualizarSolicitud(solicitud.copy(estado = EstadoSolicitud.CANCELADA.name))
 
-            // 2. Liberar el equipo
-            val equipo = dao.obtenerEquipoPorId(solicitud.equipoId)
+            val equipo = dao.obtenerEquipoSync(solicitud.equipoId)
             if (equipo != null) {
-                val equipoLiberado = equipo.copy(estado = EstadoEquipo.DISPONIBLE.name)
-                dao.actualizarEquipo(equipoLiberado)
+                dao.actualizarEquipo(equipo.copy(estado = EstadoEquipo.DISPONIBLE.name))
             }
 
             Result.success(Unit)
@@ -78,36 +75,16 @@ class RoomPrestamoRepository(private val dao: PrestamoDao) : PrestamoRepository 
         }
     }
 
-    // --- Funciones privadas de Mapeo (Traducción entre Room y App) ---
-
-    private fun toDominio(entity: EquipmentEntity): Equipo {
-        return Equipo(
-            id = entity.id,
-            nombre = entity.nombre,
-            categoria = CategoriaEquipo.valueOf(entity.categoria),
-            estado = EstadoEquipo.valueOf(entity.estado)
-        )
-    }
-
-    private fun toDominio(entity: LoanEntity): SolicitudPrestamo {
-        return SolicitudPrestamo(
-            id = entity.id,
-            equipoId = entity.equipoId,
-            ambienteDestino = entity.ambienteDestino,
-            proposito = entity.proposito,
-            duracionHoras = entity.duracionHoras,
-            estado = EstadoSolicitud.valueOf(entity.estado)
-        )
-    }
-
-    private fun toEntity(domain: SolicitudPrestamo): LoanEntity {
-        return LoanEntity(
-            id = domain.id,
-            equipoId = domain.equipoId,
-            ambienteDestino = domain.ambienteDestino,
-            proposito = domain.proposito,
-            duracionHoras = domain.duracionHoras,
-            estado = domain.estado.name
-        )
-    }
+    private fun toDominio(entity: EquipmentEntity): Equipo = Equipo(
+        id = entity.id, nombre = entity.nombre,
+        categoria = CategoriaEquipo.valueOf(entity.categoria), estado = EstadoEquipo.valueOf(entity.estado)
+    )
+    private fun toDominio(entity: LoanEntity): SolicitudPrestamo = SolicitudPrestamo(
+        id = entity.id, equipoId = entity.equipoId, ambienteDestino = entity.ambienteDestino,
+        proposito = entity.proposito, duracionHoras = entity.duracionHoras, estado = EstadoSolicitud.valueOf(entity.estado)
+    )
+    private fun toEntity(domain: SolicitudPrestamo): LoanEntity = LoanEntity(
+        id = domain.id, equipoId = domain.equipoId, ambienteDestino = domain.ambienteDestino,
+        proposito = domain.proposito, duracionHoras = domain.duracionHoras, estado = domain.estado.name
+    )
 }
