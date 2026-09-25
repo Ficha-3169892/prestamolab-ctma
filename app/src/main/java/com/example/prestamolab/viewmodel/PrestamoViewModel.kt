@@ -1,6 +1,7 @@
 package com.example.prestamolab.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.SolicitudPrestamo
 import com.example.prestamolab.repository.InMemoryPrestamoRepository
@@ -8,6 +9,7 @@ import com.example.prestamolab.repository.PrestamoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class PrestamoViewModel(
     private val repository: PrestamoRepository = InMemoryPrestamoRepository()
@@ -24,10 +26,20 @@ class PrestamoViewModel(
         cargarDatos()
     }
 
-    private fun cargarDatos() {
+    fun cargarDatos() {
+        val equipos = repository.obtenerEquipos()
+        val solicitudes = repository.obtenerSolicitudes()
+
+        val status = if (equipos.isEmpty() && solicitudes.isEmpty()) {
+            UiStatus.Empty
+        } else {
+            UiStatus.Content
+        }
+
         _uiState.value = _uiState.value.copy(
-            equipos = repository.obtenerEquipos(),
-            solicitudes = repository.obtenerSolicitudes()
+            equipos = equipos,
+            solicitudes = solicitudes,
+            uiStatus = status
         )
     }
 
@@ -39,23 +51,17 @@ class PrestamoViewModel(
     ): Boolean {
 
         if (ambienteDestino.isBlank()) {
-            mostrarMensaje(
-                "Debes ingresar el ambiente de destino"
-            )
+            mostrarMensaje("Debes ingresar el ambiente de destino")
             return false
         }
 
         if (proposito.length !in 10..180) {
-            mostrarMensaje(
-                "El propósito debe tener entre 10 y 180 caracteres"
-            )
+            mostrarMensaje("El propósito debe tener entre 10 y 180 caracteres")
             return false
         }
 
         if (duracionHoras !in 1..8) {
-            mostrarMensaje(
-                "La duración debe estar entre 1 y 8 horas"
-            )
+            mostrarMensaje("La duración debe estar entre 1 y 8 horas")
             return false
         }
 
@@ -68,45 +74,28 @@ class PrestamoViewModel(
             estado = EstadoSolicitud.SOLICITADA
         )
 
-        val resultado = repository.crearSolicitud(
-            nuevaSolicitud
-        )
+        val resultado = repository.crearSolicitud(nuevaSolicitud)
 
         return if (resultado.isSuccess) {
-
             cargarDatos()
-
-            mostrarMensaje(
-                "Solicitud creada correctamente"
-            )
-
+            mostrarMensaje("Solicitud creada correctamente")
             true
-
         } else {
-
             mostrarMensaje(
                 resultado.exceptionOrNull()?.message
                     ?: "No se pudo crear la solicitud"
             )
-
             false
         }
     }
 
     fun cancelarSolicitud(id: Int) {
-
         val resultado = repository.cancelarSolicitud(id)
 
         if (resultado.isSuccess) {
-
             cargarDatos()
-
-            mostrarMensaje(
-                "Solicitud cancelada correctamente"
-            )
-
+            mostrarMensaje("Solicitud cancelada correctamente")
         } else {
-
             mostrarMensaje(
                 resultado.exceptionOrNull()?.message
                     ?: "No se pudo cancelar la solicitud"

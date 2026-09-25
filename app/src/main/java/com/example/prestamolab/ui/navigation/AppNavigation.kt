@@ -9,67 +9,96 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.prestamolab.repository.RoomPrestamoRepository
+import com.example.prestamolab.ui.admin.AdminDashboardScreen
 import com.example.prestamolab.ui.catalogo.CatalogoScreen
 import com.example.prestamolab.ui.detalle.DetalleEquipoScreen
+import com.example.prestamolab.ui.login.LoginScreen
 import com.example.prestamolab.ui.prestamos.MisPrestamosScreen
 import com.example.prestamolab.ui.solicitud.SolicitarPrestamoScreen
 import com.example.prestamolab.viewmodel.PrestamoViewModel
 
 @Composable
 fun AppNavigation(
-    viewModel: PrestamoViewModel = viewModel()
+    viewModel: PrestamoViewModel = viewModel(
+        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>, extras: androidx.lifecycle.viewmodel.CreationExtras): T {
+                val application = extras[androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]
+                if (application != null) {
+                    return PrestamoViewModel(RoomPrestamoRepository(application)) as T
+                }
+                return PrestamoViewModel() as T
+            }
+        }
+    )
 ) {
     val navController = rememberNavController()
 
-    Column {
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 45.dp,
-                    bottom = 16.dp
-                )
-        ) {
-
-            Button(
-                onClick = {
-                    navController.navigate("catalogo") {
-                        launchSingleTop = true
+    NavHost(
+        navController = navController,
+        startDestination = "login"
+    ) {
+        // LOGIN
+        composable("login") {
+            LoginScreen(
+                onLoginSuccess = { role ->
+                    if (role == "admin") {
+                        navController.navigate("admin_dashboard") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate("catalogo") {
+                            popUpTo("login") { inclusive = true }
+                        }
                     }
-                },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Catálogo")
-            }
-
-            Button(
-                onClick = {
-                    navController.navigate("mis_prestamos") {
-                        launchSingleTop = true
-                    }
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 8.dp)
-            ) {
-                Text("Mis préstamos")
-            }
+                }
+            )
         }
 
-        NavHost(
-            navController = navController,
-            startDestination = "catalogo"
-        ) {
+        // ADMIN DASHBOARD
+        composable("admin_dashboard") {
+            AdminDashboardScreen(
+                viewModel = viewModel,
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("admin_dashboard") { inclusive = true }
+                    }
+                }
+            )
+        }
 
-            // CATÁLOGO
-            composable("catalogo") {
+        // USER MAIN FLOW
+        composable("catalogo") {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 45.dp, bottom = 16.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            navController.navigate("catalogo") { launchSingleTop = true }
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Catálogo")
+                    }
+
+                    Button(
+                        onClick = {
+                            navController.navigate("mis_prestamos") { launchSingleTop = true }
+                        },
+                        modifier = Modifier.weight(1f).padding(start = 8.dp)
+                    ) {
+                        Text("Mis préstamos")
+                    }
+                }
+
                 CatalogoScreen(
                     viewModel = viewModel,
                     onEquipoClick = { equipoId ->
@@ -77,58 +106,66 @@ fun AppNavigation(
                     }
                 )
             }
+        }
 
-            // DETALLE DEL EQUIPO
-            composable("detalle/{equipoId}") { backStackEntry ->
-
-                val equipoId = backStackEntry
-                    .arguments
-                    ?.getString("equipoId")
-                    ?.toIntOrNull()
-
-                if (equipoId != null) {
-                    DetalleEquipoScreen(
-                        equipoId = equipoId,
-                        viewModel = viewModel,
-                        onVolver = {
-                            navController.popBackStack()
-                        },
-                        onSolicitar = {
-                            navController.navigate("solicitar/$equipoId")
-                        }
-                    )
-                }
-            }
-
-            // CREAR SOLICITUD / PRÉSTAMO
-            composable("solicitar/{equipoId}") { backStackEntry ->
-
-                val equipoId = backStackEntry
-                    .arguments
-                    ?.getString("equipoId")
-                    ?.toIntOrNull()
-
-                if (equipoId != null) {
-                    SolicitarPrestamoScreen(
-                        equipoId = equipoId,
-                        viewModel = viewModel,
-                        onVolver = {
-                            navController.popBackStack()
-                        },
-                        onSolicitudCreada = {
-                            navController.navigate("mis_prestamos") {
-                                popUpTo("catalogo")
-                            }
-                        }
-                    )
-                }
-            }
-
-            // MIS PRÉSTAMOS
-            composable("mis_prestamos") {
-                MisPrestamosScreen(
-                    viewModel = viewModel
+        // DETALLE DEL EQUIPO
+        composable("detalle/{equipoId}") { backStackEntry ->
+            val equipoId = backStackEntry.arguments?.getString("equipoId")?.toIntOrNull()
+            if (equipoId != null) {
+                DetalleEquipoScreen(
+                    equipoId = equipoId,
+                    viewModel = viewModel,
+                    onVolver = { navController.popBackStack() },
+                    onSolicitar = { navController.navigate("solicitar/$equipoId") }
                 )
+            }
+        }
+
+        // CREAR SOLICITUD
+        composable("solicitar/{equipoId}") { backStackEntry ->
+            val equipoId = backStackEntry.arguments?.getString("equipoId")?.toIntOrNull()
+            if (equipoId != null) {
+                SolicitarPrestamoScreen(
+                    equipoId = equipoId,
+                    viewModel = viewModel,
+                    onVolver = { navController.popBackStack() },
+                    onSolicitudCreada = {
+                        navController.navigate("mis_prestamos") {
+                            popUpTo("catalogo")
+                        }
+                    }
+                )
+            }
+        }
+
+        // MIS PRÉSTAMOS
+        composable("mis_prestamos") {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 45.dp, bottom = 16.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            navController.navigate("catalogo") { launchSingleTop = true }
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Catálogo")
+                    }
+
+                    Button(
+                        onClick = {
+                            navController.navigate("mis_prestamos") { launchSingleTop = true }
+                        },
+                        modifier = Modifier.weight(1f).padding(start = 8.dp)
+                    ) {
+                        Text("Mis préstamos")
+                    }
+                }
+
+                MisPrestamosScreen(viewModel = viewModel)
             }
         }
     }

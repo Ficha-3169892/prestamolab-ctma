@@ -12,12 +12,15 @@
 | **R-04** | Un ID inexistente provoca el cierre de la aplicación. | Media | Alto | Alto | TC-03 |
 | **R-05** | El catálogo y las solicitudes muestran información inconsistente. | Media | Alto | Alto | TC-14, TC-15 |
 | **R-06** | Permite cancelar solicitudes en estados donde no está permitido. | Media | Medio | Medio | TC-15, TC-16 |
+| **R-07** | Pérdida de sesión o token expirado en Supabase afecta la sincronización Local-First. | Media | Alto | Alto | TC-17 |
+| **R-08** | Fallo en la subida de evidencia fotográfica al Bucket de Supabase Storage. | Media | Medio | Alto | TC-18 |
+| **R-09** | Acceso no autorizado a rutas de administrador por elevación de privilegios. | Baja | Crítico | Crítico | TC-19 |
 
 ---
 
 ## Priorización
 
-*   **Críticos (R-01, R-02):** Son críticos porque afectan directamente la integridad de las reservas y la disponibilidad de los equipos.
-*   **Prioridad Alta (R-03, R-04):** Pueden permitir ingresos de datos incorrectos o provocar una experiencia de usuario inestable.
-*   **Importante (R-05):** La aplicación debe mantener una representación única y coherente del estado de los recursos.
-*   **Prioridad Media (R-06):** Afecta las reglas de transición de estados, aunque su impacto en el flujo principal es menor que otros.
+*   **Críticos (R-01, R-02, R-09):** Afectan la seguridad de roles (admin/usuario), la integridad de reservas y la disponibilidad.
+*   **Prioridad Alta (R-03, R-04, R-07, R-08):** Involucran sincronización en la nube, autenticación y manejo de hardware (cámara/GPS).
+*   **Importante (R-05):** Mantenimiento de coherencia de estado local-first.
+*   **Prioridad Media (R-06):** Reglas de transición de estados.

@@ -7,6 +7,12 @@ import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.SolicitudPrestamo
 import com.example.prestamolab.repository.PrestamoRepository
 import com.example.prestamolab.viewmodel.PrestamoViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -56,13 +62,16 @@ class FakePrestamoRepository : PrestamoRepository {
     }
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class PrestamoViewModelTest {
 
+    private val testDispatcher = StandardTestDispatcher()
     private lateinit var repository: FakePrestamoRepository
     private lateinit var viewModel: PrestamoViewModel
 
     @Before
     fun setUp() {
+        Dispatchers.setMain(testDispatcher)
         repository = FakePrestamoRepository()
         repository.equipos = mutableListOf(
             Equipo(1, "Kit de electrónica", CategoriaEquipo.ELECTRONICA, EstadoEquipo.DISPONIBLE),
@@ -73,8 +82,14 @@ class PrestamoViewModelTest {
         viewModel = PrestamoViewModel(repository)
     }
 
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
     @Test
     fun tu01_cargarDatos_inicializaEquiposYSolicitudesCorrectamente() {
+        testDispatcher.scheduler.advanceUntilIdle()
         val state = viewModel.uiState.value
         assertEquals(4, state.equipos.size)
         assertTrue(state.solicitudes.isEmpty())
@@ -95,12 +110,14 @@ class PrestamoViewModelTest {
 
     @Test
     fun tu04_crearSolicitud_conDatosValidos_retornaTrueYActualizaEstado() {
+        testDispatcher.scheduler.advanceUntilIdle()
         val exito = viewModel.crearSolicitud(
             equipoId = 1,
             ambienteDestino = "Ambiente 302",
             proposito = "Práctica de soldadura de circuitos de control",
             duracionHoras = 4
         )
+        testDispatcher.scheduler.advanceUntilIdle()
         assertTrue(exito)
         assertEquals("Solicitud creada correctamente", viewModel.uiState.value.mensaje)
         assertEquals(1, viewModel.uiState.value.solicitudes.size)
@@ -193,12 +210,14 @@ class PrestamoViewModelTest {
 
     @Test
     fun tu12_crearSolicitud_exito_cambiaEstadoEquipoAReservado() {
+        testDispatcher.scheduler.advanceUntilIdle()
         viewModel.crearSolicitud(
             equipoId = 1,
             ambienteDestino = "Ambiente 302",
             proposito = "Práctica de soldadura de circuitos de control",
             duracionHoras = 4
         )
+        testDispatcher.scheduler.advanceUntilIdle()
         val equipo = viewModel.uiState.value.equipos.find { it.id == 1 }
         assertEquals(EstadoEquipo.RESERVADO, equipo?.estado)
     }
@@ -213,14 +232,17 @@ class PrestamoViewModelTest {
 
     @Test
     fun tu14_cancelarSolicitud_conIdValido_cambiaEstadoACanceladaYLiberaEquipo() {
+        testDispatcher.scheduler.advanceUntilIdle()
         viewModel.crearSolicitud(
             equipoId = 1,
             ambienteDestino = "Ambiente 302",
             proposito = "Práctica de soldadura de circuitos de control",
             duracionHoras = 4
         )
+        testDispatcher.scheduler.advanceUntilIdle()
         val idSolicitud = viewModel.uiState.value.solicitudes.first().id
         viewModel.cancelarSolicitud(idSolicitud)
+        testDispatcher.scheduler.advanceUntilIdle()
 
         assertEquals("Solicitud cancelada correctamente", viewModel.uiState.value.mensaje)
         assertEquals(EstadoSolicitud.CANCELADA, viewModel.uiState.value.solicitudes.first().estado)
