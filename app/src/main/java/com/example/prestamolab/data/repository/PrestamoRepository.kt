@@ -4,6 +4,8 @@ import com.example.prestamolab.model.Devolucion
 import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.NuevaDevolucion
 import com.example.prestamolab.model.NuevaSolicitud
+import com.example.prestamolab.model.PrestamoDetalle
+import com.example.prestamolab.model.Ubicacion
 import com.example.prestamolab.model.SolicitudPrestamo
 import kotlinx.coroutines.flow.Flow
 
@@ -12,6 +14,12 @@ interface PrestamoRepository {
     val solicitudes: Flow<List<SolicitudPrestamo>>
     val devoluciones: Flow<List<Devolucion>>
     suspend fun obtenerEquipo(id: Int): Equipo?
+
+    /** CA-HU06-05: préstamo con su equipo y sus evidencias; null si no existe. */
+    suspend fun obtenerDetalle(solicitudId: Int): PrestamoDetalle?
+
+    /** CA-HU13-03: agrega el GPS a una solicitud ya creada (la ubicación puede tardar varios segundos). */
+    suspend fun agregarUbicacion(solicitudId: Int, ubicacion: Ubicacion)
 
     /** Falla si el equipo no existe o no está DISPONIBLE. */
     suspend fun crearSolicitud(nueva: NuevaSolicitud): Result<SolicitudPrestamo>

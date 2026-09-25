@@ -224,7 +224,12 @@ private fun AreaAutenticada(
                 composable(Rutas.CATALOGO) {
                     RutaProtegida(Rutas.CATALOGO, usuario, onVolver = onCerrarSesion) {
                         CatalogScreen(
-                            equipos = uiState.equipos,
+                            equipos = uiState.equiposCatalogo,
+                            filtro = uiState.filtro,
+                            categorias = uiState.categorias,
+                            onSoloDisponiblesChange = prestamoViewModel::onSoloDisponiblesChanged,
+                            onCategoriaSeleccionada = prestamoViewModel::onCategoriaSeleccionada,
+                            onQuitarFiltros = prestamoViewModel::quitarFiltros,
                             onEquipoClick = { equipoId ->
                                 uiState.equipos.find { it.id == equipoId }?.let(prestamoViewModel::seleccionarEquipoParaDetalle)
                                 navController.navigate(Rutas.detalleEquipo(equipoId))

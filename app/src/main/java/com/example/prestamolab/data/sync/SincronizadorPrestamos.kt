@@ -116,7 +116,7 @@ class SincronizadorPrestamos(
             } else {
                 enviar { remoto.guardarPrestamo(remotoPrestamo) }
             }
-            loanDao.marcarEnviado(prestamo.id, prestamo.status, resultado)
+            loanDao.marcarEnviado(prestamo.id, prestamo.status, prestamo.latitude, prestamo.longitude, resultado)
             resumen.contar(resultado)
         }
         // Solo el instructor mantiene las actividades (HU-11)
@@ -219,7 +219,9 @@ class SincronizadorPrestamos(
             proposito = purpose,
             duracionHoras = durationHours,
             revisadoPor = reviewedBy,
-            motivoRechazo = rejectionReason
+            motivoRechazo = rejectionReason,
+            latitud = latitude,
+            longitud = longitude
         )
     }
 
@@ -325,7 +327,11 @@ class SincronizadorPrestamos(
             status = estado,
             reviewedBy = r.revisadoPor,
             rejectionReason = r.motivoRechazo,
-            syncStatus = EstadoSincronizacion.SINCRONIZADO
+            syncStatus = EstadoSincronizacion.SINCRONIZADO,
+            latitude = r.latitud,
+            longitude = r.longitud,
+            // Supabase no guarda la precisión: se conserva la del teléfono que solicitó
+            locationAccuracy = local?.locationAccuracy.takeIf { local?.latitude == r.latitud && local?.longitude == r.longitud }
         )
         return when {
             local == null -> { loanDao.insertar(entidad); 1 }

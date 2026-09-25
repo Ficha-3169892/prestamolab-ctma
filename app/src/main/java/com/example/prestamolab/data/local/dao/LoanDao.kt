@@ -3,8 +3,10 @@ package com.example.prestamolab.data.local.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.prestamolab.data.local.entity.EstadoSincronizacion
+import com.example.prestamolab.data.local.entity.LoanConDetalle
 import com.example.prestamolab.data.local.entity.LoanEntity
 import com.example.prestamolab.model.EstadoSolicitud
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +18,18 @@ interface LoanDao {
 
     @Query("SELECT * FROM loans WHERE id = :id")
     suspend fun obtener(id: Int): LoanEntity?
+
+    /** CA-HU06-05: préstamo, equipo y evidencias en una sola llamada (@Relation). */
+    @Transaction
+    @Query("SELECT * FROM loans WHERE id = :id")
+    suspend fun obtenerConDetalle(id: Int): LoanConDetalle?
+
+    /** CA-HU13-03: la ubicación llega después de crear la solicitud y queda pendiente de enviar. */
+    @Query(
+        "UPDATE loans SET latitude = :latitud, longitude = :longitud, location_accuracy = :precision, " +
+            "sync_status = 'PENDIENTE' WHERE id = :id"
+    )
+    suspend fun guardarUbicacion(id: Int, latitud: Double, longitud: Double, precision: Float?)
 
     /** Estados de los préstamos de un equipo: deciden si se puede eliminar (CA-HU12-04). */
     @Query("SELECT status FROM loans WHERE equipment_id = :equipoId")
@@ -48,7 +62,16 @@ interface LoanDao {
     @Query("SELECT * FROM loans WHERE sync_status = 'PENDIENTE' ORDER BY id")
     suspend fun pendientes(): List<LoanEntity>
 
-    /** Solo si no volvió a cambiar mientras se enviaba; si cambió, sigue PENDIENTE. */
-    @Query("UPDATE loans SET sync_status = :resultado WHERE id = :id AND status = :enviado AND sync_status = 'PENDIENTE'")
-    suspend fun marcarEnviado(id: Int, enviado: EstadoSolicitud, resultado: EstadoSincronizacion)
+    /** Solo si no volvió a cambiar (estado ni ubicación) mientras se enviaba; si cambió, sigue PENDIENTE. */
+    @Query(
+        "UPDATE loans SET sync_status = :resultado WHERE id = :id AND status = :enviado " +
+            "AND latitude IS :latitud AND longitude IS :longitud AND sync_status = 'PENDIENTE'"
+    )
+    suspend fun marcarEnviado(
+        id: Int,
+        enviado: EstadoSolicitud,
+        latitud: Double?,
+        longitud: Double?,
+        resultado: EstadoSincronizacion
+    )
 }

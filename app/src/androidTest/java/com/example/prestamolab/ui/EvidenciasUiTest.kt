@@ -37,7 +37,7 @@ class EvidenciasUiTest {
 
     private fun abrirEvidenciasDelPrestamo2() {
         composeTestRule.onAllNodesWithText("Mis Solicitudes")[0].performClick()
-        composeTestRule.onNodeWithText("Evidencias").performClick()
+        composeTestRule.tocarEnMisSolicitudes("Evidencias")
     }
 
     @Test
@@ -52,7 +52,7 @@ class EvidenciasUiTest {
     @Test
     fun LaDevolucionAbreLasEvidenciasDeDevolucion() {
         composeTestRule.onAllNodesWithText("Mis Solicitudes")[0].performClick()
-        composeTestRule.onNodeWithText("Registrar devolución").performClick()
+        composeTestRule.tocarEnMisSolicitudes("Registrar devolución")
         composeTestRule.onNode(hasScrollAction()).performScrollToNode(hasText("Adjuntar evidencia de devolución"))
         composeTestRule.onNodeWithText("Adjuntar evidencia de devolución").performClick()
 

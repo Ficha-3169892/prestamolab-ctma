@@ -61,7 +61,7 @@ class DevolucionUiTest {
 
     @Test
     fun TC_HU13_02_CapturarUbicacion_MuestraCoordenadasYMensaje() {
-        composeTestRule.onNodeWithText("Registrar devolución").performClick()
+        composeTestRule.tocarEnMisSolicitudes("Registrar devolución")
 
         composeTestRule.onNodeWithText("Capturar ubicación actual").performClick()
 
@@ -72,7 +72,7 @@ class DevolucionUiTest {
 
     @Test
     fun TC_HU05_02_DevolucionConUbicacion_CierraElPrestamo() {
-        composeTestRule.onNodeWithText("Registrar devolución").performClick()
+        composeTestRule.tocarEnMisSolicitudes("Registrar devolución")
         composeTestRule.onNodeWithText("Préstamo #2").assertIsDisplayed()
         composeTestRule.onNodeWithText("Equipo: Kit Arduino Uno").assertIsDisplayed()
 
@@ -95,7 +95,7 @@ class DevolucionUiTest {
 
     @Test
     fun TC_HU05_04_EquipoDanadoSinObservacion_MuestraError() {
-        composeTestRule.onNodeWithText("Registrar devolución").performClick()
+        composeTestRule.tocarEnMisSolicitudes("Registrar devolución")
 
         composeTestRule.onNodeWithText("Dañado").performClick()
         composeTestRule.onNodeWithText("Confirmar devolución").performScrollTo().performClick()

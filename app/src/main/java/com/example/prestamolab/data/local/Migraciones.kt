@@ -100,3 +100,12 @@ val MIGRACION_6_7 = object : Migration(6, 7) {
         db.execSQL("ALTER TABLE evidences ADD COLUMN longitude REAL")
     }
 }
+
+/** v7 → v8: ubicación de la solicitud de préstamo (CA-HU13-03). */
+val MIGRACION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE loans ADD COLUMN latitude REAL")
+        db.execSQL("ALTER TABLE loans ADD COLUMN longitude REAL")
+        db.execSQL("ALTER TABLE loans ADD COLUMN location_accuracy REAL")
+    }
+}

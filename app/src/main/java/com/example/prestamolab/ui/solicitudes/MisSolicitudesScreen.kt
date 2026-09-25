@@ -81,7 +81,10 @@ fun MisSolicitudesScreen(
                         val nombreEquipo = equipos.find { it.id == solicitud.equipoId }?.nombre
                             ?: "#${solicitud.equipoId}"
                         Text(text = "Equipo: $nombreEquipo", fontFamily = FontFamily.SansSerif)
-                        Text(text = "Fecha: ${solicitud.fechaInicio}", fontFamily = FontFamily.SansSerif)
+                        // CA-HU04-02: equipo, fechas, ambiente y estado
+                        Text(text = "Ambiente: ${solicitud.ambiente}", fontFamily = FontFamily.SansSerif)
+                        Text(text = "Solicitada: ${solicitud.fechaInicio}", fontFamily = FontFamily.SansSerif)
+                        Text(text = "Devolver antes de: ${solicitud.fechaFin}", fontFamily = FontFamily.SansSerif)
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = "Estado: ${solicitud.estado}",

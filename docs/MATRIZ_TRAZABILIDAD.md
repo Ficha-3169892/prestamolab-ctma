@@ -4,7 +4,7 @@ Generada por `docs/backlog/generar_issues.py`; no editar a mano. Cada criterio d
 CA-HUxx-nn tiene exactamente un caso de prueba TC-HUxx-nn (trazabilidad 1:1), y cada caso apunta a
 la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 
-**Cobertura:** 62 de 74 criterios automatizados (83 %).
+**Cobertura:** 74 de 74 criterios automatizados (100 %).
 
 ## Resumen por historia
 
@@ -12,14 +12,14 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 |---|---|---|---|---|---|
 | HU-05 | Registrar devolución | 5 | 5 | 5 | 0 |
 | HU-10 | Iniciar sesión y control de acceso por rol | 5 | 7 | 7 | 0 |
-| HU-13 | Registrar geolocalización de las operaciones | 5 | 6 | 3 | 3 |
-| HU-01 | Consultar equipos disponibles | 6 | 5 | 1 | 4 |
+| HU-13 | Registrar geolocalización de las operaciones | 5 | 6 | 6 | 0 |
+| HU-01 | Consultar equipos disponibles | 6 | 5 | 5 | 0 |
 | HU-02 | Consultar detalle de un equipo | 6 | 4 | 4 | 0 |
-| HU-06 | Conservar datos localmente sin conexión | 6 | 5 | 3 | 2 |
+| HU-06 | Conservar datos localmente sin conexión | 6 | 5 | 5 | 0 |
 | HU-11 | Gestionar actividades formativas (instructor) | 6 | 5 | 5 | 0 |
 | HU-12 | Gestionar inventario de equipos (instructor) | 6 | 5 | 5 | 0 |
 | HU-03 | Solicitar préstamo | 7 | 8 | 8 | 0 |
-| HU-04 | Consultar mis préstamos activos | 7 | 6 | 3 | 3 |
+| HU-04 | Consultar mis préstamos activos | 7 | 6 | 6 | 0 |
 | HU-14 | Revisar solicitudes de préstamo (instructor) | 7 | 4 | 4 | 0 |
 | HU-07 | Sincronizar datos con servicio remoto | 8 | 5 | 5 | 0 |
 | HU-08 | Adjuntar evidencia fotográfica | 8 | 5 | 5 | 0 |
@@ -30,10 +30,10 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
 | CA-HU01-01 | Dado que existen equipos registrados, cuando abro la pantalla Catálogo, entonces veo cada equipo con nombre, categoría y estado (DISPONIBLE, RESERVADO o PRESTADO). | TC-HU01-01 | UI | Automatizada | `PrestamoUiTest.TC01_CargarCatalogoInicial_MuestraEquipos` |
-| CA-HU01-02 | Dado que un equipo no está DISPONIBLE, cuando veo el catálogo, entonces su estado se muestra con un color distinto al de los disponibles. | TC-HU01-02 | UI | Pendiente | — |
-| CA-HU01-03 | Dado que hay equipos de varias categorías, cuando activo el filtro "Solo disponibles" o elijo una categoría, entonces la lista muestra solo los equipos que cumplen el filtro. | TC-HU01-03 | Unitaria | Pendiente | — |
-| CA-HU01-04 | Dado que apliqué un filtro, cuando cierro y vuelvo a abrir la app, entonces el filtro se conserva (DataStore). | TC-HU01-04 | Instrumentada | Pendiente | — |
-| CA-HU01-05 | Dado que no hay equipos que cumplan el filtro, cuando veo el catálogo, entonces aparece el mensaje "No hay equipos para mostrar" en lugar de una lista vacía. | TC-HU01-05 | UI | Pendiente | — |
+| CA-HU01-02 | Dado que un equipo no está DISPONIBLE, cuando veo el catálogo, entonces su estado se muestra con un color distinto al de los disponibles. | TC-HU01-02 | UI | Automatizada | `ColorEstadoTest.TC_HU01_02_LosNoDisponiblesTienenUnColorDistintoAlDeLosDisponibles` |
+| CA-HU01-03 | Dado que hay equipos de varias categorías, cuando activo el filtro "Solo disponibles" o elijo una categoría, entonces la lista muestra solo los equipos que cumplen el filtro. | TC-HU01-03 | Unitaria | Automatizada | `FiltroCatalogoTest.TC_HU01_03_SoloDisponibles`<br>`FiltroCatalogoTest.TC_HU01_03_PorCategoria`<br>`PrestamoViewModelTest.TC-HU01-03`<br>`CatalogoFiltrosUiTest.TC_HU01_03_SoloDisponiblesYCategoria_FiltranLaLista` |
+| CA-HU01-04 | Dado que apliqué un filtro, cuando cierro y vuelvo a abrir la app, entonces el filtro se conserva (DataStore). | TC-HU01-04 | Instrumentada | Automatizada | `CatalogoFiltrosUiTest.TC_HU01_04_ElFiltroSeConservaAlCerrarYVolverAAbrirLaApp`<br>`PrestamoViewModelTest.TC-HU01-04` |
+| CA-HU01-05 | Dado que no hay equipos que cumplan el filtro, cuando veo el catálogo, entonces aparece el mensaje "No hay equipos para mostrar" en lugar de una lista vacía. | TC-HU01-05 | UI | Automatizada | `CatalogoFiltrosUiTest.TC_HU01_05_SinResultados_MuestraElMensajeYSePuedenQuitarLosFiltros`<br>`PrestamoViewModelTest.TC-HU01-05` |
 
 ## HU-02: Consultar detalle de un equipo
 
@@ -61,10 +61,10 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
-| CA-HU04-01 | Dado que hay solicitudes de varios usuarios, cuando abro "Mis Solicitudes", entonces veo solo las del usuario con sesión iniciada. | TC-HU04-01 | Unitaria | Pendiente | — |
-| CA-HU04-02 | Dado que tengo solicitudes, cuando abro "Mis Solicitudes", entonces cada una muestra equipo, fechas, ambiente y estado. | TC-HU04-02 | UI | Pendiente | — |
+| CA-HU04-01 | Dado que hay solicitudes de varios usuarios, cuando abro "Mis Solicitudes", entonces veo solo las del usuario con sesión iniciada. | TC-HU04-01 | Unitaria | Automatizada | `PrestamoViewModelTest.Mis Solicitudes del estudiante solo muestra las suyas y el instructor ve todas` |
+| CA-HU04-02 | Dado que tengo solicitudes, cuando abro "Mis Solicitudes", entonces cada una muestra equipo, fechas, ambiente y estado. | TC-HU04-02 | UI | Automatizada | `CatalogoFiltrosUiTest.TC_HU04_02_CadaSolicitudMuestraEquipoFechasAmbienteYEstado` |
 | CA-HU04-03 | Dado que tengo solicitudes CANCELADAS o DEVUELTAS, cuando abro "Mis Solicitudes", entonces no aparecen en la lista de activas. | TC-HU04-03 | UI | Automatizada | `PrestamoUiTest.TC15_CancelarSolicitud_ActualizaLista` |
-| CA-HU04-04 | Dado que no tengo solicitudes activas, cuando abro "Mis Solicitudes", entonces veo "No tienes solicitudes activas.". | TC-HU04-04 | UI | Pendiente | — |
+| CA-HU04-04 | Dado que no tengo solicitudes activas, cuando abro "Mis Solicitudes", entonces veo "No tienes solicitudes activas.". | TC-HU04-04 | UI | Automatizada | `CatalogoFiltrosUiTest.TC_HU04_04_SinSolicitudesActivas_MuestraElMensaje` |
 | CA-HU04-05 | Dado que tengo una solicitud SOLICITADA, cuando la cancelo, entonces pasa a CANCELADA y el equipo vuelve a DISPONIBLE. | TC-HU04-05 | Unitaria | Automatizada | `PrestamoViewModelTest.TC-15` |
 | CA-HU04-06 | Dado que una solicitud ya está CANCELADA, cuando intento cancelarla otra vez, entonces no se produce ningún cambio ni error. | TC-HU04-06 | Unitaria | Automatizada | `PrestamoViewModelTest.TC-16`<br>`RoomPrestamoRepositoryTest.Cancelar_EsIdempotenteYLiberaElEquipo` |
 
@@ -82,11 +82,11 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
-| CA-HU06-01 | Dado que hay datos guardados, cuando reinicio la app en modo avión, entonces el catálogo y mis préstamos siguen visibles (Room). | TC-HU06-01 | Instrumentada | Pendiente | — |
+| CA-HU06-01 | Dado que hay datos guardados, cuando reinicio la app en modo avión, entonces el catálogo y mis préstamos siguen visibles (Room). | TC-HU06-01 | Instrumentada | Automatizada | `PersistenciaSinConexionTest.TC_HU06_01_TrasReiniciarSinRedElCatalogoYMisPrestamosSiguenVisibles` |
 | CA-HU06-02 | Dado que no hay conexión, cuando creo una solicitud, entonces se guarda localmente con estado de sincronización PENDIENTE. | TC-HU06-02 | Integración | Automatizada | `RoomPrestamoRepositoryTest.TC_HU06_02_SolicitudNueva_QuedaPendienteConUuidYPideSincronizar` |
 | CA-HU06-03 | Dado que la app está en uso, cuando cambian los datos en Room, entonces la UI se actualiza sola, porque solo lee de Room mediante Flow. | TC-HU06-03 | Integración | Automatizada | `RoomPrestamoRepositoryTest.TC_HU06_03_ElFlujoDeEquiposEmiteLosCambiosDeRoom` |
 | CA-HU06-04 | Dado que existe una versión anterior de la base de datos, cuando actualizo la app, entonces la migración conserva los datos existentes. | TC-HU06-04 | Instrumentada | Automatizada | `MigracionTest.TC_HU06_04_MigracionDeV1AV2ConservaLosDatos` |
-| CA-HU06-05 | Dado que existen entidades relacionadas, cuando consulto un préstamo, entonces obtengo el préstamo con su equipo y sus evidencias en una sola consulta (@Relation). | TC-HU06-05 | Integración | Pendiente | — |
+| CA-HU06-05 | Dado que existen entidades relacionadas, cuando consulto un préstamo, entonces obtengo el préstamo con su equipo y sus evidencias en una sola consulta (@Relation). | TC-HU06-05 | Integración | Automatizada | `RoomPrestamoRepositoryTest.TC_HU06_05_ElPrestamoLlegaConSuEquipoYSusEvidenciasEnUnaSolaConsulta` |
 
 ## HU-07: Sincronizar datos con servicio remoto
 
@@ -153,12 +153,12 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
-| CA-HU13-01 | Dado que no he concedido el permiso de ubicación, cuando toco "Capturar ubicación actual" al registrar una devolución, entonces la app pide en ese momento ACCESS_FINE_LOCATION (junto con COARSE, como exige Android 12+), nunca al abrirse ni en segundo plano. | TC-HU13-01 | Manual | Pendiente | — |
+| CA-HU13-01 | Dado que no he concedido el permiso de ubicación, cuando toco "Capturar ubicación actual" al registrar una devolución, entonces la app pide en ese momento ACCESS_FINE_LOCATION (junto con COARSE, como exige Android 12+), nunca al abrirse ni en segundo plano. | TC-HU13-01 | Instrumentada | Automatizada | `PermisoUbicacionUiTest.TC_HU13_01_ElPermisoSePideAlCapturarLaUbicacion_YNegarloNoBloqueaLaDevolucion (se ejecuta aparte, tras revocar la ubicación)` |
 | CA-HU13-02 | Dado que concedí el permiso, cuando toco "Capturar ubicación actual", entonces veo "Ubicación capturada correctamente", la latitud, la longitud y la precisión. | TC-HU13-02 | UI + Unitaria | Automatizada | `DevolucionUiTest.TC_HU13_02_CapturarUbicacion_MuestraCoordenadasYMensaje`<br>`DevolucionViewModelTest.TC-HU13-02` |
-| CA-HU13-03 | Dado que concedí el permiso de ubicación, cuando solicito un préstamo, entonces la solicitud guarda latitud, longitud y precisión. | TC-HU13-03 | Unitaria | Pendiente | — |
+| CA-HU13-03 | Dado que concedí el permiso de ubicación, cuando solicito un préstamo, entonces la solicitud guarda latitud, longitud y precisión. | TC-HU13-03 | Unitaria | Automatizada | `PrestamoViewModelTest.TC-HU13-03`<br>`RoomPrestamoRepositoryTest.TC_HU13_03_LaSolicitudGuardaLatitudLongitudYPrecision` |
 | CA-HU13-04 | Dado que capturé la ubicación, cuando confirmo la devolución, entonces la devolución guarda la latitud y la longitud capturadas. | TC-HU13-04 | Unitaria + UI | Automatizada | `DevolucionViewModelTest.TC-HU13-04`<br>`DevolucionUiTest.TC_HU05_02_DevolucionConUbicacion_CierraElPrestamo` |
 | CA-HU13-05 | Dado que negué el permiso o el GPS está desactivado, cuando confirmo la devolución, entonces la devolución se registra sin coordenadas y se muestra un aviso. | TC-HU13-05 | Unitaria | Automatizada | `DevolucionViewModelTest.TC-HU13-05` |
-| CA-HU13-06 | Dado que hay registros con coordenadas, cuando se sincroniza, entonces latitud y longitud llegan a Supabase (`loans` y `returns`). | TC-HU13-06 | Integración | Pendiente | — |
+| CA-HU13-06 | Dado que hay registros con coordenadas, cuando se sincroniza, entonces latitud y longitud llegan a Supabase (`loans` y `returns`). | TC-HU13-06 | Integración | Automatizada | `SincronizadorPrestamosTest.TC_HU13_06_LasCoordenadasDePrestamosYDevolucionesLleganASupabase`<br>`SupabasePrestamosDataSourceTest.TC-HU13-06` |
 
 ## HU-14: Revisar solicitudes de préstamo (instructor)
 

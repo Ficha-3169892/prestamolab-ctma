@@ -198,4 +198,31 @@ class MigracionTest {
             assertTrue(c.isNull(3))
         }
     }
+
+    @Test
+    fun MigracionDeV7AV8AgregaLaUbicacionDeLaSolicitud() {
+        helper.createDatabase(nombreBase, 7).apply {
+            execSQL(
+                "INSERT INTO equipments (id, remote_id, name, category, status, sync_status, deleted) " +
+                    "VALUES (1, 'e1', 'Multímetro Digital', 'Herramienta', 'RESERVADO', 'SINCRONIZADO', 0)"
+            )
+            execSQL(
+                "INSERT INTO loans (id, remote_id, equipment_id, user_id, requester_name, environment, purpose, " +
+                    "duration_hours, request_date, return_date, status, sync_status) VALUES " +
+                    "(1, 'l1', 1, 'u1', 'Andrés Vargas', 'Lab', 'Mediciones', 2, '2026-09-24 08:00', " +
+                    "'2026-09-24 10:00', 'SOLICITADA', 'SINCRONIZADO')"
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(nombreBase, 8, true, MIGRACION_7_8)
+
+        db.query("SELECT status, latitude, longitude, location_accuracy FROM loans").use { c ->
+            c.moveToNext()
+            assertEquals("SOLICITADA", c.getString(0))
+            assertTrue(c.isNull(1))
+            assertTrue(c.isNull(2))
+            assertTrue(c.isNull(3))
+        }
+    }
 }

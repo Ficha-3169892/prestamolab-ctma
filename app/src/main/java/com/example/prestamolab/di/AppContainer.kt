@@ -13,6 +13,9 @@ import com.example.prestamolab.data.local.PrestamoLabDatabase
 import com.example.prestamolab.data.evidencias.AlmacenFotos
 import com.example.prestamolab.data.evidencias.FileProviderAlmacenFotos
 import com.example.prestamolab.data.location.FusedLocationProvider
+import com.example.prestamolab.data.preferencias.DataStorePreferenciasCatalogo
+import com.example.prestamolab.data.preferencias.PreferenciasCatalogo
+import com.example.prestamolab.data.preferencias.preferenciasDataStore
 import com.example.prestamolab.data.recordatorios.AndroidNotificador
 import com.example.prestamolab.data.recordatorios.AperturasPendientes
 import com.example.prestamolab.data.recordatorios.CoordinadorRecordatorios
@@ -92,6 +95,9 @@ class AppContainer(context: Context) {
             programadorRecordatorios
         ).iniciar(scope)
     }
+
+    /** CA-HU01-04: filtro del catálogo en DataStore. */
+    val preferenciasCatalogo: PreferenciasCatalogo by lazy { DataStorePreferenciasCatalogo(appContext.preferenciasDataStore) }
 
     var locationProvider: LocationProvider = FusedLocationProvider(appContext)
 

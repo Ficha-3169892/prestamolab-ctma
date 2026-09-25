@@ -17,7 +17,7 @@ import com.example.prestamolab.data.local.entity.ReturnEntity
 
 @Database(
     entities = [EquipmentEntity::class, LoanEntity::class, ReturnEntity::class, ActivityEntity::class, EvidenceEntity::class],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 abstract class PrestamoLabDatabase : RoomDatabase() {
@@ -31,13 +31,14 @@ abstract class PrestamoLabDatabase : RoomDatabase() {
         const val NOMBRE = "prestamolab.db"
 
         /** La base nace vacía: el catálogo y los préstamos llegan de Supabase al sincronizar (HU-07). */
-        fun construir(context: Context, enMemoria: Boolean = false): PrestamoLabDatabase {
+        /** [nombre] distinto solo en pruebas que necesitan un archivo propio (reinicio sin conexión). */
+        fun construir(context: Context, enMemoria: Boolean = false, nombre: String = NOMBRE): PrestamoLabDatabase {
             val builder = if (enMemoria) {
                 Room.inMemoryDatabaseBuilder(context, PrestamoLabDatabase::class.java)
             } else {
-                Room.databaseBuilder(context, PrestamoLabDatabase::class.java, NOMBRE)
+                Room.databaseBuilder(context, PrestamoLabDatabase::class.java, nombre)
             }
-            return builder.addMigrations(MIGRACION_1_2, MIGRACION_2_3, MIGRACION_3_4, MIGRACION_4_5, MIGRACION_5_6, MIGRACION_6_7).build()
+            return builder.addMigrations(MIGRACION_1_2, MIGRACION_2_3, MIGRACION_3_4, MIGRACION_4_5, MIGRACION_5_6, MIGRACION_6_7, MIGRACION_7_8).build()
         }
     }
 }

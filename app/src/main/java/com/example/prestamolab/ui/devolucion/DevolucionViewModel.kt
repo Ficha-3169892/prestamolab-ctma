@@ -16,7 +16,6 @@ import com.example.prestamolab.model.Ubicacion
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -49,8 +48,10 @@ class DevolucionViewModel(
 
     init {
         viewModelScope.launch {
-            val solicitud = repository.solicitudes.first().find { it.id == solicitudId }
-            val equipo = solicitud?.let { repository.obtenerEquipo(it.equipoId) }
+            // CA-HU06-05: préstamo, equipo y evidencias en una sola consulta
+            val detalle = repository.obtenerDetalle(solicitudId)
+            val solicitud = detalle?.solicitud
+            val equipo = detalle?.equipo
             _uiState.update {
                 it.copy(
                     cargando = false,

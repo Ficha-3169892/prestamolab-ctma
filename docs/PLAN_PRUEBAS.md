@@ -22,7 +22,7 @@ CA-HUxx-nn tiene exactamente un caso TC-HUxx-nn.
 | Unitarias de ViewModel | Validaciones, estados de la UI, control por rol, eventos de navegación | JUnit, Turbine, MockK, `MainDispatcherRule`, repositorios en memoria | `app/src/test/.../ui/` |
 | Contrato HTTP | Nombres de columna, filtros, métodos y cabeceras que se envían a Supabase | MockWebServer | `SupabasePrestamosDataSourceTest` |
 | Integración con Room | Repositorios, transacciones y consultas sobre una base en memoria con datos semilla | Room in-memory, `DatosSemilla` | `app/src/androidTest/.../data/` |
-| Migraciones | Cada migración 1→2 … 6→7 conserva los datos y deja el esquema exportado exacto | `MigrationTestHelper` | `MigracionTest` |
+| Migraciones | Cada migración 1→2 … 7→8 conserva los datos y deja el esquema exportado exacto | `MigrationTestHelper` | `MigracionTest` |
 | Sincronización | Envío de pendientes, recepción, conflictos, errores 401/404/4xx/5xx, fotos a Storage | Room in-memory, `FakePrestamosRemoteDataSource` | `SincronizadorPrestamosTest` |
 | WorkManager | Reintento exponencial, programación y cancelación de recordatorios | `TestListenableWorkerBuilder`, WorkManager real con retrasos largos | `SincronizacionWorkerTest`, `WorkManagerRecordatoriosTest` |
 | UI de extremo a extremo en el dispositivo | Flujos completos por rol sobre la app real | Compose UI Test, `PrestamoLabTestRunner` | `app/src/androidTest/.../ui/` |
@@ -65,39 +65,31 @@ CA-HUxx-nn tiene exactamente un caso TC-HUxx-nn.
 
 | Suite | Pruebas | Resultado |
 |---|---|---|
-| Unitarias (`testDebugUnitTest`) | 165 | En verde (también en el CI) |
-| Instrumentadas y de UI (Xiaomi) | 141 | En verde |
-| Criterios automatizados | 62 de 74 (83 %) | Ver matriz |
+| Unitarias (`testDebugUnitTest`) | 177 | En verde (también en el CI) |
+| Instrumentadas y de UI (Xiaomi) | 153 | 152 en verde en la suite completa; TC-HU13-01 en verde ejecutada aparte (ver 7) |
+| Criterios automatizados | 74 de 74 (100 %) | Ver matriz |
 
-## 7. Pruebas manuales
+## 7. Pruebas que dependen de permisos no concedidos
+
+Dos pruebas verifican el diálogo real del sistema y necesitan el permiso **sin conceder**; si está concedido se
+omiten (`assumeTrue`). Revocar un permiso mata el proceso de prueba, así que se revoca antes desde adb:
+
+| Caso | Preparación | Ejecución |
+|---|---|---|
+| TC-HU08-01 y 03 (cámara) | `adb shell pm revoke com.example.prestamolab android.permission.CAMERA` | Corre en la suite completa (ninguna otra prueba concede la cámara) |
+| TC-HU13-01 (ubicación) | `adb shell pm revoke com.example.prestamolab android.permission.ACCESS_FINE_LOCATION` y lo mismo con `ACCESS_COARSE_LOCATION` | Aparte, porque `DevolucionUiTest` concede la ubicación durante la suite: `adb shell am instrument -w -r -e class com.example.prestamolab.ui.PermisoUbicacionUiTest com.example.prestamolab.test/com.example.prestamolab.PrestamoLabTestRunner` |
+
+## 8. Pruebas manuales
 
 | Caso | Pasos | Estado |
 |---|---|---|
 | Foto real de evidencia (HU-08) | Estudiante → Mis Solicitudes → préstamo PRESTADO → Evidencias → tomar foto → sincronizar; comprobar la fila en `evidences` y que la URL pública abre la imagen | Aprobado (foto JPEG de 2,7 MB en el bucket `evidencias`) |
-| Diálogo de ubicación (TC-HU13-01) | Sin permiso de ubicación, tocar "Capturar ubicación actual" en la devolución: el diálogo aparece en ese momento | Pendiente de registrar |
 | Diálogo de notificaciones (HU-09) | `adb shell pm revoke com.example.prestamolab android.permission.POST_NOTIFICATIONS`; entrar como estudiante con un préstamo PRESTADO: aparece el diálogo; negarlo no bloquea nada | Pendiente de registrar |
 | Aprobar / rechazar, inventario y actividades contra Supabase real (HU-14, HU-12, HU-11) | Hacer la acción como instructor, sincronizar y consultar la tabla en Supabase | HU-14 verificada; HU-12 y HU-11 pendientes |
-
-## 8. Criterios pendientes
-
-De los 12 criterios sin prueba automatizada, 6 requieren también implementar la funcionalidad:
-
-| Criterio | Qué falta |
-|---|---|
-| CA-HU01-02 | Prueba del color distinto para equipos no disponibles (ya implementado en el catálogo) |
-| CA-HU01-03 | **Funcionalidad:** filtro "Solo disponibles" y por categoría, y su prueba |
-| CA-HU01-04 | **Funcionalidad:** conservar el filtro en DataStore, y su prueba |
-| CA-HU01-05 | **Funcionalidad:** mensaje "No hay equipos para mostrar", y su prueba |
-| CA-HU04-01, 04 | Pruebas de Mis Solicitudes: solo las del usuario y mensaje sin solicitudes (ya implementado) |
-| CA-HU04-02 | **Funcionalidad:** mostrar el ambiente y la fecha límite en cada tarjeta, y su prueba |
-| CA-HU06-01 | Prueba de reinicio en modo avión (Room ya es la fuente de verdad) |
-| CA-HU06-05 | **Funcionalidad:** consulta con `@Relation` (préstamo con su equipo y evidencias), y su prueba |
-| CA-HU13-01 | Registro de la prueba manual del diálogo de ubicación |
-| CA-HU13-03 | **Funcionalidad:** guardar latitud, longitud y precisión al solicitar un préstamo |
-| CA-HU13-06 | Prueba de que las coordenadas llegan a Supabase (`returns` ya las envía; `loans` depende de CA-HU13-03) |
 
 ## 9. Riesgos del plan
 
 - Las pruebas de UI dependen del teléfono físico; el CI solo ejecuta las unitarias.
-- La cámara y los diálogos del sistema varían por fabricante: se cubren con pruebas manuales registradas aquí.
+- La cámara y los diálogos del sistema varían por fabricante: los diálogos se verificaron en el Xiaomi (sección 7)
+  y la captura real de la foto es manual (sección 8).
 - Los riesgos de seguridad aceptados (R-01 a R-05) se verifican aparte, según `docs/RIESGOS.md`.

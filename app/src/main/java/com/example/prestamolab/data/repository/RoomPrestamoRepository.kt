@@ -13,6 +13,8 @@ import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.NuevaDevolucion
 import com.example.prestamolab.model.NuevaSolicitud
+import com.example.prestamolab.model.PrestamoDetalle
+import com.example.prestamolab.model.Ubicacion
 import com.example.prestamolab.model.ReglasInventario
 import com.example.prestamolab.model.ResultadoRevision
 import com.example.prestamolab.model.RevisionSolicitud
@@ -48,6 +50,14 @@ class RoomPrestamoRepository(
         returnDao.observarTodos().map { lista -> lista.map(ReturnEntity::aDominio) }
 
     override suspend fun obtenerEquipo(id: Int): Equipo? = equipmentDao.obtener(id)?.aDominio()
+
+    override suspend fun obtenerDetalle(solicitudId: Int): PrestamoDetalle? =
+        loanDao.obtenerConDetalle(solicitudId)?.aDominio()
+
+    override suspend fun agregarUbicacion(solicitudId: Int, ubicacion: Ubicacion) {
+        loanDao.guardarUbicacion(solicitudId, ubicacion.latitud, ubicacion.longitud, ubicacion.precisionMetros)
+        alCambiarLocalmente()
+    }
 
     override suspend fun crearSolicitud(nueva: NuevaSolicitud): Result<SolicitudPrestamo> = db.withTransaction {
         val equipo = equipmentDao.obtener(nueva.equipoId)

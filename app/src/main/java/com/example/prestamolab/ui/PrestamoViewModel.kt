@@ -1,15 +1,22 @@
 package com.example.prestamolab.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.prestamolab.PrestamoLabApp
+import com.example.prestamolab.data.location.LocationProvider
+import com.example.prestamolab.data.preferencias.PreferenciasCatalogo
+import com.example.prestamolab.data.preferencias.PreferenciasCatalogoEnMemoria
 import com.example.prestamolab.data.repository.PrestamoRepository
 import com.example.prestamolab.data.sync.AvisosSincronizacion
 import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
+import com.example.prestamolab.model.FiltroCatalogo
 import com.example.prestamolab.model.NuevaSolicitud
 import com.example.prestamolab.model.Rol
 import com.example.prestamolab.model.SolicitudPrestamo
@@ -30,6 +37,10 @@ sealed interface EventoPrestamo {
 
 data class PrestamoUiState(
     val equipos: List<Equipo> = emptyList(),
+    /** Catálogo después de aplicar [filtro] (CA-HU01-03). */
+    val equiposCatalogo: List<Equipo> = emptyList(),
+    val filtro: FiltroCatalogo = FiltroCatalogo(),
+    val categorias: List<String> = emptyList(),
     val solicitudes: List<SolicitudPrestamo> = emptyList(),
     val equipoSeleccionado: Equipo? = null,
     /** Id pedido por la ruta que no existe en el repositorio (CA-HU02-02). */
@@ -49,7 +60,11 @@ data class PrestamoUiState(
 class PrestamoViewModel(
     private val repository: PrestamoRepository,
     private val usuario: Usuario = USUARIO_DEMO,
-    private val avisos: AvisosSincronizacion = AvisosSincronizacion()
+    private val avisos: AvisosSincronizacion = AvisosSincronizacion(),
+    private val preferencias: PreferenciasCatalogo = PreferenciasCatalogoEnMemoria(),
+    private val locationProvider: LocationProvider? = null,
+    /** CA-HU13-03: el GPS se agrega solo si el estudiante ya concedió la ubicación (no se pide aquí). */
+    private val tienePermisoUbicacion: () -> Boolean = { false }
 ) : ViewModel() {
 
     private val rol: Rol get() = usuario.rol
@@ -72,9 +87,13 @@ class PrestamoViewModel(
                     val seleccionado = state.equipoSeleccionado?.let { sel ->
                         equipos.find { it.id == sel.id } ?: sel
                     }
-                    state.copy(equipos = equipos, equipoSeleccionado = seleccionado)
+                    state.copy(equipos = equipos, equipoSeleccionado = seleccionado).conCatalogo()
                 }
             }
+        }
+        viewModelScope.launch {
+            // CA-HU01-04: el filtro guardado se restaura al abrir la app
+            preferencias.filtro.collect { filtro -> _uiState.update { it.copy(filtro = filtro).conCatalogo() } }
         }
         viewModelScope.launch {
             repository.solicitudes.collect { solicitudes ->
@@ -89,6 +108,25 @@ class PrestamoViewModel(
     }
 
     fun descartarAvisoSincronizacion() = avisos.descartar()
+
+    fun onSoloDisponiblesChanged(soloDisponibles: Boolean) =
+        guardarFiltro(_uiState.value.filtro.copy(soloDisponibles = soloDisponibles))
+
+    /** null muestra todas las categorías. */
+    fun onCategoriaSeleccionada(categoria: String?) = guardarFiltro(_uiState.value.filtro.copy(categoria = categoria))
+
+    fun quitarFiltros() = guardarFiltro(FiltroCatalogo())
+
+    private fun guardarFiltro(filtro: FiltroCatalogo) {
+        // Se muestra al instante; DataStore lo confirma al guardar
+        _uiState.update { it.copy(filtro = filtro).conCatalogo() }
+        viewModelScope.launch { preferencias.guardar(filtro) }
+    }
+
+    private fun PrestamoUiState.conCatalogo() = copy(
+        equiposCatalogo = filtro.aplicar(equipos),
+        categorias = FiltroCatalogo.categorias(equipos)
+    )
 
     fun seleccionarEquipoParaDetalle(equipo: Equipo) {
         _uiState.update { it.copy(equipoSeleccionado = equipo, equipoNoEncontrado = null) }
@@ -202,6 +240,7 @@ class PrestamoViewModel(
                         )
                     }
                     _eventos.send(EventoPrestamo.SolicitudRegistrada(solicitud.id))
+                    agregarUbicacion(solicitud.id)
                 }
                 .onFailure { error ->
                     _uiState.update {
@@ -210,6 +249,13 @@ class PrestamoViewModel(
                 }
         }
         return true
+    }
+
+    /** La solicitud ya está guardada: el GPS puede tardar y, si falla, queda sin ubicación. */
+    private suspend fun agregarUbicacion(solicitudId: Int) {
+        val proveedor = locationProvider ?: return
+        if (!tienePermisoUbicacion()) return
+        proveedor.ubicacionActual().onSuccess { repository.agregarUbicacion(solicitudId, it) }
     }
 
     fun cancelarSolicitud(idSolicitud: Int) {
@@ -246,7 +292,14 @@ class PrestamoViewModel(
         fun factory(usuario: Usuario): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PrestamoLabApp
-                PrestamoViewModel(app.container.prestamoRepository, usuario, app.container.avisosSincronizacion)
+                PrestamoViewModel(
+                    app.container.prestamoRepository, usuario, app.container.avisosSincronizacion,
+                    app.container.preferenciasCatalogo, app.container.locationProvider
+                ) {
+                    listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION).any {
+                        ContextCompat.checkSelfPermission(app, it) == PackageManager.PERMISSION_GRANTED
+                    }
+                }
             }
         }
     }

@@ -16,7 +16,18 @@ data class SolicitudPrestamo(
     val fechaFin: String,
     val estado: EstadoSolicitud,
     /** Lo registra el instructor al rechazar (CA-HU14-03). */
-    val motivoRechazo: String? = null
+    val motivoRechazo: String? = null,
+    /** CA-HU13-03: dónde se solicitó; null si el estudiante no ha concedido la ubicación. */
+    val latitud: Double? = null,
+    val longitud: Double? = null,
+    val precisionMetros: Float? = null
+)
+
+/** CA-HU06-05: un préstamo con su equipo y sus evidencias, obtenidos en una sola consulta. */
+data class PrestamoDetalle(
+    val solicitud: SolicitudPrestamo,
+    val equipo: Equipo?,
+    val evidencias: List<Evidencia>
 )
 
 /** Datos que captura el formulario; el repositorio asigna id, fechas y estado. */

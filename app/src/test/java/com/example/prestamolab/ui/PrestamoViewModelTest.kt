@@ -2,7 +2,9 @@ package com.example.prestamolab.ui
 
 import com.example.prestamolab.data.repository.InMemoryPrestamoRepository
 import com.example.prestamolab.data.repository.PrestamoRepository
+import com.example.prestamolab.data.preferencias.PreferenciasCatalogoEnMemoria
 import com.example.prestamolab.data.sync.AvisosSincronizacion
+import com.example.prestamolab.testutil.FakeLocationProvider
 import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
@@ -412,5 +414,72 @@ class PrestamoViewModelTest {
 
         vm.descartarAvisoSincronizacion()
         assertNull(vm.uiState.value.avisoSincronizacion)
+    }
+
+    @Test
+    fun `TC-HU01-03 - Solo disponibles y por categoria filtran el catalogo`() {
+        viewModel.onSoloDisponiblesChanged(true)
+        assertEquals(listOf(1, 3, 4), viewModel.uiState.value.equiposCatalogo.map { it.id })
+
+        viewModel.onCategoriaSeleccionada("Laboratorio")
+        assertEquals(listOf(4), viewModel.uiState.value.equiposCatalogo.map { it.id })
+        // Los nombres de las demás pantallas siguen usando el catálogo completo
+        assertEquals(5, viewModel.uiState.value.equipos.size)
+        assertEquals(listOf("Herramienta", "Laboratorio"), viewModel.uiState.value.categorias)
+    }
+
+    @Test
+    fun `TC-HU01-04 - El filtro guardado se restaura al volver a abrir la app`() {
+        val preferencias = PreferenciasCatalogoEnMemoria()
+        PrestamoViewModel(repository, preferencias = preferencias).onCategoriaSeleccionada("Herramienta")
+
+        // Un ViewModel nuevo, como al volver a abrir la app
+        val reabierto = PrestamoViewModel(repository, preferencias = preferencias)
+
+        assertEquals("Herramienta", reabierto.uiState.value.filtro.categoria)
+        assertEquals(listOf(1, 3, 5), reabierto.uiState.value.equiposCatalogo.map { it.id })
+    }
+
+    @Test
+    fun `TC-HU01-05 - Sin equipos que cumplan el filtro el catalogo queda vacio y se puede quitar el filtro`() {
+        viewModel.onSoloDisponiblesChanged(true)
+        viewModel.onCategoriaSeleccionada("Categoria inexistente")
+        assertTrue(viewModel.uiState.value.equiposCatalogo.isEmpty())
+
+        viewModel.quitarFiltros()
+
+        assertFalse(viewModel.uiState.value.filtro.activo)
+        assertEquals(5, viewModel.uiState.value.equiposCatalogo.size)
+    }
+
+    @Test
+    fun `TC-HU13-03 - Con permiso de ubicacion la solicitud guarda latitud, longitud y precision`() {
+        val gps = FakeLocationProvider()
+        val vm = PrestamoViewModel(repository, locationProvider = gps, tienePermisoUbicacion = { true })
+        vm.seleccionarEquipoParaDetalle(vm.uiState.value.equipos.first { it.id == 1 })
+        vm.onAmbienteChanged("Lab 1")
+        vm.onPropositoChanged("Practica de medicion")
+        vm.onDuracionChanged("2")
+
+        assertTrue(vm.guardarSolicitud())
+
+        val nueva = vm.uiState.value.solicitudes.single { it.equipoId == 1 }
+        assertEquals(FakeLocationProvider.UBICACION_CTMA.latitud, nueva.latitud!!, 0.0)
+        assertEquals(FakeLocationProvider.UBICACION_CTMA.longitud, nueva.longitud!!, 0.0)
+        assertEquals(FakeLocationProvider.UBICACION_CTMA.precisionMetros, nueva.precisionMetros)
+    }
+
+    @Test
+    fun `Sin permiso de ubicacion la solicitud se registra sin coordenadas y sin leer el GPS`() {
+        val gps = FakeLocationProvider()
+        val vm = PrestamoViewModel(repository, locationProvider = gps, tienePermisoUbicacion = { false })
+        vm.seleccionarEquipoParaDetalle(vm.uiState.value.equipos.first { it.id == 1 })
+        vm.onAmbienteChanged("Lab 1")
+        vm.onPropositoChanged("Practica de medicion")
+
+        assertTrue(vm.guardarSolicitud())
+
+        assertNull(vm.uiState.value.solicitudes.single { it.equipoId == 1 }.latitud)
+        assertEquals(0, gps.llamadas)
     }
 }

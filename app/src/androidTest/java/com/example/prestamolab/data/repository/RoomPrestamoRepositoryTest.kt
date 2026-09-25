@@ -8,6 +8,7 @@ import com.example.prestamolab.data.local.DatosSemilla
 import com.example.prestamolab.data.local.PrestamoLabDatabase
 import com.example.prestamolab.data.local.entity.EstadoSincronizacion
 import com.example.prestamolab.model.CondicionEquipo
+import com.example.prestamolab.model.EtapaEvidencia
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.NuevaDevolucion
@@ -321,5 +322,34 @@ class RoomPrestamoRepositoryTest {
         val pendiente = db.equipmentDao().pendientes().single()
         assertTrue(pendiente.deleted)
         assertEquals(3, pendiente.id)
+    }
+
+    @Test
+    fun TC_HU06_05_ElPrestamoLlegaConSuEquipoYSusEvidenciasEnUnaSolaConsulta() = runTest {
+        val evidencias = RoomEvidenciaRepository(db)
+        evidencias.registrar(2, EtapaEvidencia.ENTREGA, "content://x/1.jpg").getOrThrow()
+        evidencias.registrar(2, EtapaEvidencia.DEVOLUCION, "content://x/2.jpg").getOrThrow()
+
+        val detalle = repository.obtenerDetalle(2)!!
+
+        assertEquals(EstadoSolicitud.PRESTADO, detalle.solicitud.estado)
+        assertEquals("Kit Arduino Uno", detalle.equipo?.nombre)
+        assertEquals(listOf(EtapaEvidencia.ENTREGA, EtapaEvidencia.DEVOLUCION), detalle.evidencias.map { it.etapa })
+        assertNull(repository.obtenerDetalle(99))
+    }
+
+    @Test
+    fun TC_HU13_03_LaSolicitudGuardaLatitudLongitudYPrecision() = runTest {
+        val solicitud = repository.crearSolicitud(nueva(1)).getOrThrow()
+        db.loanDao().marcarEnviado(solicitud.id, EstadoSolicitud.SOLICITADA, null, null, EstadoSincronizacion.SINCRONIZADO)
+
+        repository.agregarUbicacion(solicitud.id, Ubicacion(6.2518, -75.5636, 12f))
+
+        val guardada = repository.solicitudes.first().single { it.id == solicitud.id }
+        assertEquals(6.2518, guardada.latitud!!, 0.0)
+        assertEquals(-75.5636, guardada.longitud!!, 0.0)
+        assertEquals(12f, guardada.precisionMetros)
+        // Vuelve a quedar pendiente para que las coordenadas lleguen a Supabase
+        assertEquals(EstadoSincronizacion.PENDIENTE, db.loanDao().obtener(solicitud.id)!!.syncStatus)
     }
 }

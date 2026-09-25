@@ -14,10 +14,8 @@
   catálogo y detalle; solicitud, aprobación o rechazo, cancelación y devolución de préstamos; devolución con GPS
   (Fused Location Provider); evidencia fotográfica con cámara, FileProvider y Supabase Storage; inventario de equipos
   y actividades formativas del instructor; recordatorio de devolución con WorkManager y notificaciones;
-  persistencia local con Room (v7, migraciones probadas) y sesión en DataStore; sincronización offline-first con
-  Supabase.
-- **Incompleto:** filtros del catálogo y su persistencia (CA-HU01-03 a 05), ambiente y fecha límite en Mis
-  Solicitudes (CA-HU04-02), consulta con `@Relation` (CA-HU06-05) y GPS al solicitar un préstamo (CA-HU13-03).
+  persistencia local con Room (v8, migraciones probadas) y sesión en DataStore; filtros del catálogo conservados en
+  DataStore; sincronización offline-first con Supabase; GPS en solicitudes, devoluciones y evidencias.
 - **Fuera de alcance de esta versión:** Supabase Auth y políticas de seguridad por rol en el servidor (ver sección 5).
 
 ## 2. Métricas de ejecución de QA
@@ -25,11 +23,11 @@
 | Métrica | Resultado |
 |---|---|
 | Historias del backlog | 14 |
-| Historias terminadas / parciales | 10 / 4 |
+| Historias terminadas | 14 de 14 |
 | Criterios de aceptación y casos de prueba (1:1) | 74 |
-| Criterios con prueba automatizada | 62 (83 %) |
-| Pruebas unitarias | 165, todas en verde (local y en GitHub Actions) |
-| Pruebas instrumentadas y de UI en el dispositivo | 141, todas en verde |
+| Criterios con prueba automatizada | 74 (100 %) |
+| Pruebas unitarias | 177, todas en verde (local y en GitHub Actions) |
+| Pruebas instrumentadas y de UI en el dispositivo | 153, todas en verde (TC-HU13-01 se ejecuta aparte) |
 | Verificación manual contra Supabase real | Login, sincronización, devolución con GPS, revisión de una solicitud y evidencia con foto |
 | Defectos registrados en la Parte 2 | 9 (BUG-04 a BUG-12), todos cerrados |
 | Defectos Críticos o Altos abiertos | 0 |
@@ -51,7 +49,7 @@ Detalle, causa raíz y pruebas de confirmación en `DEFECTOS.md`.
 | Criterio (ver `SCRUM.md`) | Estado |
 |---|---|
 | 1. Compila y CI en verde | Cumple |
-| 2. Criterios implementados y registrados en la matriz | Parcial: 6 criterios sin implementar |
+| 2. Criterios implementados y registrados en la matriz | Cumple (74 de 74) |
 | 3. UI → ViewModel (`StateFlow`) → Repository | Cumple |
 | 4. Room como fuente de verdad, migraciones probadas | Cumple |
 | 5. Sincronización sin duplicados | Cumple |
@@ -75,6 +73,6 @@ Detalle y plan de verificación en `docs/RIESGOS.md`:
 ## 6. Recomendación y dictamen
 
 **Dictamen: ACEPTABLE CON OBSERVACIONES.** La funcionalidad principal está completa, probada en el dispositivo y
-verificada contra Supabase, sin defectos graves abiertos. Antes de la entrega final se recomienda: implementar los 6
-criterios faltantes, cerrar los riesgos de seguridad del servidor (RLS por rol y login mediante una función que
+verificada contra Supabase, sin defectos graves abiertos, y los 74 criterios tienen prueba automatizada. Antes de la
+entrega final se recomienda: cerrar los riesgos de seguridad del servidor (RLS por rol y login mediante una función que
 valide la contraseña), ejecutar la prueba con OWASP ZAP y registrar las Sprint Reviews.

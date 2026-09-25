@@ -14,20 +14,20 @@ Detalle de cada historia, con sus criterios Dado/cuando/entonces y sus casos de 
 |---|---|---|---|---|
 | 1 | HU-10 Iniciar sesión y control de acceso por rol | Alta | 5 | Hecho |
 | 2 | HU-05 Registrar devolución | Alta | 5 | Hecho |
-| 3 | HU-13 Registrar geolocalización de las operaciones | Media | 5 | Parcial: falta GPS al solicitar (CA-HU13-03) |
-| 4 | HU-01 Consultar equipos disponibles | Alta | 6 | Parcial: faltan filtros y mensaje sin resultados (CA-HU01-03 a 05) |
+| 3 | HU-13 Registrar geolocalización de las operaciones | Media | 5 | Hecho |
+| 4 | HU-01 Consultar equipos disponibles | Alta | 6 | Hecho |
 | 5 | HU-02 Consultar detalle de un equipo | Alta | 6 | Hecho |
-| 6 | HU-06 Conservar datos localmente sin conexión | Alta | 6 | Parcial: falta consulta con `@Relation` (CA-HU06-05) |
+| 6 | HU-06 Conservar datos localmente sin conexión | Alta | 6 | Hecho |
 | 7 | HU-12 Gestionar inventario de equipos (instructor) | Media | 6 | Hecho |
 | 8 | HU-11 Gestionar actividades formativas (instructor) | Media | 6 | Hecho |
 | 9 | HU-03 Solicitar préstamo | Alta | 7 | Hecho |
-| 10 | HU-04 Consultar mis préstamos activos | Alta | 7 | Parcial: la tarjeta no muestra ambiente ni fecha límite (CA-HU04-02) |
+| 10 | HU-04 Consultar mis préstamos activos | Alta | 7 | Hecho |
 | 11 | HU-14 Revisar solicitudes de préstamo (instructor) | Alta | 7 | Hecho |
 | 12 | HU-07 Sincronizar datos con servicio remoto | Media/Alta | 8 | Hecho |
 | 13 | HU-08 Adjuntar evidencia fotográfica | Media | 8 | Hecho |
 | 14 | HU-09 Recibir recordatorio de devolución | Media | 9 | Hecho |
 
-**Avance:** 10 de 14 historias terminadas y 4 parciales; 62 de 74 criterios con prueba automatizada.
+**Avance:** 14 de 14 historias terminadas; 74 de 74 criterios con prueba automatizada.
 
 ## 3. Sprint Goals
 

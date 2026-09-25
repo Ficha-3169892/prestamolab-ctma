@@ -287,6 +287,31 @@ class SupabasePrestamosDataSourceTest {
     }
 
     @Test
+    fun `TC-HU13-06 - El prestamo envia y recibe latitud y longitud`() = runTest {
+        responder(201, "")
+        remoto.guardarPrestamo(
+            PrestamoRemoto(
+                "l1", "u1", "e1", "SOLICITADA", "2026-09-24T08:00:00-05:00", "2026-09-24T10:00:00-05:00",
+                "Lab 1", "Practica de redes", 2, latitud = 6.2518, longitud = -75.5636
+            )
+        )
+        val cuerpo = JSONObject(servidor.takeRequest().body.readUtf8())
+        assertEquals(6.2518, cuerpo.getDouble("latitude"), 0.0)
+        assertEquals(-75.5636, cuerpo.getDouble("longitude"), 0.0)
+
+        responder(
+            200,
+            """[{"id":"l1","user_id":"u1","equipment_id":"e1","status":"SOLICITADA",
+                "request_date":"2026-09-24T13:00:00+00:00","return_date":"2026-09-24T15:00:00+00:00",
+                "environment":"Lab 1","purpose":"Practica de redes","duration_hours":2,
+                "latitude":6.2518,"longitude":-75.5636,"solicitante":null}]"""
+        )
+        val recibido = remoto.prestamos(null).single()
+        assertEquals(6.2518, recibido.latitud!!, 0.0)
+        assertTrue(rutaDecodificada().contains("latitude,longitude"))
+    }
+
+    @Test
     fun `El estado del equipo se envia con PATCH y solo la columna status`() = runTest {
         responder(204, "")
 

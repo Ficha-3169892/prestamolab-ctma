@@ -1,11 +1,14 @@
 package com.example.prestamolab.data.local.entity
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.Relation
 import com.example.prestamolab.model.EstadoSolicitud
+import com.example.prestamolab.model.PrestamoDetalle
 import com.example.prestamolab.model.SolicitudPrestamo
 
 /** Copia local de `public.loans`. */
@@ -36,7 +39,21 @@ data class LoanEntity(
     @ColumnInfo(name = "reviewed_by") val reviewedBy: String? = null,
     @ColumnInfo(name = "rejection_reason") val rejectionReason: String? = null,
     @ColumnInfo(name = "sync_status", defaultValue = "'PENDIENTE'")
-    val syncStatus: EstadoSincronizacion = EstadoSincronizacion.PENDIENTE
+    val syncStatus: EstadoSincronizacion = EstadoSincronizacion.PENDIENTE,
+    /** GPS al solicitar (CA-HU13-03); latitud y longitud existen también en public.loans. */
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    /** Solo local: Supabase no tiene columna de precisión. */
+    @ColumnInfo(name = "location_accuracy") val locationAccuracy: Float? = null
+)
+
+/** CA-HU06-05: Room arma el préstamo con su equipo y sus evidencias en una transacción. */
+data class LoanConDetalle(
+    @Embedded val prestamo: LoanEntity,
+    @Relation(parentColumn = "equipment_id", entityColumn = "id")
+    val equipo: EquipmentEntity?,
+    @Relation(parentColumn = "id", entityColumn = "loan_id")
+    val evidencias: List<EvidenceEntity>
 )
 
 fun LoanEntity.aDominio() = SolicitudPrestamo(
@@ -50,5 +67,14 @@ fun LoanEntity.aDominio() = SolicitudPrestamo(
     fechaInicio = requestDate,
     fechaFin = returnDate,
     estado = status,
-    motivoRechazo = rejectionReason
+    motivoRechazo = rejectionReason,
+    latitud = latitude,
+    longitud = longitude,
+    precisionMetros = locationAccuracy
+)
+
+fun LoanConDetalle.aDominio() = PrestamoDetalle(
+    solicitud = prestamo.aDominio(),
+    equipo = equipo?.aDominio(),
+    evidencias = evidencias.map(EvidenceEntity::aDominio)
 )

@@ -7,6 +7,8 @@ import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.NuevaDevolucion
 import com.example.prestamolab.model.NuevaSolicitud
+import com.example.prestamolab.model.PrestamoDetalle
+import com.example.prestamolab.model.Ubicacion
 import com.example.prestamolab.model.ReglasInventario
 import com.example.prestamolab.model.ResultadoRevision
 import com.example.prestamolab.model.RevisionSolicitud
@@ -38,6 +40,22 @@ class InMemoryPrestamoRepository(
     override val devoluciones: StateFlow<List<Devolucion>> = _devoluciones.asStateFlow()
 
     override suspend fun obtenerEquipo(id: Int): Equipo? = _equipos.value.find { it.id == id }
+
+    // Sin tabla de evidencias: el detalle trae la lista vacía
+    override suspend fun obtenerDetalle(solicitudId: Int): PrestamoDetalle? =
+        _solicitudes.value.find { it.id == solicitudId }?.let { solicitud ->
+            PrestamoDetalle(solicitud, _equipos.value.find { it.id == solicitud.equipoId }, emptyList())
+        }
+
+    override suspend fun agregarUbicacion(solicitudId: Int, ubicacion: Ubicacion) {
+        _solicitudes.update { lista ->
+            lista.map {
+                if (it.id == solicitudId) {
+                    it.copy(latitud = ubicacion.latitud, longitud = ubicacion.longitud, precisionMetros = ubicacion.precisionMetros)
+                } else it
+            }
+        }
+    }
 
     override suspend fun crearSolicitud(nueva: NuevaSolicitud): Result<SolicitudPrestamo> = mutex.withLock {
         val equipo = _equipos.value.find { it.id == nueva.equipoId }

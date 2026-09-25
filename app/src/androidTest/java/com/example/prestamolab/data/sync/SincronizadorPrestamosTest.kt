@@ -287,7 +287,7 @@ class SincronizadorPrestamosTest {
         // El usuario cancela justo después de leer el pendiente y antes de marcarlo
         repository.cancelarSolicitud(solicitud.id)
 
-        db.loanDao().marcarEnviado(enviada.id, enviada.status, EstadoSincronizacion.SINCRONIZADO)
+        db.loanDao().marcarEnviado(enviada.id, enviada.status, enviada.latitude, enviada.longitude, EstadoSincronizacion.SINCRONIZADO)
 
         assertEquals(EstadoSincronizacion.PENDIENTE, db.loanDao().obtener(solicitud.id)!!.syncStatus)
     }
@@ -528,5 +528,41 @@ class SincronizadorPrestamosTest {
         assertEquals(6.2518, remoto.evidencias.single().latitud!!, 0.0)
         // La foto no se vuelve a subir: ya tenía su URL
         assertEquals(1, remoto.fotos.size)
+    }
+
+    @Test
+    fun TC_HU13_06_LasCoordenadasDePrestamosYDevolucionesLleganASupabase() = runTest {
+        val solicitud = solicitar(1)
+        repository.agregarUbicacion(solicitud.id, Ubicacion(6.2518, -75.5636, 12f))
+        repository.registrarDevolucion(
+            NuevaDevolucion(2, CondicionEquipo.BUENO, "", Ubicacion(6.2600, -75.5700, 8f))
+        ).getOrThrow()
+
+        sincronizador.sincronizar(estudiante)
+
+        val prestamo = remoto.prestamos.single { it.id == db.loanDao().obtener(solicitud.id)!!.remoteId }
+        assertEquals(6.2518, prestamo.latitud!!, 0.0)
+        assertEquals(-75.5636, prestamo.longitud!!, 0.0)
+        val devolucion = remoto.devoluciones.single()
+        assertEquals(6.2600, devolucion.latitud!!, 0.0)
+        assertEquals(-75.5700, devolucion.longitud!!, 0.0)
+    }
+
+    @Test
+    fun AlAprobarElInstructorNoBorraLaUbicacionDeLaSolicitud() = runTest {
+        remoto.equipos += equipoRemoto(2, EstadoEquipo.RESERVADO, "Osciloscopio 100MHz")
+        remoto.prestamos += PrestamoRemoto(
+            "5eed0000-0000-4000-8000-000000000001", estudiante.id, CatalogoInicial.remoteIdPorIdLocal.getValue(2),
+            "SOLICITADA", "2026-09-02T13:00:00+00:00", "2026-09-02T15:00:00+00:00", "Laboratorio 302",
+            "Práctica de señales", 2, latitud = 6.2518, longitud = -75.5636
+        )
+        sincronizador.sincronizar(instructor)
+
+        repository.aprobarSolicitud(1, instructor.id).getOrThrow()
+        sincronizador.sincronizar(instructor)
+
+        val enviado = remoto.prestamos.single { it.id.endsWith("001") }
+        assertEquals("PRESTADO", enviado.estado)
+        assertEquals(6.2518, enviado.latitud!!, 0.0)
     }
 }
