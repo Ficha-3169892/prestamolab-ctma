@@ -64,8 +64,9 @@ Informe completo (con la URL del proyecto reemplazada por `<proyecto>`): [`zap/i
 | Revisar `Cache-Control` | Informativo | 15 | Las respuestas de la API no prohíben la caché; la app no guarda caché HTTP | Aceptado |
 | Información sensible en la URL (`user_id`) | Informativo | 2 | La sincronización del estudiante filtra por `user_id=eq.<uuid>`; un uuid no es secreto y desde `009` el servidor ya limita la consulta a los préstamos propios | Aceptado |
 
-Además se comprobó en el tráfico capturado que la contraseña nunca viaja en claro: solo su SHA-256, en el cuerpo de
-`iniciar_sesion`, y el token de sesión en la cabecera `x-sesion`.
+ZAP no reportó datos sensibles en URL ni en cabeceras de la app, salvo el `user_id` de la tabla. Que la contraseña
+nunca viaja en claro (solo su SHA-256, en el cuerpo de `iniciar_sesion`) lo verifica la prueba de contrato
+`SupabaseUsuariosDataSourceTest`; esta revisión no inspeccionó los mensajes uno por uno.
 
 ### Cómo repetirla
 
