@@ -21,11 +21,20 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // 1. Inicializamos la base de datos de Room
+        // 1. Inicializamos Room
         val database = PrestamoDatabase.getDatabase(applicationContext)
-        // 2. Pasamos el DAO al nuevo repositorio
-        val repository = RoomPrestamoRepository(database.prestamoDao())
-        // 3. Inyectamos el repositorio al ViewModel
+
+        // 2. Inicializamos Retrofit (API REST)
+        val retrofit = retrofit2.Retrofit.Builder()
+            .baseUrl("https://api.ctma-prestamolab.com/") // URL base simulada
+            .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
+            .build()
+        val apiService = retrofit.create(com.example.prestamolab.data.remote.PrestamoApiService::class.java)
+
+        // 3. Pasamos Room y la API al repositorio
+        val repository = RoomPrestamoRepository(database.prestamoDao(), apiService)
+
+        // 4. Inyectamos al ViewModel
         val viewModel = PrestamoViewModel(repository)
 
         val darkScheme = darkColorScheme(
@@ -35,11 +44,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme(colorScheme = darkScheme) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black)
-                ) {
+                Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
                     AppNavigation(viewModel = viewModel)
                 }
             }

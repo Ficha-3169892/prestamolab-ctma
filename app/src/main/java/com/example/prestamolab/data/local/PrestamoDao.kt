@@ -2,6 +2,7 @@ package com.example.prestamolab.data.local
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +24,7 @@ interface PrestamoDao {
     fun obtenerSolicitudPorId(id: Int): Flow < LoanEntity? >
 
     // Escrituras asíncronas
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertarEquipos(equipos: List < EquipmentEntity >)
 
     @Update
