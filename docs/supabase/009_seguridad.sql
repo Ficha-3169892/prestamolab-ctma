@@ -54,7 +54,7 @@ end $$;
 
 create or replace function public.rol_actual() returns text
 language sql stable security definer set search_path = public as $$
-    select u.role from public.users u where u.id = public.usuario_actual()
+    select u.role::text from public.users u where u.id = public.usuario_actual()
 $$;
 
 -- La app lo consulta antes de sincronizar: con RLS, una sesión vencida no da error al leer sino
@@ -71,6 +71,7 @@ language plpgsql volatile security definer set search_path = public, extensions 
 #variable_conflict use_column
 declare
     v_usuario public.users%rowtype;
+    v_token uuid;
 begin
     select * into v_usuario
     from public.users u
@@ -88,9 +89,9 @@ begin
     end if;
 
     delete from public.sesiones s where s.user_id = v_usuario.id and s.expires_at < now();
-    return query
-        insert into public.sesiones (user_id) values (v_usuario.id)
-        returning sesiones.token, v_usuario.id, v_usuario.email, v_usuario.full_name, v_usuario.role;
+    insert into public.sesiones (user_id) values (v_usuario.id) returning sesiones.token into v_token;
+    -- email, full_name y role son varchar en la tabla: se convierten al text que declara la función
+    return query select v_token, v_usuario.id, v_usuario.email::text, v_usuario.full_name::text, v_usuario.role::text;
 end $$;
 
 create or replace function public.cerrar_sesion() returns void
@@ -113,6 +114,8 @@ grant execute on function public.usuario_actual(), public.rol_actual(), public.s
 -- Solo id y nombre, y solo con sesión: los necesita "Solicitante" en los préstamos que ve el instructor.
 revoke select on public.users from anon;
 grant select (id, full_name) on public.users to anon;
+-- Sin RLS activo la política de abajo no se aplica y id y full_name serían públicos
+alter table public.users enable row level security;
 drop policy if exists "users_select_publico" on public.users;
 drop policy if exists "users_con_sesion" on public.users;
 create policy "users_con_sesion" on public.users for select to anon
