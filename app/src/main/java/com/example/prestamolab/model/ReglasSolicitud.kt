@@ -16,6 +16,19 @@ object ReglasSolicitud {
     const val DURACION_MINIMA = 1
     const val DURACION_MAXIMA = 8
 
-    // TDD, fase roja: la especificación existe en ReglasSolicitudTest; la regla aún no valida nada
-    fun validar(ambiente: String, proposito: String, duracionHoras: String): ErroresSolicitud = ErroresSolicitud()
+    fun validar(ambiente: String, proposito: String, duracionHoras: String): ErroresSolicitud {
+        val largoProposito = proposito.trim().length
+        val duracion = duracionHoras.trim().toIntOrNull()
+        return ErroresSolicitud(
+            ambiente = if (ambiente.isBlank()) "El ambiente o destino es obligatorio." else null,
+            proposito = when {
+                largoProposito < PROPOSITO_MINIMO -> "Propósito debe tener mínimo $PROPOSITO_MINIMO caracteres"
+                largoProposito > PROPOSITO_MAXIMO -> "Máximo $PROPOSITO_MAXIMO caracteres"
+                else -> null
+            },
+            duracion = if (duracion == null || duracion !in DURACION_MINIMA..DURACION_MAXIMA) {
+                "Duración entre $DURACION_MINIMA y $DURACION_MAXIMA horas"
+            } else null
+        )
+    }
 }
