@@ -96,5 +96,3 @@
 8. Las correcciones cuentan con pruebas de confirmación y regresión.
 9. El repositorio Git está actualizado y el `README.md` incluye instrucciones claras.
 10. El incremento puede demostrarse y cada integrante explica su contribución.
-
----
