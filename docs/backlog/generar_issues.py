@@ -236,7 +236,7 @@ HISTORIAS = [
              "Integración", "Verificar que el trabajo quede CANCELLED.", "WorkManagerRecordatoriosTest.TC_HU09_03_ElPrestamoQueSaleDeLaListaQuedaCancelado; CoordinadorRecordatoriosTest.TC_HU09_03_AlDevolverSeCancelaElRecordatorio"),
             ("uso Android 13 o superior y no concedí POST_NOTIFICATIONS", "se debe programar un recordatorio",
              "la app pide el permiso; si lo niego, el préstamo se registra igual sin fallar",
-             "Instrumentada", "API 33+, permiso negado.", "RecordatorioWorkerTest.TC_HU09_04_SinPermiso_NoMuestraNadaYNoFalla; PermisoNotificacionesTest.TC_HU09_04_EnAndroid13SinPermiso_SePideAlTenerUnPrestamoEntregado (el diálogo del sistema se verifica a mano: revocar el permiso mata el proceso de prueba)"),
+             "Instrumentada", "API 33+, permiso negado.", "RecordatorioWorkerTest.TC_HU09_04_SinPermiso_NoMuestraNadaYNoFalla; PermisoNotificacionesTest.TC_HU09_04_EnAndroid13SinPermiso_SePideAlTenerUnPrestamoEntregado; PermisoNotificacionesUiTest.TC_HU09_04_ConPrestamoEntregadoSePideElPermiso_YNegarloNoBloqueaLaApp (se ejecuta aparte, tras revocar el permiso)"),
         ],
     },
     {
