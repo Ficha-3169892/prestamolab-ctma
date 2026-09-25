@@ -19,7 +19,9 @@ import com.example.prestamolab.data.repository.EvidenciaRepository
 import com.example.prestamolab.model.EtapaEvidencia
 import com.example.prestamolab.model.Evidencia
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -28,6 +30,8 @@ import kotlinx.coroutines.withContext
 
 data class EvidenciasUiState(
     val evidencias: List<Evidencia> = emptyList(),
+    /** Hay una sincronización en curso: las evidencias locales se muestran "Subiendo…". */
+    val sincronizando: Boolean = false,
     /** Aviso para el usuario: permiso negado, cámara no disponible o foto guardada. */
     val mensaje: String? = null,
     val esError: Boolean = false
@@ -42,7 +46,8 @@ class EvidenciasViewModel(
     private val estadoGuardado: SavedStateHandle = SavedStateHandle(),
     private val locationProvider: LocationProvider? = null,
     /** Mínimo privilegio: el GPS se agrega solo si el estudiante ya concedió la ubicación (p. ej. al devolver). */
-    private val tienePermisoUbicacion: () -> Boolean = { false }
+    private val tienePermisoUbicacion: () -> Boolean = { false },
+    private val sincronizando: Flow<Boolean> = flowOf(false)
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EvidenciasUiState())
@@ -65,6 +70,9 @@ class EvidenciasViewModel(
     init {
         viewModelScope.launch {
             repository.evidencias(solicitudId).collect { lista -> _uiState.update { it.copy(evidencias = lista) } }
+        }
+        viewModelScope.launch {
+            sincronizando.collect { activo -> _uiState.update { it.copy(sincronizando = activo) } }
         }
     }
 
@@ -132,12 +140,14 @@ class EvidenciasViewModel(
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PrestamoLabApp
                 EvidenciasViewModel(
                     app.container.evidenciaRepository, app.container.almacenFotos, solicitudId, etapa, createSavedStateHandle(),
-                    app.container.locationProvider
-                ) {
-                    listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION).any {
-                        ContextCompat.checkSelfPermission(app, it) == PackageManager.PERMISSION_GRANTED
+                    app.container.locationProvider,
+                    sincronizando = app.container.programadorSincronizacion.sincronizando,
+                    tienePermisoUbicacion = {
+                        listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION).any {
+                            ContextCompat.checkSelfPermission(app, it) == PackageManager.PERMISSION_GRANTED
+                        }
                     }
-                }
+                )
             }
         }
     }

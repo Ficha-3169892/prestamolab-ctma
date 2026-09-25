@@ -27,7 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.prestamolab.model.EtapaEvidencia
+import com.example.prestamolab.model.EstadoEvidencia
 import com.example.prestamolab.model.Evidencia
+import com.example.prestamolab.model.etiquetaEstadoEvidencia
 import java.util.Locale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -102,14 +104,14 @@ fun EvidenciasScreen(
             Text("Aún no hay evidencias en este préstamo.", fontFamily = FontFamily.SansSerif)
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(uiState.evidencias, key = { it.id }) { FilaEvidencia(it, cargarMiniatura) }
+                items(uiState.evidencias, key = { it.id }) { FilaEvidencia(it, uiState.sincronizando, cargarMiniatura) }
             }
         }
     }
 }
 
 @Composable
-private fun FilaEvidencia(evidencia: Evidencia, cargarMiniatura: suspend (String) -> Bitmap?) {
+private fun FilaEvidencia(evidencia: Evidencia, sincronizando: Boolean, cargarMiniatura: suspend (String) -> Bitmap?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -126,8 +128,9 @@ private fun FilaEvidencia(evidencia: Evidencia, cargarMiniatura: suspend (String
                 )
                 Text(evidencia.fecha, style = MaterialTheme.typography.bodySmall)
                 Text(
-                    if (evidencia.urlRemota != null) "Subida a Supabase" else "Pendiente de subir",
-                    style = MaterialTheme.typography.bodySmall
+                    etiquetaEstadoEvidencia(evidencia.estado, sincronizando),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (evidencia.estado == EstadoEvidencia.FALLIDA) MaterialTheme.colorScheme.error else Color.Unspecified
                 )
                 Text(
                     if (evidencia.latitud != null && evidencia.longitud != null) {

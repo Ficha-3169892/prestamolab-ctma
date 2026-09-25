@@ -8,7 +8,11 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import java.util.concurrent.TimeUnit
 
 interface ProgramadorSincronizacion {
@@ -16,11 +20,22 @@ interface ProgramadorSincronizacion {
     fun sincronizarAhora()
     fun programarPeriodica()
     fun cancelar()
+
+    /** true mientras un trabajo de sincronización se ejecuta (la UI muestra "Subiendo…"). */
+    val sincronizando: Flow<Boolean>
 }
 
 class WorkManagerProgramador(private val contexto: Context) : ProgramadorSincronizacion {
 
     private val workManager by lazy { WorkManager.getInstance(contexto) }
+
+    override val sincronizando: Flow<Boolean> by lazy {
+        combine(
+            workManager.getWorkInfosForUniqueWorkFlow(TRABAJO_INMEDIATO),
+            workManager.getWorkInfosForUniqueWorkFlow(TRABAJO_PERIODICO)
+        ) { inmediato, periodico -> (inmediato + periodico).any { it.state == WorkInfo.State.RUNNING } }
+            .distinctUntilChanged()
+    }
 
     private val conRed = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 

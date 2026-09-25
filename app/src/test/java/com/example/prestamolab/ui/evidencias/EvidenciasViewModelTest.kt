@@ -6,6 +6,7 @@ import com.example.prestamolab.data.evidencias.FotoReservada
 import com.example.prestamolab.data.repository.EvidenciaRepository
 import com.example.prestamolab.model.EtapaEvidencia
 import android.graphics.Bitmap
+import com.example.prestamolab.model.EstadoEvidencia
 import com.example.prestamolab.model.Evidencia
 import com.example.prestamolab.model.Ubicacion
 import com.example.prestamolab.testutil.FakeLocationProvider
@@ -61,9 +62,13 @@ class EvidenciasViewModelTest {
     private val estado = SavedStateHandle()
 
     private val gps = FakeLocationProvider()
+    private val sincronizando = MutableStateFlow(false)
 
     private fun viewModel(solicitudId: Int = 2, permisoUbicacion: Boolean = false) =
-        EvidenciasViewModel(repository, almacen, solicitudId, EtapaEvidencia.ENTREGA, estado, gps) { permisoUbicacion }
+        EvidenciasViewModel(
+            repository, almacen, solicitudId, EtapaEvidencia.ENTREGA, estado, gps,
+            tienePermisoUbicacion = { permisoUbicacion }, sincronizando = sincronizando
+        )
 
     @Test
     fun TC_HU08_02_AlConfirmarLaFoto_SuUriQuedaAsociadaAlPrestamo() {
@@ -171,5 +176,18 @@ class EvidenciasViewModelTest {
 
         assertNull(vm.uiState.value.evidencias.single().latitud)
         assertFalse(vm.uiState.value.esError)
+    }
+
+    @Test
+    fun MientrasSincronizaLaPantallaLoSabe_ParaMostrarSubiendo() {
+        val vm = viewModel()
+        vm.prepararFoto()
+        vm.onFotoTomada(true)
+        assertFalse(vm.uiState.value.sincronizando)
+        assertEquals(EstadoEvidencia.LOCAL, vm.uiState.value.evidencias.single().estado)
+
+        sincronizando.value = true
+
+        assertTrue(vm.uiState.value.sincronizando)
     }
 }

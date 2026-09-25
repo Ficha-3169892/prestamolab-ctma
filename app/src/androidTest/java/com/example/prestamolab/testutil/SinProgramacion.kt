@@ -12,4 +12,6 @@ class SinProgramacion : ProgramadorSincronizacion {
 
     override fun programarPeriodica() = Unit
     override fun cancelar() = Unit
+
+    override val sincronizando = kotlinx.coroutines.flow.MutableStateFlow(false)
 }

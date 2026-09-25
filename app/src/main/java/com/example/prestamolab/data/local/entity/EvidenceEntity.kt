@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.prestamolab.model.EstadoEvidencia
 import com.example.prestamolab.model.EtapaEvidencia
 import com.example.prestamolab.model.Evidencia
 
@@ -32,4 +33,11 @@ data class EvidenceEntity(
     val longitude: Double? = null
 )
 
-fun EvidenceEntity.aDominio() = Evidencia(id, loanId, stage, localUri, photoUrl, takenAt, latitude, longitude)
+fun EvidenceEntity.aDominio() = Evidencia(
+    id, loanId, stage, localUri, photoUrl, takenAt, latitude, longitude,
+    estado = when (syncStatus) {
+        EstadoSincronizacion.PENDIENTE -> EstadoEvidencia.LOCAL
+        EstadoSincronizacion.SINCRONIZADO -> EstadoEvidencia.SINCRONIZADA
+        EstadoSincronizacion.ERROR -> EstadoEvidencia.FALLIDA
+    }
+)
