@@ -16,7 +16,8 @@
   y actividades formativas del instructor; recordatorio de devolución con WorkManager y notificaciones;
   persistencia local con Room (v8, migraciones probadas) y sesión en DataStore; filtros del catálogo conservados en
   DataStore; sincronización offline-first con Supabase; GPS en solicitudes, devoluciones y evidencias.
-- **Fuera de alcance de esta versión:** Supabase Auth y políticas de seguridad por rol en el servidor (ver sección 5).
+- **Seguridad en el servidor (Sprint 9):** contraseñas con bcrypt, sesiones con token, RLS por rol y reglas del
+  negocio en triggers (`docs/supabase/009_seguridad.sql`), verificadas con 26 ataques contra la base real.
 
 ## 2. Métricas de ejecución de QA
 
@@ -26,10 +27,11 @@
 | Historias terminadas | 14 de 14 |
 | Criterios de aceptación y casos de prueba (1:1) | 74 |
 | Criterios con prueba automatizada | 74 (100 %) |
-| Pruebas unitarias | 177, todas en verde (local y en GitHub Actions) |
-| Pruebas instrumentadas y de UI en el dispositivo | 153, todas en verde (TC-HU13-01 se ejecuta aparte) |
-| Verificación manual contra Supabase real | Login, sincronización, devolución con GPS, revisión de una solicitud y evidencia con foto |
-| Defectos registrados en la Parte 2 | 9 (BUG-04 a BUG-12), todos cerrados |
+| Pruebas unitarias | 187, todas en verde (local y en GitHub Actions) |
+| Pruebas instrumentadas y de UI en el dispositivo | 154, todas en verde (TC-HU13-01 se ejecuta aparte) |
+| Pruebas de seguridad contra Supabase real | 26 de 26 superadas (`docs/seguridad/`) |
+| Verificación manual contra Supabase real | Login, sincronización, devolución con GPS, evidencia con foto y el ciclo completo solicitar → aprobar con la seguridad activa |
+| Defectos registrados en la Parte 2 | 11 (BUG-04 a BUG-14), todos cerrados |
 | Defectos Críticos o Altos abiertos | 0 |
 
 ## 3. Principales defectos y gestión de calidad
@@ -61,18 +63,21 @@ Detalle, causa raíz y pruebas de confirmación en `DEFECTOS.md`.
 
 ## 5. Riesgo residual
 
-Detalle y plan de verificación en `docs/RIESGOS.md`:
+Los riesgos R-01 a R-05 (contraseñas, lectura de usuarios, sesión y escritura abierta) quedaron **mitigados y
+verificados** con `docs/supabase/009_seguridad.sql`. Quedan aceptados, con su tratamiento posible en
+`docs/RIESGOS.md`:
 
-- **Seguridad del servidor (R-01 a R-05):** la anon key va dentro del APK y las políticas RLS permiten leer y
-  escribir a cualquiera que la tenga; el control por rol solo existe en la app. El SHA-256 sin sal permite
-  autenticarse con el hash. Las fotos de evidencia son públicas con solo conocer su URL.
-- **Pruebas de seguridad del Sprint 9 (OWASP ZAP / MASVS):** planificadas, no ejecutadas.
+- **R-06:** la subida al bucket de evidencias sigue abierta, porque Storage no recibe el token de sesión.
+- **R-07:** un estudiante con la anon key podría cambiar el estado de un equipo por fuera de la app.
+- **R-08 / R-09:** la anon key va dentro del APK y el login no bloquea tras varios intentos (solo los demora).
+- **OWASP ZAP:** no se escaneó activamente la infraestructura compartida de Supabase; el procedimiento en modo
+  pasivo está en `docs/seguridad/README.md`.
 - **Dependencia del dispositivo:** las pruebas de UI se ejecutan en un solo teléfono; el CI solo corre las
   unitarias.
 
 ## 6. Recomendación y dictamen
 
-**Dictamen: ACEPTABLE CON OBSERVACIONES.** La funcionalidad principal está completa, probada en el dispositivo y
-verificada contra Supabase, sin defectos graves abiertos, y los 74 criterios tienen prueba automatizada. Antes de la
-entrega final se recomienda: cerrar los riesgos de seguridad del servidor (RLS por rol y login mediante una función que
-valide la contraseña), ejecutar la prueba con OWASP ZAP y registrar las Sprint Reviews.
+**Dictamen: DONE / ACEPTABLE.** Las 14 historias están completas, los 74 criterios tienen prueba automatizada,
+la seguridad del servidor está verificada contra la base real y no hay defectos graves abiertos. Pendientes antes
+de la entrega: registrar las Sprint Reviews y Retrospectivas (`SCRUM.md`) y, si la guía lo exige, la revisión
+pasiva con OWASP ZAP.

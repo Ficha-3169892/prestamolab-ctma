@@ -1,7 +1,8 @@
 # Registro de defectos, confirmación y regresión (PréstamoLab CTMA)
 
 Formato de cada defecto: plantilla `.github/ISSUE_TEMPLATE/bug.md`. La numeración continúa la de la Parte 1
-(BUG-03). Todos los defectos de la Parte 2 están **cerrados**; ninguno de severidad Alta o Crítica queda abierto.
+(BUG-03). Todos los defectos de la Parte 2 (BUG-04 a BUG-14) están **cerrados**; ninguno de severidad Alta o
+Crítica queda abierto.
 
 ## Parte 2 (semanas 5 a 9)
 
@@ -16,6 +17,8 @@ Formato de cada defecto: plantilla `.github/ISSUE_TEMPLATE/bug.md`. La numeraci�
 | BUG-10 | "Confirmar devolución" quedaba debajo de la barra de navegación del sistema y no se podía pulsar | Alta | Prueba manual en el Xiaomi (edge-to-edge) | `2795f7a` | `DevolucionUiTest.TC_HU05_02_DevolucionConUbicacion_CierraElPrestamo` |
 | BUG-11 | Tras solicitar, tocar la pestaña Catálogo dejaba al usuario en Mis Solicitudes | Media | `PrestamoUiTest.TC12` falló en el Xiaomi | `3922d36` | `PrestamoUiTest.TC12_BotonSolicitarDeshabilitado_SiEquipoEstaReservado` y `Navegacion_BottomBar_CicloCompleto` |
 | BUG-12 | "Mis Solicitudes" mostraba el id local del equipo en vez de su nombre | Baja | Prueba manual | `2795f7a` | `PrestamoUiTest.TC14_FlujoCompleto_CrearSolicitud` ("Equipo: Multímetro Digital") |
+| BUG-13 | El propósito se guardaba con el salto de línea final del teclado, y ese salto contaba para el mínimo de 10 caracteres | Baja | Prueba de punta a punta contra Supabase (Sprint 9) | ver historial | `PrestamoViewModelTest`: "BUG-13 - El proposito se guarda sin espacios…" y "BUG-13 - Nueve letras y un salto de linea…" |
+| BUG-14 | `009_seguridad.sql`: el login fallaba (42804, `varchar` frente a `text`), RLS no estaba activo en `users` y políticas creadas a mano anulaban las del script (un estudiante pudo borrar un equipo, restaurado de inmediato) | Crítica | `docs/seguridad/verificar_seguridad.py` contra Supabase | `fda65a1`, `edc7aeb` | `verificar_seguridad.py`: 26 de 26 comprobaciones |
 
 ### Detalle y causa raíz
 
@@ -38,11 +41,17 @@ Formato de cada defecto: plantilla `.github/ISSUE_TEMPLATE/bug.md`. La numeraci�
   ruta de inicio y la restauraba. **Solución:** la pestaña de inicio se alcanza regresando a su entrada.
 - **BUG-12:** la tarjeta mostraba `equipoId`, que no coincide entre dispositivos. **Solución:** se muestra el
   nombre del equipo.
+- **BUG-13:** el ViewModel validaba y guardaba el propósito sin recortar (el ambiente sí se recortaba).
+  **Solución:** el propósito se recorta antes de validar y de guardar.
+- **BUG-14:** PostgreSQL valida los tipos de una función PL/pgSQL al ejecutarla, no al crearla; y las políticas
+  RLS se combinan con OR, así que una política permisiva ajena anula las demás. **Solución:** conversiones
+  explícitas a `text`, `enable row level security` en `users` y un bloque que elimina toda política que el script
+  no define. **Lección:** la seguridad se verifica atacando la base real, no solo leyendo el script.
 
 ### Regresión
 
 Después de cada corrección se ejecutaron las suites completas: unitaria (`testDebugUnitTest`) e instrumentada en el
-Xiaomi. Resultado actual: **165 unitarias y 141 instrumentadas en verde**; el CI de GitHub Actions repite las
+Xiaomi. Resultado actual: **187 unitarias y 154 instrumentadas en verde**; el CI de GitHub Actions repite las
 unitarias en cada push.
 
 ## Parte 1 (histórico)

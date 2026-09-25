@@ -186,10 +186,12 @@ class PrestamoViewModel(
         }
 
         // TC-04 al TC-07
-        if (estadoActual.proposito.length < 10) {
+        // BUG-13: los espacios y saltos de línea de los extremos no cuentan ni se guardan
+        val proposito = estadoActual.proposito.trim()
+        if (proposito.length < 10) {
             errProposito = "Propósito debe tener mínimo 10 caracteres"
             hayError = true
-        } else if (estadoActual.proposito.length > 180) {
+        } else if (proposito.length > 180) {
             errProposito = "Máximo 180 caracteres"
             hayError = true
         }
@@ -220,7 +222,7 @@ class PrestamoViewModel(
             usuarioId = usuario.id,
             solicitante = usuario.nombre,
             ambiente = estadoActual.ambiente.trim(),
-            proposito = estadoActual.proposito,
+            proposito = proposito,
             duracionHoras = duracion
         )
 

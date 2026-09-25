@@ -8,8 +8,8 @@ cámara, notificaciones).
 
 - **Dentro del alcance:** lógica de dominio, ViewModels, repositorios sobre Room, migraciones, sincronización con
   Supabase (PostgREST y Storage), WorkManager, permisos en tiempo de ejecución y flujos de UI en Jetpack Compose.
-- **Fuera del alcance de este plan:** pruebas de carga y de seguridad del servidor; la prueba no funcional de
-  seguridad (OWASP ZAP / MASVS) se planifica en `docs/RIESGOS.md` para el Sprint 9.
+- **Fuera del alcance de este plan:** pruebas de carga. Las pruebas de seguridad del servidor (Sprint 9) están en
+  `docs/seguridad/`, con su resultado en `docs/RIESGOS.md`.
 
 La trazabilidad criterio → caso → prueba está en [`MATRIZ_TRAZABILIDAD.md`](MATRIZ_TRAZABILIDAD.md): cada
 CA-HUxx-nn tiene exactamente un caso TC-HUxx-nn.
@@ -65,8 +65,9 @@ CA-HUxx-nn tiene exactamente un caso TC-HUxx-nn.
 
 | Suite | Pruebas | Resultado |
 |---|---|---|
-| Unitarias (`testDebugUnitTest`) | 177 | En verde (también en el CI) |
-| Instrumentadas y de UI (Xiaomi) | 153 | 152 en verde en la suite completa; TC-HU13-01 en verde ejecutada aparte (ver 7) |
+| Unitarias (`testDebugUnitTest`) | 187 | En verde (también en el CI) |
+| Instrumentadas y de UI (Xiaomi) | 154 | 153 en verde en la suite completa; TC-HU13-01 en verde ejecutada aparte (ver 7) |
+| Seguridad del servidor (`docs/seguridad/verificar_seguridad.py`) | 26 | En verde contra Supabase real |
 | Criterios automatizados | 74 de 74 (100 %) | Ver matriz |
 
 ## 7. Pruebas que dependen de permisos no concedidos
@@ -85,11 +86,13 @@ omiten (`assumeTrue`). Revocar un permiso mata el proceso de prueba, así que se
 |---|---|---|
 | Foto real de evidencia (HU-08) | Estudiante → Mis Solicitudes → préstamo PRESTADO → Evidencias → tomar foto → sincronizar; comprobar la fila en `evidences` y que la URL pública abre la imagen | Aprobado (foto JPEG de 2,7 MB en el bucket `evidencias`) |
 | Diálogo de notificaciones (HU-09) | `adb shell pm revoke com.example.prestamolab android.permission.POST_NOTIFICATIONS`; entrar como estudiante con un préstamo PRESTADO: aparece el diálogo; negarlo no bloquea nada | Pendiente de registrar |
-| Aprobar / rechazar, inventario y actividades contra Supabase real (HU-14, HU-12, HU-11) | Hacer la acción como instructor, sincronizar y consultar la tabla en Supabase | HU-14 verificada; HU-12 y HU-11 pendientes |
+| Punta a punta con seguridad (HU-03, HU-14, HU-13, R-04) | Con `009` aplicado: estudiante inicia sesión y solicita el Multímetro; instructor lo aprueba; estudiante lo ve PRESTADO. Consultar `loans` en Supabase | Aprobado: préstamo PRESTADO con solicitante y revisor correctos, equipo PRESTADO y coordenadas GPS reales de la solicitud. Encontró BUG-13 |
+| Inventario y actividades contra Supabase real (HU-12, HU-11) | Hacer la acción como instructor, sincronizar y consultar la tabla en Supabase | Pendiente de registrar |
 
 ## 9. Riesgos del plan
 
 - Las pruebas de UI dependen del teléfono físico; el CI solo ejecuta las unitarias.
 - La cámara y los diálogos del sistema varían por fabricante: los diálogos se verificaron en el Xiaomi (sección 7)
   y la captura real de la foto es manual (sección 8).
-- Los riesgos de seguridad aceptados (R-01 a R-05) se verifican aparte, según `docs/RIESGOS.md`.
+- Las pruebas instrumentadas usan dobles de Supabase: los cambios del servidor (`docs/supabase/`) se verifican
+  aparte contra la base real, con `docs/seguridad/verificar_seguridad.py` y la prueba de punta a punta.

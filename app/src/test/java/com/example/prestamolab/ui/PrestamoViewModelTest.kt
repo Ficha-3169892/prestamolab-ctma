@@ -482,4 +482,25 @@ class PrestamoViewModelTest {
         assertNull(vm.uiState.value.solicitudes.single { it.equipoId == 1 }.latitud)
         assertEquals(0, gps.llamadas)
     }
+
+    @Test
+    fun `BUG-13 - El proposito se guarda sin espacios ni saltos de linea en los extremos`() {
+        viewModel.seleccionarEquipoParaDetalle(viewModel.uiState.value.equipos.first { it.id == 1 })
+        viewModel.onAmbienteChanged("Lab 1")
+        viewModel.onPropositoChanged("  practica de mediciones\n")
+
+        assertTrue(viewModel.guardarSolicitud())
+
+        assertEquals("practica de mediciones", viewModel.uiState.value.solicitudes.last().proposito)
+    }
+
+    @Test
+    fun `BUG-13 - Nueve letras y un salto de linea no completan los 10 caracteres`() {
+        viewModel.seleccionarEquipoParaDetalle(viewModel.uiState.value.equipos.first { it.id == 1 })
+        viewModel.onAmbienteChanged("Lab 1")
+        viewModel.onPropositoChanged("123456789\n")
+
+        assertFalse(viewModel.guardarSolicitud())
+        assertEquals("Propósito debe tener mínimo 10 caracteres", viewModel.uiState.value.errorProposito)
+    }
 }
