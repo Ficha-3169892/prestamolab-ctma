@@ -20,7 +20,9 @@ fun LoginScreen(
     uiState: LoginUiState,
     onIdentificadorChange: (String) -> Unit,
     onContrasenaChange: (String) -> Unit,
-    onIngresarClick: () -> Unit
+    onIngresarClick: () -> Unit,
+    /** "Entorno: dev" o "Entorno: stage"; null en prod (docs/AMBIENTES.md). */
+    etiquetaEntorno: String? = null
 ) {
     val blueAccent = Color(0xFF1E6091)
 
@@ -94,6 +96,14 @@ fun LoginScreen(
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.SansSerif,
                 color = Color.White
+            )
+        }
+
+        if (etiquetaEntorno != null) {
+            Text(
+                text = etiquetaEntorno,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

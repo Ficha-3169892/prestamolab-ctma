@@ -28,10 +28,34 @@ android {
 
         testInstrumentationRunner = "com.example.prestamolab.PrestamoLabTestRunner"
 
-        // Inyectar URL y KEY de Supabase desde local.properties a BuildConfig
-        val supabaseUrl = localProperties.getProperty("SUPABASE_URL") ?: ""
-        val supabaseKey = localProperties.getProperty("SUPABASE_ANON_KEY") ?: ""
+        // Ambientes dev/stage/prod (docs/AMBIENTES.md): se eligen con -Pambiente=... o la variable
+        // PRESTAMOLAB_AMBIENTE; por defecto dev. Cada ambiente tiene su URL y su clave en
+        // local.properties o en variables de entorno (secretos del CI), nunca en git.
+        val ambiente = (findProperty("ambiente") as String? ?: System.getenv("PRESTAMOLAB_AMBIENTE") ?: "dev").lowercase()
+        if (ambiente !in listOf("dev", "stage", "prod")) {
+            throw GradleException("Ambiente '$ambiente' no válido: use dev, stage o prod")
+        }
+        fun credencial(nombre: String): String {
+            val porAmbiente = "${nombre}_${ambiente.uppercase()}"
+            return localProperties.getProperty(porAmbiente) ?: System.getenv(porAmbiente)
+                // dev conserva las claves originales sin sufijo (SUPABASE_URL, SUPABASE_ANON_KEY)
+                ?: (if (ambiente == "dev") localProperties.getProperty(nombre) ?: System.getenv(nombre) else null)
+                ?: ""
+        }
+        val supabaseUrl = credencial("SUPABASE_URL")
+        val supabaseKey = credencial("SUPABASE_ANON_KEY")
 
+        // stage y prod no compilan sin credenciales ni con URL sin HTTPS: así nunca se publica
+        // una versión que apunte en silencio a otro ambiente o que envíe datos en texto plano.
+        // dev puede quedar vacío (CI sin secretos: las pruebas usan dobles y MockWebServer).
+        if (ambiente != "dev" && (supabaseUrl.isBlank() || supabaseKey.isBlank())) {
+            throw GradleException("Faltan SUPABASE_URL_${ambiente.uppercase()} o SUPABASE_ANON_KEY_${ambiente.uppercase()} para el ambiente $ambiente")
+        }
+        if (supabaseUrl.isNotBlank() && !supabaseUrl.startsWith("https://")) {
+            throw GradleException("La URL de Supabase del ambiente $ambiente debe usar HTTPS")
+        }
+
+        buildConfigField("String", "AMBIENTE", "\"$ambiente\"")
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_KEY", "\"$supabaseKey\"")
     }

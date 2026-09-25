@@ -21,6 +21,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.prestamolab.BuildConfig
+import com.example.prestamolab.model.AmbienteDespliegue
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.EtapaEvidencia
 import com.example.prestamolab.ui.evidencias.EvidenciasRoute
@@ -73,7 +75,8 @@ fun AppNavHost() {
                 uiState = uiState,
                 onIdentificadorChange = loginViewModel::onIdentificadorChanged,
                 onContrasenaChange = loginViewModel::onContrasenaChanged,
-                onIngresarClick = loginViewModel::iniciarSesion
+                onIngresarClick = loginViewModel::iniciarSesion,
+                etiquetaEntorno = AmbienteDespliegue.desde(BuildConfig.AMBIENTE).etiqueta
             )
         }
 

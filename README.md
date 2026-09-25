@@ -21,9 +21,10 @@ La aplicación implementa el patrón arquitectónico **Model-View-ViewModel (MVV
 2. Abrir el entorno de desarrollo oficial **Android Studio**.
 3. Agregar a `local.properties` (no se sube a git) las credenciales del proyecto Supabase:
    `SUPABASE_URL=https://<proyecto>.supabase.co` y `SUPABASE_ANON_KEY=<clave anon>`.
+   Ese es el ambiente **dev**, el que se compila por defecto. Para stage o prod se agregan `SUPABASE_URL_STAGE`, `SUPABASE_ANON_KEY_STAGE`, etc., y se compila con `-Pambiente=stage` o `-Pambiente=prod`: ver `docs/AMBIENTES.md`.
 4. Preparar la base de datos ejecutando en orden los scripts de `docs/supabase/` (001 a 009) en el SQL Editor de Supabase. El 009 activa la seguridad por rol: sin él, esta versión de la app no puede iniciar sesión.
 5. Sincronizar el proyecto con Gradle y ejecutar la configuración `app` en un dispositivo o emulador con Android 7.0 (API 24) o superior.
-6. Pruebas: `gradlew testDebugUnitTest` (unitarias; también las ejecuta GitHub Actions en cada push). Las instrumentadas se ejecutan en el dispositivo como indica `docs/PLAN_PRUEBAS.md`.
+6. Pruebas: `gradlew testDebugUnitTest` (unitarias; también las ejecuta GitHub Actions en cada push). Las instrumentadas se ejecutan en el dispositivo como indica `docs/PLAN_PRUEBAS.md`. Las pruebas inestables detectadas y su manejo están en `docs/PRUEBAS_INESTABLES.md`.
 
 ## 5. Uso Responsable de Inteligencia Artificial
 | Herramienta | Propósito | Sugerencia Recibida | Verificación del Equipo | Decisión Adoptada |
