@@ -225,6 +225,7 @@ private fun AreaAutenticada(
                     RutaProtegida(Rutas.CATALOGO, usuario, onVolver = onCerrarSesion) {
                         CatalogScreen(
                             equipos = uiState.equiposCatalogo,
+                            cargando = uiState.cargandoCatalogo,
                             filtro = uiState.filtro,
                             categorias = uiState.categorias,
                             onSoloDisponiblesChange = prestamoViewModel::onSoloDisponiblesChanged,

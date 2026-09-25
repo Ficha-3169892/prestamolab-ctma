@@ -37,6 +37,8 @@ sealed interface EventoPrestamo {
 }
 
 data class PrestamoUiState(
+    /** Loading: Room aún no entrega el catálogo (estados Loading/Content/Empty/Error de la guía, semana 7). */
+    val cargandoCatalogo: Boolean = true,
     val equipos: List<Equipo> = emptyList(),
     /** Catálogo después de aplicar [filtro] (CA-HU01-03). */
     val equiposCatalogo: List<Equipo> = emptyList(),
@@ -88,7 +90,7 @@ class PrestamoViewModel(
                     val seleccionado = state.equipoSeleccionado?.let { sel ->
                         equipos.find { it.id == sel.id } ?: sel
                     }
-                    state.copy(equipos = equipos, equipoSeleccionado = seleccionado).conCatalogo()
+                    state.copy(equipos = equipos, equipoSeleccionado = seleccionado, cargandoCatalogo = false).conCatalogo()
                 }
             }
         }

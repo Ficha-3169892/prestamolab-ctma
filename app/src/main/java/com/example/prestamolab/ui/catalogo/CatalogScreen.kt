@@ -27,6 +27,7 @@ fun colorEstado(estado: EstadoEquipo): Color = when (estado) {
 @Composable
 fun CatalogScreen(
     equipos: List<Equipo>,
+    cargando: Boolean,
     filtro: FiltroCatalogo,
     categorias: List<String>,
     onSoloDisponiblesChange: (Boolean) -> Unit,
@@ -80,6 +81,19 @@ fun CatalogScreen(
                         label = { Text(categoria) }
                     )
                 }
+            }
+
+            if (cargando) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(Modifier.height(12.dp))
+                    Text("Cargando catálogo…", style = MaterialTheme.typography.bodyLarge)
+                }
+                return@Column
             }
 
             if (equipos.isEmpty()) {

@@ -17,6 +17,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
@@ -502,5 +503,22 @@ class PrestamoViewModelTest {
 
         assertFalse(viewModel.guardarSolicitud())
         assertEquals("Propósito debe tener mínimo 10 caracteres", viewModel.uiState.value.errorProposito)
+    }
+
+    @Test
+    fun `Estado Loading - el catalogo esta cargando hasta que Room entrega la primera lista`() = runTest {
+        val equipos = MutableSharedFlow<List<Equipo>>()
+        val repositorioLento = mockk<PrestamoRepository>(relaxed = true) {
+            every { this@mockk.equipos } returns equipos
+            every { solicitudes } returns MutableStateFlow(emptyList())
+        }
+        val vm = PrestamoViewModel(repositorioLento)
+        assertTrue(vm.uiState.value.cargandoCatalogo)
+
+        equipos.emit(emptyList())
+
+        // Empty: cargó y no hay equipos (la pantalla muestra "No hay equipos para mostrar")
+        assertFalse(vm.uiState.value.cargandoCatalogo)
+        assertTrue(vm.uiState.value.equiposCatalogo.isEmpty())
     }
 }
