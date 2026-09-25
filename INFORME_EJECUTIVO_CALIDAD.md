@@ -78,6 +78,6 @@ verificados** con `docs/supabase/009_seguridad.sql`. Quedan aceptados, con su tr
 ## 6. Recomendación y dictamen
 
 **Dictamen: DONE / ACEPTABLE.** Las 14 historias están completas, los 74 criterios tienen prueba automatizada,
-la seguridad del servidor está verificada contra la base real y no hay defectos graves abiertos. Pendientes antes
-de la entrega: que el equipo confirme las mejoras propuestas en las retrospectivas (`SCRUM.md`) y, si la guía lo
-exige, la revisión pasiva con OWASP ZAP.
+la seguridad del servidor está verificada contra la base real y no hay defectos graves abiertos. Las mejoras de las
+retrospectivas quedaron adoptadas y aplicadas (`SCRUM.md`). Pendiente opcional: la revisión pasiva con OWASP ZAP,
+si la guía lo exige.

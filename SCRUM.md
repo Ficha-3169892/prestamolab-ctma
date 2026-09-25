@@ -67,8 +67,8 @@ commits de la rama `andres-vargas`; cada commit indica las historias que cubre y
 incremento* construida con evidencia verificable: los commits de la rama `andres-vargas`, las suites de pruebas
 ejecutadas en el Xiaomi y las verificaciones contra el proyecto Supabase real. La implementación de la Parte 2 se
 concentró entre el 23 y el 24 de septiembre de 2026 (fechas reales del historial de git), por eso cada acta indica
-la fecha de su último commit. Las mejoras de las retrospectivas son **propuestas** que salen de defectos y
-situaciones reales del proyecto; el equipo las confirma o ajusta.
+la fecha de su último commit. Las mejoras de las retrospectivas salen de defectos y situaciones reales del proyecto;
+el equipo las **adoptó** el 25 de septiembre de 2026, y cada una indica dónde quedó aplicada.
 
 ### Sprint 5: acceso por rol y devolución con GPS
 
@@ -84,11 +84,12 @@ situaciones reales del proyecto; el equipo las confirma o ajusta.
 - **Adaptación del backlog:** login contra la tabla `users` sin Supabase Auth y contraseña en SHA-256 calculado en
   la app (decisión del equipo); los riesgos de esa decisión se registraron en `docs/RIESGOS.md` (R-01 a R-05).
 
-**Retrospectiva (propuesta)**
+**Retrospectiva**
 - *Qué salió bien:* criterios Dado/cuando/entonces con un caso de prueba 1:1 desde el inicio del sprint.
 - *Qué mejorar:* BUG-05 pasó todas las pruebas porque usan un servidor simulado.
-- *Mejora:* toda historia que use la red se verifica también en el teléfono contra Supabase real antes de
-  darla por terminada.
+- *Mejora adoptada:* toda historia que use la red se verifica también en el teléfono contra Supabase real antes de
+  darla por terminada. *Aplicada:* pruebas manuales contra Supabase de HU-07, HU-08 y HU-14, y
+  `SupabaseRealE2ETest` para HU-11 y HU-12 (`docs/PLAN_PRUEBAS.md`, secciones 7b y 8).
 
 ### Sprint 6: catálogo e inventario persistentes sin conexión
 
@@ -103,12 +104,13 @@ situaciones reales del proyecto; el equipo las confirma o ajusta.
   (sus pruebas automatizadas usan el servidor simulado).
 - **Adaptación del backlog:** un equipo con préstamos cerrados tampoco se elimina, para conservar su historial.
 
-**Retrospectiva (propuesta)**
+**Retrospectiva**
 - *Qué salió bien:* BUG-11 (la pestaña Catálogo llevaba a Mis Solicitudes) lo detectó una prueba de UI en el
   teléfono físico, no un usuario.
 - *Qué mejorar:* los chips de filtro con desplazamiento horizontal rompieron 11 pruebas de UI y ocultaban
   categorías en pantallas pequeñas.
-- *Mejora:* ejecutar la suite de UI completa en el teléfono real antes de cada commit que cambie una pantalla.
+- *Mejora adoptada:* ejecutar la suite de UI completa en el teléfono real antes de cada commit que cambie una
+  pantalla. *Aplicada:* cada commit posterior registra la suite instrumentada completa en verde en su mensaje.
 
 ### Sprint 7: ciclo completo del préstamo
 
@@ -122,12 +124,13 @@ situaciones reales del proyecto; el equipo las confirma o ajusta.
 - **Resultado:** incremento aceptado después de una auditoría de criterios que encontró funcionalidad faltante en
   HU-04 (CA-HU04-02), completada en `ca16808`.
 
-**Retrospectiva (propuesta)**
+**Retrospectiva**
 - *Qué salió bien:* la matriz de trazabilidad permitió auditar criterio por criterio.
 - *Qué mejorar:* se informó que las 14 historias estaban completas cuando la auditoría mostró 6 criterios sin la
   funcionalidad implementada (HU-01, HU-04, HU-06 y HU-13).
-- *Mejora:* una historia es "Hecho" solo cuando todas sus filas de `docs/MATRIZ_TRAZABILIDAD.md` tienen prueba en
-  verde, no cuando su pantalla principal funciona.
+- *Mejora adoptada:* una historia es "Hecho" solo cuando todas sus filas de `docs/MATRIZ_TRAZABILIDAD.md` tienen
+  prueba en verde, no cuando su pantalla principal funciona. *Aplicada:* el estado del backlog (sección 2) se
+  actualizó con esa regla y la matriz se regenera con `generar_issues.py` en cada cambio (74 de 74).
 
 ### Sprint 8: sincronización y evidencia fotográfica
 
@@ -143,11 +146,13 @@ situaciones reales del proyecto; el equipo las confirma o ajusta.
 - **Adaptación del backlog:** el estudiante envía solo el estado del equipo (PATCH) y el instructor el equipo
   completo; se agregó GPS a las evidencias.
 
-**Retrospectiva (propuesta)**
+**Retrospectiva**
 - *Qué salió bien:* una sola prueba manual contra el servidor real encontró 6 defectos antes de la entrega.
 - *Qué mejorar:* el código de sincronización asumió un esquema que no coincidía con el real (columnas NOT NULL
   como `equipments.title` y `loans.user_role`).
-- *Mejora:* antes de escribir código contra una tabla, consultar sus columnas y restricciones reales en Supabase.
+- *Mejora adoptada:* antes de escribir código contra una tabla, consultar sus columnas y restricciones reales en
+  Supabase. *Aplicada:* se consultó el esquema real antes de HU-11 (`activities`), HU-08 (`evidences`) y HU-13
+  (`loans.latitude`); por eso la precisión del GPS quedó solo en el teléfono, al no existir esa columna.
 
 ### Sprint 9: recordatorios y seguridad
 
@@ -165,14 +170,17 @@ situaciones reales del proyecto; el equipo las confirma o ajusta.
 - **Adaptación del backlog:** la revisión con OWASP ZAP se hace en modo pasivo sobre el tráfico de la app, sin
   escanear activamente la infraestructura compartida de Supabase.
 
-**Retrospectiva (propuesta)**
+**Retrospectiva**
 - *Qué salió bien:* verificar la seguridad atacando la base real encontró tres fallas que la lectura del script no
   mostraba.
 - *Qué mejorar:* el script de reversión aparecía antes del de seguridad y casi se ejecutaron los dos; los datos que
-  dejan las pruebas automáticas en el teléfono se habrían subido a Supabase al iniciar sesión.
-- *Mejoras:* (1) los scripts de emergencia viven fuera de la secuencia numerada (`docs/supabase/emergencia/`);
-  (2) después de cada ejecución de pruebas instrumentadas se limpian los datos locales de la app antes de usarla con
-  el servidor real; (3) toda política RLS nueva se valida con `verificar_seguridad.py`.
+  dejan las pruebas automáticas en el teléfono se habrían subido a Supabase al iniciar sesión; `005_reiniciar_demo.sql`
+  dejó inconsistente un préstamo que no era de demostración (el equipo DISPONIBLE y su préstamo PRESTADO).
+- *Mejoras adoptadas y aplicadas:* (1) los scripts de emergencia viven fuera de la secuencia numerada
+  (`docs/supabase/emergencia/`); (2) después de cada ejecución de pruebas instrumentadas se limpian los datos locales
+  de la app antes de usarla con el servidor real; (3) toda política RLS nueva se valida con
+  `docs/seguridad/verificar_seguridad.py`; (4) los préstamos creados en pruebas contra el servidor real se cierran
+  con su devolución antes de reiniciar la demo (así se cerró el del Multímetro).
 
 ## 7. Parte 1 (histórico)
 
