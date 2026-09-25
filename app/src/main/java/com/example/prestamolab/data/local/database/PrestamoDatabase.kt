@@ -12,7 +12,7 @@ import com.example.prestamolab.data.local.entity.SolicitudEntity
 
 @Database(
     entities = [EquipoEntity::class, SolicitudEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -30,7 +30,9 @@ abstract class PrestamoDatabase : RoomDatabase() {
                     context.applicationContext,
                     PrestamoDatabase::class.java,
                     "prestamo_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration(dropAllTables = true)
+                .build()
                 INSTANCE = instance
                 instance
             }

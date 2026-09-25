@@ -1,5 +1,6 @@
 package com.example.prestamolab.repository
 
+import android.util.Log
 import com.example.prestamolab.data.local.dao.EquipoDao
 import com.example.prestamolab.data.local.dao.SolicitudDao
 import com.example.prestamolab.data.mapper.toDomain
@@ -22,6 +23,10 @@ class OfflineFirstPrestamoRepository(
     private val apiService: PrestamoApiService
 ) : PrestamoRepository {
 
+    companion object {
+        private const val TAG = "OfflineFirstRepo"
+    }
+
     override fun obtenerEquipos(): Flow<List<Equipo>> {
         return equipoDao.getAllEquipos()
             .map { entities -> entities.map { it.toDomain() } }
@@ -41,9 +46,11 @@ class OfflineFirstPrestamoRepository(
             try {
                 apiService.createEquipo(equipo.toDto())
             } catch (e: Exception) {
+                Log.e(TAG, "Error al crear equipo en Supabase: ${e.message}", e)
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Error local al crear equipo: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -54,9 +61,11 @@ class OfflineFirstPrestamoRepository(
             try {
                 apiService.updateEquipo("eq.${equipo.id}", equipo.toDto())
             } catch (e: Exception) {
+                Log.e(TAG, "Error al actualizar equipo en Supabase: ${e.message}", e)
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Error local al actualizar equipo: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -67,9 +76,11 @@ class OfflineFirstPrestamoRepository(
             try {
                 apiService.deleteEquipo("eq.$id")
             } catch (e: Exception) {
+                Log.e(TAG, "Error al eliminar equipo en Supabase: ${e.message}", e)
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Error local al eliminar equipo: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -95,16 +106,24 @@ class OfflineFirstPrestamoRepository(
             equipoDao.updateEstado(solicitud.equipoId, EstadoEquipo.RESERVADO)
 
             try {
-                apiService.createSolicitud(solicitud.toDto())
+                val createdDtos = apiService.createSolicitud(solicitud.toDto())
                 val entity = solicitudDao.getSolicitudById(solicitud.id)
                 if (entity != null) {
-                    solicitudDao.updateSolicitud(entity.copy(estadoSincronizacion = "SINCRONIZADA"))
+                    val remoteId = createdDtos.firstOrNull()?.id
+                    solicitudDao.updateSolicitud(
+                        entity.copy(
+                            id = if (remoteId != null && remoteId > 0) remoteId else entity.id,
+                            estadoSincronizacion = "SINCRONIZADA"
+                        )
+                    )
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "Error al crear solicitud en Supabase: ${e.message}", e)
             }
             
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Error local al crear solicitud: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -118,9 +137,11 @@ class OfflineFirstPrestamoRepository(
             try {
                 apiService.updateSolicitud("eq.$id", mapOf("estado" to EstadoSolicitud.CANCELADA.name))
             } catch (e: Exception) {
+                Log.e(TAG, "Error al cancelar solicitud en Supabase: ${e.message}", e)
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Error local al cancelar solicitud: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -146,9 +167,11 @@ class OfflineFirstPrestamoRepository(
 
                 apiService.updateSolicitud("eq.$solicitudId", updates)
             } catch (e: Exception) {
+                Log.e(TAG, "Error al registrar devolución en Supabase: ${e.message}", e)
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Error local al registrar devolución: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -159,9 +182,11 @@ class OfflineFirstPrestamoRepository(
             try {
                 apiService.deleteSolicitudes("in.(DEVUELTA,CANCELADA,RECHAZADA)")
             } catch (e: Exception) {
+                Log.e(TAG, "Error al borrar historial en Supabase: ${e.message}", e)
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Error local al borrar historial: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -183,16 +208,19 @@ class OfflineFirstPrestamoRepository(
     private suspend fun syncEquipos() {
         try {
             val remoteEquipos = apiService.getEquipos()
+            Log.d(TAG, "Equipos recibidos de Supabase: ${remoteEquipos.size}")
             if (remoteEquipos.isNotEmpty()) {
                 equipoDao.insertEquipos(remoteEquipos.map { it.toDomain().toEntity() })
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error al sincronizar equipos desde Supabase: ${e.message}", e)
         }
     }
 
     private suspend fun syncSolicitudes() {
         try {
             val remoteSolicitudes = apiService.getSolicitudes()
+            Log.d(TAG, "Solicitudes recibidas de Supabase: ${remoteSolicitudes.size}")
             if (remoteSolicitudes.isNotEmpty()) {
                 remoteSolicitudes.forEach { dto ->
                     val domain = dto.toDomain()
@@ -200,6 +228,7 @@ class OfflineFirstPrestamoRepository(
                 }
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error al sincronizar solicitudes desde Supabase: ${e.message}", e)
         }
     }
 }

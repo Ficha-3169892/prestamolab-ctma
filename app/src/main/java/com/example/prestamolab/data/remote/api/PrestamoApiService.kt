@@ -21,12 +21,12 @@ interface PrestamoApiService {
     @Headers("Prefer: return=representation")
     @PATCH("equipos")
     suspend fun updateEquipo(
-        @Query("id") idQuery: String,
+        @Query(value = "id", encoded = true) idQuery: String,
         @Body equipo: EquipoDto
     ): List<EquipoDto>
 
     @DELETE("equipos")
-    suspend fun deleteEquipo(@Query("id") idQuery: String)
+    suspend fun deleteEquipo(@Query(value = "id", encoded = true) idQuery: String)
 
     @GET("solicitudes?select=*")
     suspend fun getSolicitudes(): List<SolicitudDto>
@@ -38,10 +38,10 @@ interface PrestamoApiService {
     @Headers("Prefer: return=representation")
     @PATCH("solicitudes")
     suspend fun updateSolicitud(
-        @Query("id") idQuery: String,
+        @Query(value = "id", encoded = true) idQuery: String,
         @Body updates: Map<String, String?>
     ): List<SolicitudDto>
 
     @DELETE("solicitudes")
-    suspend fun deleteSolicitudes(@Query("estado") estadoQuery: String)
+    suspend fun deleteSolicitudes(@Query(value = "estado", encoded = true) estadoQuery: String)
 }

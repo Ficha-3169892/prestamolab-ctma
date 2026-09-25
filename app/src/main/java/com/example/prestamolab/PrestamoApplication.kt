@@ -46,6 +46,8 @@ class PrestamoApplication : Application() {
     private val json = Json { 
         ignoreUnknownKeys = true 
         encodeDefaults = true
+        isLenient = true
+        coerceInputValues = true
     }
     
     private val okHttpClient = OkHttpClient.Builder()
