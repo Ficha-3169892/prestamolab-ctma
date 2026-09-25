@@ -52,7 +52,7 @@ class AppContainer(context: Context) {
     private val appContext = context.applicationContext
 
     private val supabase by lazy {
-        SupabaseRestClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_KEY) { sessionStore.sesion.first()?.token }
+        SupabaseRestClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_KEY, tokenSesion = { sessionStore.sesion.first()?.token })
     }
 
     val database: PrestamoLabDatabase by lazy { PrestamoLabDatabase.construir(appContext) }

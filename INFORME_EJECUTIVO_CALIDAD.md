@@ -30,6 +30,7 @@
 | Pruebas unitarias | 187, todas en verde (local y en GitHub Actions) |
 | Pruebas instrumentadas y de UI en el dispositivo | 154, todas en verde (TC-HU13-01 se ejecuta aparte) |
 | Pruebas de seguridad contra Supabase real | 26 de 26 superadas (`docs/seguridad/`) |
+| OWASP ZAP (pasivo, 88 mensajes) | 0 alertas altas, 0 medias |
 | Verificación manual contra Supabase real | Login, sincronización, devolución con GPS, evidencia con foto y el ciclo completo solicitar → aprobar con la seguridad activa |
 | Defectos registrados en la Parte 2 | 11 (BUG-04 a BUG-14), todos cerrados |
 | Defectos Críticos o Altos abiertos | 0 |
@@ -70,8 +71,9 @@ verificados** con `docs/supabase/009_seguridad.sql`. Quedan aceptados, con su tr
 - **R-06:** la subida al bucket de evidencias sigue abierta, porque Storage no recibe el token de sesión.
 - **R-07:** un estudiante con la anon key podría cambiar el estado de un equipo por fuera de la app.
 - **R-08 / R-09:** la anon key va dentro del APK y el login no bloquea tras varios intentos (solo los demora).
-- **OWASP ZAP:** no se escaneó activamente la infraestructura compartida de Supabase; el procedimiento en modo
-  pasivo está en `docs/seguridad/README.md`.
+- **OWASP ZAP (modo pasivo, tráfico real de la app):** 0 alertas altas y 0 medias; las 2 bajas y 4 informativas
+  vienen de la cookie de Cloudflare delante de Supabase o están aceptadas con su análisis (`docs/seguridad/README.md`).
+  No se escaneó activamente la infraestructura compartida de Supabase.
 - **Dependencia del dispositivo:** las pruebas de UI se ejecutan en un solo teléfono; el CI solo corre las
   unitarias.
 
@@ -79,5 +81,5 @@ verificados** con `docs/supabase/009_seguridad.sql`. Quedan aceptados, con su tr
 
 **Dictamen: DONE / ACEPTABLE.** Las 14 historias están completas, los 74 criterios tienen prueba automatizada,
 la seguridad del servidor está verificada contra la base real y no hay defectos graves abiertos. Las mejoras de las
-retrospectivas quedaron adoptadas y aplicadas (`SCRUM.md`). Pendiente opcional: la revisión pasiva con OWASP ZAP,
-si la guía lo exige.
+retrospectivas quedaron adoptadas y aplicadas (`SCRUM.md`) y la revisión pasiva con OWASP ZAP no encontró alertas de
+riesgo alto ni medio.

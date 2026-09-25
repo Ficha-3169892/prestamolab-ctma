@@ -22,12 +22,15 @@ class SupabaseRestClient(
     tiempoEsperaMs: Long = 10_000,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     /** Token de la sesión activa (R-04): las políticas RLS del servidor lo leen de la cabecera x-sesion. */
-    private val tokenSesion: suspend () -> String? = { null }
+    private val tokenSesion: suspend () -> String? = { null },
+    /** Solo para pruebas (p. ej. pasar el tráfico por el proxy de OWASP ZAP); la app no lo usa. */
+    personalizarHttp: (OkHttpClient.Builder) -> OkHttpClient.Builder = { it }
 ) {
     private val http = OkHttpClient.Builder()
         .connectTimeout(tiempoEsperaMs, TimeUnit.MILLISECONDS)
         .readTimeout(tiempoEsperaMs, TimeUnit.MILLISECONDS)
         .writeTimeout(tiempoEsperaMs, TimeUnit.MILLISECONDS)
+        .let(personalizarHttp)
         .build()
 
     private val httpArchivos = http.newBuilder()

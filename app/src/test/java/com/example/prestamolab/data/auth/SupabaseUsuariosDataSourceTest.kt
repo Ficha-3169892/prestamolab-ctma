@@ -21,7 +21,7 @@ class SupabaseUsuariosDataSourceTest {
     fun setup() {
         servidor = MockWebServer()
         servidor.start()
-        val cliente = SupabaseRestClient(servidor.url("/").toString(), "anon-key", tiempoEsperaMs = 500) { token }
+        val cliente = SupabaseRestClient(servidor.url("/").toString(), "anon-key", tiempoEsperaMs = 500, tokenSesion = { token })
         remoto = SupabaseUsuariosDataSource(cliente)
     }
 

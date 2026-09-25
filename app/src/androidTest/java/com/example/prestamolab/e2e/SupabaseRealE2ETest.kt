@@ -1,6 +1,15 @@
 package com.example.prestamolab.e2e
 
 import android.content.Context
+import android.util.Base64
+import okhttp3.OkHttpClient
+import java.net.InetSocketAddress
+import java.net.Proxy
+import java.security.KeyStore
+import java.security.cert.CertificateFactory
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -40,6 +49,9 @@ import java.util.UUID
  *   adb shell am instrument -w -r -e e2e true -e class com.example.prestamolab.e2e.SupabaseRealE2ETest \
  *       com.example.prestamolab.test/com.example.prestamolab.PrestamoLabTestRunner
  * Crea un equipo y una actividad con nombres únicos y los elimina al terminar, aunque la prueba falle.
+ *
+ * Revisión con OWASP ZAP (docs/seguridad/README.md): con `-e zapProxy 127.0.0.1:8090 -e zapCa <certificado raíz de
+ * ZAP en base64>` todo el tráfico de la prueba pasa por el proxy de ZAP, sin cambiar la red del teléfono.
  */
 @RunWith(AndroidJUnit4::class)
 class SupabaseRealE2ETest {
@@ -49,7 +61,33 @@ class SupabaseRealE2ETest {
 
     /** Token de la sesión con la que habla cada cliente; cambia al "iniciar sesión" con otro rol. */
     private var tokenActual: String? = null
-    private val cliente by lazy { SupabaseRestClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_KEY) { tokenActual } }
+    private val cliente by lazy {
+        SupabaseRestClient(
+            BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_KEY,
+            tokenSesion = { tokenActual },
+            personalizarHttp = ::usarProxyZapSiSePide
+        )
+    }
+
+    /** Envía el tráfico al proxy de ZAP y confía solo en su certificado raíz, que llega como argumento. */
+    private fun usarProxyZapSiSePide(builder: OkHttpClient.Builder): OkHttpClient.Builder {
+        val argumentos = InstrumentationRegistry.getArguments()
+        val proxy = argumentos.getString("zapProxy") ?: return builder
+        val (host, puerto) = proxy.split(":")
+        val certificado = CertificateFactory.getInstance("X.509").generateCertificate(
+            Base64.decode(argumentos.getString("zapCa"), Base64.DEFAULT).inputStream()
+        )
+        val almacen = KeyStore.getInstance(KeyStore.getDefaultType()).apply {
+            load(null, null)
+            setCertificateEntry("zap", certificado)
+        }
+        val confianza = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply { init(almacen) }
+            .trustManagers.single() as X509TrustManager
+        val tls = SSLContext.getInstance("TLS").apply { init(null, arrayOf(confianza), null) }
+        return builder
+            .proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(host, puerto.toInt())))
+            .sslSocketFactory(tls.socketFactory, confianza)
+    }
     private val login by lazy { SupabaseUsuariosDataSource(cliente) }
     private val remoto by lazy { SupabasePrestamosDataSource(cliente) }
 
