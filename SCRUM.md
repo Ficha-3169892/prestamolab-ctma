@@ -182,7 +182,50 @@ el equipo las **adoptó** el 25 de septiembre de 2026, y cada una indica dónde 
   `docs/seguridad/verificar_seguridad.py`; (4) los préstamos creados en pruebas contra el servidor real se cierran
   con su devolución antes de reiniciar la demo (así se cerró el del Multímetro).
 
-## 7. Parte 1 (histórico)
+## 7. Métricas del Sprint
+
+Guía, semana 7, actividad 21: *registrar lead/cycle time básico de las HU y analizar cuellos de botella*. Los datos
+salen del historial real de git de la rama (fecha de autor de cada commit que menciona la historia; los mismos
+commits que enlaza `docs/MATRIZ_TRAZABILIDAD.md`). Calculado el 25 de septiembre de 2026.
+
+- **Lead time:** desde que la historia entró al backlog (commit `6898c91`, 23-09 20:17) hasta su último commit.
+- **Cycle time:** desde el primer hasta el último commit de la historia.
+
+| Historia | Commits | Primer commit | Último commit | Cycle time | Lead time |
+|---|---|---|---|---|---|
+| HU-10 | 4 | 23-09 20:41 | 24-09 13:22 | 16,7 h | 17,1 h |
+| HU-05 | 2 | 23-09 21:10 | 24-09 14:42 | 17,5 h | 18,4 h |
+| HU-13 | 2 | 23-09 21:10 | 24-09 19:39 | 22,5 h | 23,4 h |
+| HU-06 | 3 | 24-09 12:42 | 24-09 19:39 | 7,0 h | 23,4 h |
+| HU-07 | 2 | 24-09 13:51 | 24-09 14:42 | 0,8 h | 18,4 h |
+| HU-14 | 1 | 24-09 17:20 | 24-09 17:20 | < 1 commit | 21,1 h |
+| HU-12 | 2 | 24-09 17:42 | 24-09 21:23 | 3,7 h | 25,1 h |
+| HU-11 | 2 | 24-09 17:58 | 24-09 21:23 | 3,4 h | 25,1 h |
+| HU-09 | 2 | 24-09 18:20 | 24-09 21:23 | 3,0 h | 25,1 h |
+| HU-08 | 3 | 24-09 18:35 | 24-09 22:23 | 3,8 h | 26,1 h |
+| HU-01 | 1 | 24-09 19:39 | 24-09 19:39 | < 1 commit | 23,4 h |
+| HU-04 | 1 | 24-09 19:39 | 24-09 19:39 | < 1 commit | 23,4 h |
+| HU-03 | 3 | 24-09 22:17 | 24-09 22:18 | < 1 commit (ciclo TDD) | 26,0 h |
+| HU-02 | — | — | — | — | Base de la Parte 1, sin commit propio |
+
+**Lectura de los datos**
+
+- **Cuello de botella: la verificación contra el entorno real.** Las tres historias con mayor cycle time (HU-13,
+  HU-05 y HU-10) son las primeras que se probaron en el teléfono contra Supabase. Ahí aparecieron BUG-05 a BUG-10:
+  permiso de Internet, columnas NOT NULL del esquema real y el botón bajo la barra del sistema. El tiempo se fue en
+  retrabajo, no en la implementación inicial. La mejora adoptada fue verificar toda historia que use la red en el
+  teléfono contra Supabase real antes de darla por terminada (retrospectiva del Sprint 5, sección 6).
+- **Una historia = uno a cuatro commits.** Cuando una historia cabe en un commit, git no registra cuándo empezó y
+  el cycle time no se puede medir; figura como "< 1 commit". Para medirlo bien hace falta registrar el paso a "En
+  progreso" en el tablero (GitHub Project) o trabajar cada historia en su propia rama `feature/hu-XX`.
+- **Trabajo concentrado.** Toda la Parte 2 se implementó en unas 26 horas de calendario (23 y 24 de septiembre),
+  así que los "sprints" 5 a 9 son agrupaciones del backlog y no iteraciones de una semana. El lead time casi igual en
+  todas las historias refleja eso: todas entraron al backlog al mismo tiempo.
+
+**Velocidad, burndown y burnup:** requieren estimar las historias en puntos (Planning Poker, actividad 17). Esa
+estimación no se hizo, y no se reconstruye después para no presentar datos inventados. Queda pendiente para el equipo.
+
+## 8. Parte 1 (histórico)
 
 - **Sprint Goal:** permitir consultar un equipo disponible y registrar una solicitud de préstamo válida, manteniendo
   la disponibilidad coherente y demostrando su calidad con pruebas reproducibles.
