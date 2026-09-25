@@ -18,6 +18,7 @@ import com.example.prestamolab.model.Equipo
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.FiltroCatalogo
 import com.example.prestamolab.model.NuevaSolicitud
+import com.example.prestamolab.model.ReglasSolicitud
 import com.example.prestamolab.model.Rol
 import com.example.prestamolab.model.SolicitudPrestamo
 import com.example.prestamolab.model.Usuario
@@ -175,44 +176,20 @@ class PrestamoViewModel(
         // Evitar solicitud sobre equipo no disponible (TC-12)
         if (equipo.estado != EstadoEquipo.DISPONIBLE) return false
 
-        var hayError = false
-        var errAmbiente: String? = null
-        var errProposito: String? = null
-        var errDuracion: String? = null
-
-        if (estadoActual.ambiente.isBlank()) {
-            errAmbiente = "El ambiente o destino es obligatorio."
-            hayError = true
-        }
-
-        // TC-04 al TC-07
-        // BUG-13: los espacios y saltos de línea de los extremos no cuentan ni se guardan
-        val proposito = estadoActual.proposito.trim()
-        if (proposito.length < 10) {
-            errProposito = "Propósito debe tener mínimo 10 caracteres"
-            hayError = true
-        } else if (proposito.length > 180) {
-            errProposito = "Máximo 180 caracteres"
-            hayError = true
-        }
-
-        // TC-08 al TC-11
-        val duracion = estadoActual.duracionHoras.toIntOrNull() ?: 0
-        if (duracion < 1 || duracion > 8) {
-            errDuracion = "Duración entre 1 y 8 horas"
-            hayError = true
-        }
-
-        if (hayError) {
+        // Reglas de HU-03 en el dominio (TDD: ReglasSolicitudTest); el propósito se guarda recortado (BUG-13)
+        val errores = ReglasSolicitud.validar(estadoActual.ambiente, estadoActual.proposito, estadoActual.duracionHoras)
+        if (errores.hayErrores) {
             _uiState.update {
                 it.copy(
-                    errorAmbiente = errAmbiente,
-                    errorProposito = errProposito,
-                    errorDuracion = errDuracion
+                    errorAmbiente = errores.ambiente,
+                    errorProposito = errores.proposito,
+                    errorDuracion = errores.duracion
                 )
             }
             return false
         }
+        val proposito = estadoActual.proposito.trim()
+        val duracion = estadoActual.duracionHoras.trim().toInt()
 
         // Bloqueo de doble pulsación (TC-13)
         _uiState.update { it.copy(guardando = true, mensajeError = null) }
