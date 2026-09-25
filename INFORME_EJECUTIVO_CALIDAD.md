@@ -28,7 +28,7 @@
 | Criterios de aceptación y casos de prueba (1:1) | 74 |
 | Criterios con prueba automatizada | 74 (100 %) |
 | Pruebas unitarias | 187, todas en verde (local y en GitHub Actions) |
-| Pruebas instrumentadas y de UI en el dispositivo | 154, todas en verde (TC-HU13-01 se ejecuta aparte) |
+| Pruebas instrumentadas y de UI en el dispositivo | 156, todas en verde (3 se ejecutan aparte: permisos sin conceder y Supabase real) |
 | Pruebas de seguridad contra Supabase real | 26 de 26 superadas (`docs/seguridad/`) |
 | OWASP ZAP (pasivo, 88 mensajes) | 0 alertas altas, 0 medias |
 | Verificación manual contra Supabase real | Login, sincronización, devolución con GPS, evidencia con foto y el ciclo completo solicitar → aprobar con la seguridad activa |

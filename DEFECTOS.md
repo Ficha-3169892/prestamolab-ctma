@@ -51,7 +51,7 @@ Crítica queda abierto.
 ### Regresión
 
 Después de cada corrección se ejecutaron las suites completas: unitaria (`testDebugUnitTest`) e instrumentada en el
-Xiaomi. Resultado actual: **187 unitarias y 154 instrumentadas en verde**; el CI de GitHub Actions repite las
+Xiaomi. Resultado actual: **187 unitarias y 156 instrumentadas en verde**; el CI de GitHub Actions repite las
 unitarias en cada push.
 
 ## Parte 1 (histórico)
