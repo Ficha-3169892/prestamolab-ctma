@@ -1,80 +1,56 @@
-# Sprint Planning
+# Sprint Planning & Evolución de Incrementos - PréstamoLab CTMA
 
-## Sprint Goal
+---
 
-Permitir consultar un equipo disponible y registrar una solicitud
-de préstamo válida, manteniendo la disponibilidad coherente y
-demostrando su calidad mediante pruebas reproducibles.
+## Sprint 1: Funcionalidad Base y Préstamos Offline
 
-## PBIs seleccionados
+### Sprint Goal 1
+Permitir consultar equipos disponibles y registrar solicitudes de préstamo válidas con persistencia local y soporte para cancelación.
 
-- HU-01 — Consultar catálogo. — Done
-- HU-02 — Consultar detalle. — Done
-- HU-03 — Registrar solicitud. — Done
-- HU-04 — Validar solicitud. — Done
-- HU-05 — Controlar disponibilidad. — Done
-- HU-06 — Evitar duplicados. — Done
-- HU-07 — Consultar mis solicitudes. — Done
-- HU-08 — Consultar detalle de solicitud. — Done
-- HU-09 — Cancelar solicitud. — Done
+### PBIs Seleccionados
+- **HU-01:** Consultar catálogo. — *Done*
+- **HU-02:** Consultar detalle de equipo. — *Done*
+- **HU-03:** Registrar solicitud. — *Done*
+- **HU-04:** Validar campos de solicitud. — *Done*
+- **HU-05:** Controlar disponibilidad de equipos. — *Done*
+- **HU-06:** Evitar solicitudes duplicadas. — *Done*
+- **HU-07:** Consultar mis solicitudes. — *Done*
+- **HU-08:** Consultar detalle de solicitud. — *Done*
+- **HU-09:** Cancelar solicitud. — *Done*
 
-## Sprint Backlog
+---
 
-1. Crear modelos Equipo y SolicitudPrestamo. — Done
-2. Crear estados y categorías. — Done
-3. Implementar InMemoryPrestamoRepository. — Done
-4. Implementar catálogo de equipos. — Done
-5. Implementar detalle de equipo. — Done
-6. Implementar navegación mediante equipoId. — Done
-7. Implementar formulario de solicitud. — Done
-8. Implementar validación de destino. — Done
-9. Implementar validación de propósito. — Done
-10. Implementar validación de duración. — Done
-11. Validar disponibilidad del equipo. — Done
-12. Crear solicitud en estado SOLICITADA. — Done
-13. Cambiar equipo a RESERVADO. — Done
-14. Evitar doble pulsación de Guardar. — Done
-15. Implementar Mis Solicitudes. — Done
-16. Implementar detalle de solicitud. — Done
-17. Implementar cancelación. — Done
-18. Manejar IDs inexistentes. — Done
-19. Diseñar y ejecutar pruebas. — Done
-20. Corregir defectos encontrados. — Done
-21. Actualizar documentación. — Done
+## Sprint 2: Capacidades de Dispositivo, Supabase, CRUD Admin y Calidad Final
 
-## Impedimentos iniciales
+### Sprint Goal 2
+Evolucionar la app hacia una arquitectura resiliente *Offline-First* conectada a Supabase, agregando captura de evidencias fotográficas, GPS, gestión protegida de catálogo (CRUD), limpieza de historial y pruebas automatizadas (TDD y No Funcionales).
 
-No se identifican impedimentos bloqueantes al inicio del Sprint.
-El desarrollo y las pruebas se realizaron utilizando Android Studio
-y un emulador Android.
+### PBIs Seleccionados
+- **HU-07 (Devolución):** Registrar devolución de equipo con evidencia fotográfica (Cámara/Photo Picker). — *Done*
+- **HU-09 (GPS):** Captura de coordenadas GPS en metadatos de entrega. — *Done*
+- **HU-10:** Autenticación de Administrador para proteger el acceso al menú de gestión (CRUD). — *Done*
+- **HU-11:** Limpieza de historial de préstamos devueltos y cancelados. — *Done*
+- **Infraestructura Cloud:** Conexión remota con Supabase PostgREST API y almacenamiento en Supabase Storage. — *Done*
+- **Preferencias Local:** Persistencia con `DataStore` para preferencias de usuario. — *Done*
+- **Pruebas y Calidad:** Pruebas TDD (`AdminAuthValidatorTest`), pruebas No Funcionales y CI/CD con GitHub Actions. — *Done*
 
-## Definition of Done
+---
 
-Un elemento del Sprint se considera Done cuando:
+## Definition of Done (DoD)
 
-1. El proyecto compila y puede ejecutarse en el ambiente definido.
-2. Los criterios de aceptación seleccionados están implementados.
-3. La UI no modifica directamente la fuente de datos.
-4. El ViewModel expone UiState/StateFlow de solo lectura.
-5. La navegación transporta identificadores y controla IDs inexistentes.
-6. Los casos de prueba acordados fueron ejecutados y sus resultados
-   corresponden con ejecuciones reales.
-7. Los defectos críticos y altos tienen una decisión explícita.
-8. Las correcciones relevantes tienen confirmación y regresión.
-9. Git y README están actualizados.
-10. El incremento puede demostrarse y cada integrante puede explicar
-    las decisiones técnicas y de calidad relacionadas con su trabajo.
+Un elemento del Sprint se considera **Done** cuando:
 
-## Estado final del Sprint
+1. El proyecto compila sin errores ni advertencias bloqueantes (`assembleDebug`).
+2. Todos los criterios de aceptación de la Historia de Usuario están implementados y verificados.
+3. El ViewModel expone `UiState` de solo lectura y las mutaciones se realizan exclusivamente a través de flujos controlados.
+4. Las pruebas unitarias automatizadas (`testDebugUnitTest`) pasan al 100% (33/33 pruebas pasadas).
+5. Se incluye evidencia de pruebas no funcionales de accesibilidad, seguridad y rendimiento.
+6. Todos los secretos/claves están aislados en `local.properties` y no se exponen en Git.
+7. La Matriz de Trazabilidad (`MATRIZ_TRAZABILIDAD.md`) vincula la HU con sus Criterios, Riesgos, Código y Resultado de Pruebas.
+8. El pipeline de CI/CD en GitHub Actions ejecuta exitosamente Lint, Tests y Build.
+9. Se han creado y publicado los Tags de Git correspondiente a cada hito de versión.
 
-El Sprint Goal fue alcanzado.
+---
 
-Las funcionalidades seleccionadas fueron implementadas y verificadas
-mediante pruebas funcionales. Durante las pruebas se identificó y
-corrigió un defecto menor de navegación relacionado con el regreso
-desde la pantalla de Mis Solicitudes.
-
-El incremento final permite consultar equipos, consultar detalles,
-registrar solicitudes válidas, controlar la disponibilidad, evitar
-duplicados, consultar solicitudes, cancelar solicitudes permitidas y
-mantener coherencia entre el estado de las solicitudes y los equipos.
+## Estado Final del Proyecto
+El producto ha alcanzado su versión **v1.0.0-final**, cumpliendo con la totalidad de los requisitos funcionales, técnicos, no funcionales y de gestión exigidos por la guía integradora de aprendizaje.
