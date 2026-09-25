@@ -6,9 +6,35 @@ TC-HUxx-nn (trazabilidad 1:1). Editar los datos aquí y volver a ejecutar:
 
     python docs/backlog/generar_issues.py
 """
+import subprocess
 from pathlib import Path
 
 SALIDA = Path(__file__).parent / "issues"
+
+# Riesgos de calidad (docs/RIESGOS.md) y defectos (DEFECTOS.md) de cada historia: completan la cadena
+# HU → CA → Riesgo → TC → implementación → resultado → bug que pide la guía.
+RIESGOS = {
+    "HU01": "R-10", "HU02": "R-11", "HU03": "R-12", "HU04": "R-13", "HU05": "R-14", "HU06": "R-15",
+    "HU07": "R-16", "HU08": "R-17", "HU09": "R-18", "HU10": "R-19, R-01 a R-05", "HU11": "R-20",
+    "HU12": "R-21", "HU13": "R-22", "HU14": "R-23",
+}
+DEFECTOS = {
+    # BUG-11: tras solicitar, la pestaña Catálogo no volvía al catálogo
+    "HU03": "BUG-03, BUG-11, BUG-13", "HU04": "BUG-12", "HU05": "BUG-04, BUG-09, BUG-10",
+    "HU07": "BUG-06, BUG-07, BUG-08", "HU10": "BUG-05, BUG-14",
+}
+
+
+def commits(hu):
+    """Commits de la rama que mencionan la historia (p. ej. "HU-05"): la implementación rastreable en git."""
+    try:
+        salida = subprocess.run(
+            ["git", "log", "--reverse", "--format=%h", "-E", f"--grep=HU-{hu[2:]}([^0-9]|$)", "HEAD"],
+            capture_output=True, text=True, check=True, cwd=Path(__file__).parent,
+        ).stdout.split()
+    except (OSError, subprocess.CalledProcessError):
+        return "—"
+    return ", ".join(f"`{c}`" for c in salida) if salida else "Sin commit etiquetado (base de la Parte 1)"
 
 # Cada criterio: (dado, cuando, entonces, tipo_prueba, pasos_y_datos, prueba_automatizada)
 # prueba_automatizada: referencia a la prueba existente o "" si está pendiente.
@@ -392,6 +418,10 @@ def render(h):
         lineas.append(f"- [ ] **CA-{hu}-{n:02d}:** **Dado** que {dado}, **cuando** {cuando}, **entonces** {entonces}.")
     lineas += [
         "",
+        "## Riesgos",
+        "",
+        f"{RIESGOS[hu]} (detalle en `docs/RIESGOS.md`).",
+        "",
         "## Casos de prueba",
         "",
         "Cada caso verifica el criterio con el mismo número (trazabilidad 1:1).",
@@ -465,16 +495,24 @@ def matriz_trazabilidad():
         "",
         "## Resumen por historia",
         "",
-        "| Historia | Título | Sprint | Criterios | Automatizados | Pendientes |",
-        "|---|---|---|---|---|---|",
+        "La implementación se rastrea por commits de la rama: el trabajo se hizo directamente en ella, sin ramas",
+        "`feature/hu-XX` ni Pull Requests. El resultado de cada caso es el de la última ejecución de la suite",
+        "(`docs/PLAN_PRUEBAS.md`, sección 6).",
+        "",
+        "| Historia | Título | Sprint | Criterios | Automatizados | Riesgos | Defectos | Commits |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for h in sorted(HISTORIAS, key=lambda h: (h["sprint"], h["id"])):
         c = len(h["criterios"])
         a = sum(1 for cr in h["criterios"] if cr[5])
-        lineas.append(f"| {h['id'][:2]}-{h['id'][2:]} | {h['titulo']} | {h['sprint']} | {c} | {a} | {c - a} |")
+        lineas.append(
+            f"| {h['id'][:2]}-{h['id'][2:]} | {h['titulo']} | {h['sprint']} | {c} | {a} | {RIESGOS[h['id']]} | "
+            f"{DEFECTOS.get(h['id'], '—')} | {commits(h['id'])} |"
+        )
     for h in HISTORIAS:
         hu = h["id"]
         lineas += ["", f"## {hu[:2]}-{hu[2:]}: {h['titulo']}", "",
+                   f"**Riesgos:** {RIESGOS[hu]} · **Defectos:** {DEFECTOS.get(hu, 'ninguno registrado')}", "",
                    "| Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |",
                    "|---|---|---|---|---|---|"]
         for n, (dado, cuando, entonces, tipo, _, auto) in enumerate(h["criterios"], 1):

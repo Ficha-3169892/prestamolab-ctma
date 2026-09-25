@@ -8,24 +8,30 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 
 ## Resumen por historia
 
-| Historia | Título | Sprint | Criterios | Automatizados | Pendientes |
-|---|---|---|---|---|---|
-| HU-05 | Registrar devolución | 5 | 5 | 5 | 0 |
-| HU-10 | Iniciar sesión y control de acceso por rol | 5 | 7 | 7 | 0 |
-| HU-13 | Registrar geolocalización de las operaciones | 5 | 6 | 6 | 0 |
-| HU-01 | Consultar equipos disponibles | 6 | 5 | 5 | 0 |
-| HU-02 | Consultar detalle de un equipo | 6 | 4 | 4 | 0 |
-| HU-06 | Conservar datos localmente sin conexión | 6 | 5 | 5 | 0 |
-| HU-11 | Gestionar actividades formativas (instructor) | 6 | 5 | 5 | 0 |
-| HU-12 | Gestionar inventario de equipos (instructor) | 6 | 5 | 5 | 0 |
-| HU-03 | Solicitar préstamo | 7 | 8 | 8 | 0 |
-| HU-04 | Consultar mis préstamos activos | 7 | 6 | 6 | 0 |
-| HU-14 | Revisar solicitudes de préstamo (instructor) | 7 | 4 | 4 | 0 |
-| HU-07 | Sincronizar datos con servicio remoto | 8 | 5 | 5 | 0 |
-| HU-08 | Adjuntar evidencia fotográfica | 8 | 5 | 5 | 0 |
-| HU-09 | Recibir recordatorio de devolución | 9 | 4 | 4 | 0 |
+La implementación se rastrea por commits de la rama: el trabajo se hizo directamente en ella, sin ramas
+`feature/hu-XX` ni Pull Requests. El resultado de cada caso es el de la última ejecución de la suite
+(`docs/PLAN_PRUEBAS.md`, sección 6).
+
+| Historia | Título | Sprint | Criterios | Automatizados | Riesgos | Defectos | Commits |
+|---|---|---|---|---|---|---|---|
+| HU-05 | Registrar devolución | 5 | 5 | 5 | R-14 | BUG-04, BUG-09, BUG-10 | `de7f2f4`, `2795f7a` |
+| HU-10 | Iniciar sesión y control de acceso por rol | 5 | 7 | 7 | R-19, R-01 a R-05 | BUG-05, BUG-14 | `792a4ab`, `00035b6`, `aa34aaa`, `22342ae` |
+| HU-13 | Registrar geolocalización de las operaciones | 5 | 6 | 6 | R-22 | — | `de7f2f4`, `ca16808` |
+| HU-01 | Consultar equipos disponibles | 6 | 5 | 5 | R-10 | — | `6898c91`, `ca16808` |
+| HU-02 | Consultar detalle de un equipo | 6 | 4 | 4 | R-11 | — | Sin commit etiquetado (base de la Parte 1) |
+| HU-06 | Conservar datos localmente sin conexión | 6 | 5 | 5 | R-15 | — | `00035b6`, `b32b6d8`, `ca16808` |
+| HU-11 | Gestionar actividades formativas (instructor) | 6 | 5 | 5 | R-20 | — | `3b7cf28`, `37d707e` |
+| HU-12 | Gestionar inventario de equipos (instructor) | 6 | 5 | 5 | R-21 | — | `2d90f65`, `37d707e` |
+| HU-03 | Solicitar préstamo | 7 | 8 | 8 | R-12 | BUG-03, BUG-11, BUG-13 | `de664cb`, `cad5ad7`, `96376f0` |
+| HU-04 | Consultar mis préstamos activos | 7 | 6 | 6 | R-13 | BUG-12 | `ca16808` |
+| HU-14 | Revisar solicitudes de préstamo (instructor) | 7 | 4 | 4 | R-23 | — | `6898c91`, `86e292b` |
+| HU-07 | Sincronizar datos con servicio remoto | 8 | 5 | 5 | R-16 | BUG-06, BUG-07, BUG-08 | `b32b6d8`, `2795f7a` |
+| HU-08 | Adjuntar evidencia fotográfica | 8 | 5 | 5 | R-17 | — | `c78237c`, `8f16c69`, `97b2b00` |
+| HU-09 | Recibir recordatorio de devolución | 9 | 4 | 4 | R-18 | — | `c659e4d`, `37d707e` |
 
 ## HU-01: Consultar equipos disponibles
+
+**Riesgos:** R-10 · **Defectos:** ninguno registrado
 
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
@@ -37,6 +43,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 
 ## HU-02: Consultar detalle de un equipo
 
+**Riesgos:** R-11 · **Defectos:** ninguno registrado
+
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
 | CA-HU02-01 | Dado que estoy en el catálogo, cuando toco un equipo, entonces se abre el detalle con id, nombre, categoría y estado de ese equipo. | TC-HU02-01 | UI | Automatizada | `PrestamoUiTest.TC02_VerDetalleEquipoValido, DetalleEquipo_VerificaDisponibilidadVisible`<br>`PrestamoViewModelTest.TC-02` |
@@ -45,6 +53,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 | CA-HU02-04 | Dado que estoy viendo el detalle, cuando el estado del equipo cambia en la fuente de datos, entonces el detalle muestra el estado nuevo sin volver a abrirlo. | TC-HU02-04 | Unitaria | Automatizada | `PrestamoViewModelTest.Detalle seleccionado se actualiza cuando cambia el estado del equipo` |
 
 ## HU-03: Solicitar préstamo
+
+**Riesgos:** R-12 · **Defectos:** BUG-03, BUG-11, BUG-13
 
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
@@ -59,6 +69,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 
 ## HU-04: Consultar mis préstamos activos
 
+**Riesgos:** R-13 · **Defectos:** BUG-12
+
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
 | CA-HU04-01 | Dado que hay solicitudes de varios usuarios, cuando abro "Mis Solicitudes", entonces veo solo las del usuario con sesión iniciada. | TC-HU04-01 | Unitaria | Automatizada | `PrestamoViewModelTest.Mis Solicitudes del estudiante solo muestra las suyas y el instructor ve todas` |
@@ -70,6 +82,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 
 ## HU-05: Registrar devolución
 
+**Riesgos:** R-14 · **Defectos:** BUG-04, BUG-09, BUG-10
+
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
 | CA-HU05-01 | Dado que tengo préstamos en distintos estados, cuando abro "Mis Solicitudes", entonces veo "Registrar devolución" solo en los préstamos PRESTADO; las solicitudes SOLICITADAS muestran "Cancelar Solicitud". | TC-HU05-01 | UI + Unitaria | Automatizada | `DevolucionUiTest.TC_HU05_01_SoloElPrestamoPrestadoOfreceRegistrarDevolucion`<br>`DevolucionViewModelTest.TC-HU05-01` |
@@ -79,6 +93,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 | CA-HU05-05 | Dado que el préstamo ya está DEVUELTO, cuando intento devolverlo otra vez, entonces la operación se rechaza sin cambios. | TC-HU05-05 | Unitaria (TDD) | Automatizada | `RoomPrestamoRepositoryTest.TC_HU05_05_DevolverUnPrestamoYaDevuelto_SeRechazaSinCambios` |
 
 ## HU-06: Conservar datos localmente sin conexión
+
+**Riesgos:** R-15 · **Defectos:** ninguno registrado
 
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
@@ -90,6 +106,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 
 ## HU-07: Sincronizar datos con servicio remoto
 
+**Riesgos:** R-16 · **Defectos:** BUG-06, BUG-07, BUG-08
+
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
 | CA-HU07-01 | Dado que hay registros PENDIENTES, cuando se recupera la conexión, entonces se envían a Supabase y quedan SINCRONIZADOS. | TC-HU07-01 | Integración | Automatizada | `SincronizadorPrestamosTest.TC_HU07_01_PendientesSeEnvianYQuedanSincronizados`<br>`SupabasePrestamosDataSourceTest.TC-HU07-01` |
@@ -99,6 +117,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 | CA-HU07-05 | Dado que el servidor responde 5xx o se agota el tiempo de espera, cuando se sincroniza, entonces se reintenta con espera exponencial y el registro sigue PENDIENTE, sin cierre inesperado. | TC-HU07-05 | Integración | Automatizada | `SincronizacionWorkerTest.TC_HU07_05_Error5xx_PideReintentarConEsperaExponencial`<br>`SincronizadorPrestamosTest.TC_HU07_05_Error5xxOTiempoAgotadoDejaLosRegistrosPendientes`<br>`SupabasePrestamosDataSourceTest.TC-HU07-05` |
 
 ## HU-08: Adjuntar evidencia fotográfica
+
+**Riesgos:** R-17 · **Defectos:** ninguno registrado
 
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
@@ -110,6 +130,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 
 ## HU-09: Recibir recordatorio de devolución
 
+**Riesgos:** R-18 · **Defectos:** ninguno registrado
+
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
 | CA-HU09-01 | Dado que un préstamo pasa a PRESTADO, cuando se registra el cambio, entonces se programa un recordatorio 30 minutos antes de la fecha de fin. | TC-HU09-01 | Integración | Automatizada | `WorkManagerRecordatoriosTest.TC_HU09_01_SeProgramaUnTrabajoParaLaHoraDelAviso`<br>`PlanRecordatoriosTest.TC_HU09_01_PrestamoPrestado_SeProgramaTreintaMinutosAntesDelFin`<br>`CoordinadorRecordatoriosTest.TC_HU09_01_AlAprobarseUnaSolicitudSeProgramaSuRecordatorio` |
@@ -118,6 +140,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 | CA-HU09-04 | Dado que uso Android 13 o superior y no concedí POST_NOTIFICATIONS, cuando se debe programar un recordatorio, entonces la app pide el permiso; si lo niego, el préstamo se registra igual sin fallar. | TC-HU09-04 | Instrumentada | Automatizada | `RecordatorioWorkerTest.TC_HU09_04_SinPermiso_NoMuestraNadaYNoFalla`<br>`PermisoNotificacionesTest.TC_HU09_04_EnAndroid13SinPermiso_SePideAlTenerUnPrestamoEntregado`<br>`PermisoNotificacionesUiTest.TC_HU09_04_ConPrestamoEntregadoSePideElPermiso_YNegarloNoBloqueaLaApp (se ejecuta aparte, tras revocar el permiso)` |
 
 ## HU-10: Iniciar sesión y control de acceso por rol
+
+**Riesgos:** R-19, R-01 a R-05 · **Defectos:** BUG-05, BUG-14
 
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
@@ -131,6 +155,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 
 ## HU-11: Gestionar actividades formativas (instructor)
 
+**Riesgos:** R-20 · **Defectos:** ninguno registrado
+
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
 | CA-HU11-01 | Dado que soy INSTRUCTOR, cuando creo una actividad con título, descripción, ambiente y fecha, entonces la actividad queda guardada y aparece en la lista. | TC-HU11-01 | Integración | Automatizada | `RoomActividadRepositoryTest.TC_HU11_01_CrearActividad_QuedaGuardadaYApareceEnLaLista`<br>`ActividadesViewModelTest.TC-HU11-01`<br>`ActividadesUiTest.TC_HU11_01_CrearActividad_ApareceEnLaLista` |
@@ -140,6 +166,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 | CA-HU11-05 | Dado que soy ESTUDIANTE, cuando abro Actividades, entonces las veo en modo solo lectura, sin opciones de crear, editar ni eliminar. | TC-HU11-05 | UI | Automatizada | `ActividadesUiTest.TC_HU11_05_ElEstudianteVeLasActividadesEnSoloLectura`<br>`ControlAccesoTest.TC-HU11-05`<br>`ActividadesViewModelTest.TC-HU11-05` |
 
 ## HU-12: Gestionar inventario de equipos (instructor)
+
+**Riesgos:** R-21 · **Defectos:** ninguno registrado
 
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
@@ -151,6 +179,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 
 ## HU-13: Registrar geolocalización de las operaciones
 
+**Riesgos:** R-22 · **Defectos:** ninguno registrado
+
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|
 | CA-HU13-01 | Dado que no he concedido el permiso de ubicación, cuando toco "Capturar ubicación actual" al registrar una devolución, entonces la app pide en ese momento ACCESS_FINE_LOCATION (junto con COARSE, como exige Android 12+), nunca al abrirse ni en segundo plano. | TC-HU13-01 | Instrumentada | Automatizada | `PermisoUbicacionUiTest.TC_HU13_01_ElPermisoSePideAlCapturarLaUbicacion_YNegarloNoBloqueaLaDevolucion (se ejecuta aparte, tras revocar la ubicación)` |
@@ -161,6 +191,8 @@ la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.
 | CA-HU13-06 | Dado que hay registros con coordenadas, cuando se sincroniza, entonces latitud y longitud llegan a Supabase (`loans` y `returns`). | TC-HU13-06 | Integración | Automatizada | `SincronizadorPrestamosTest.TC_HU13_06_LasCoordenadasDePrestamosYDevolucionesLleganASupabase`<br>`SupabasePrestamosDataSourceTest.TC-HU13-06` |
 
 ## HU-14: Revisar solicitudes de préstamo (instructor)
+
+**Riesgos:** R-23 · **Defectos:** ninguno registrado
 
 | Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |
 |---|---|---|---|---|---|

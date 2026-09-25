@@ -1,5 +1,34 @@
 # Riesgos técnicos — PréstamoLab CTMA
 
+Dos grupos: los **riesgos de calidad por historia** (R-10 a R-23), que orientan qué probar en cada HU, y los
+**riesgos de seguridad** (R-01 a R-09), tratados en el Sprint 9. La matriz `docs/MATRIZ_TRAZABILIDAD.md` enlaza
+cada historia con sus riesgos, casos de prueba, commits y defectos.
+
+## Riesgos de calidad por historia
+
+Probabilidad e impacto: A (alto), M (medio), B (bajo). Es una valoración cualitativa hecha al documentar los riesgos (2026-09-25) a partir de los defectos encontrados y de lo crítico de cada flujo; el equipo puede ajustarla. La prioridad
+sale de combinar ambos: A·A y A·M se prueban primero y con más casos. "Se materializó" indica los defectos reales en
+los que el riesgo ocurrió (`DEFECTOS.md`).
+
+| ID | Historia | Riesgo | Prob. | Impacto | Prioridad | Mitigación: casos de prueba | Se materializó |
+|----|----------|--------|-------|---------|-----------|-----------------------------|----------------|
+| R-10 | HU-01 | El catálogo muestra un estado desactualizado y el estudiante intenta pedir un equipo que ya no está disponible | M | M | Media | TC-HU01-01, TC-HU01-02, TC-HU02-04 (el estado llega por Flow desde Room) | — |
+| R-11 | HU-02 | Un id de equipo inexistente (enlace viejo, registro borrado) cierra la app | M | A | Alta | TC-HU02-02 | — |
+| R-12 | HU-03 | Se crean solicitudes duplicadas o con datos fuera de los límites (propósito, duración, ambiente) | A | A | Alta | TC-HU03-01 a TC-HU03-05 (valores límite, doble pulsación), ciclo TDD de `ReglasSolicitud` | BUG-03, BUG-13 |
+| R-13 | HU-04 | Mis préstamos muestra datos de otro usuario o datos incompletos | M | A | Alta | TC-HU04-01, TC-HU04-02 | BUG-12 |
+| R-14 | HU-05 | Se registra una devolución sobre un préstamo no activo, dos veces, o no se puede confirmar | A | A | Alta | TC-HU05-01, TC-HU05-02, TC-HU05-05, recorrido `RegresionFlujoCriticoUiTest` | BUG-04, BUG-09, BUG-10 |
+| R-15 | HU-06 | Se pierden datos locales al reiniciar la app o al migrar la base de Room | M | A | Alta | TC-HU06-01 a TC-HU06-04 (`MigracionTest`, `PersistenciaSinConexionTest`) | — |
+| R-16 | HU-07 | La sincronización pisa cambios locales o falla por diferencias con el esquema remoto | A | A | Alta | TC-HU07-01 a TC-HU07-05 (MockWebServer: 401, 404, 5xx, timeout) | BUG-06, BUG-07, BUG-08 |
+| R-17 | HU-08 | Una foto se pierde o queda sin subir sin que el usuario lo sepa | M | M | Media | TC-HU08-02, TC-HU08-05, estados Local/Subiendo/Sincronizada/Fallida (`EstadoEvidenciaTest`) | — |
+| R-18 | HU-09 | El recordatorio no llega, o llega para un préstamo ya devuelto | M | M | Media | TC-HU09-01, TC-HU09-03, TC-HU09-04 | — |
+| R-19 | HU-10 | Un rol accede a funciones del otro, o nadie puede iniciar sesión | M | A | Alta | TC-HU10-01 a TC-HU10-07 y R-01 a R-05 (`verificar_seguridad.py`) | BUG-05, BUG-14 |
+| R-20 | HU-11 | Se guardan actividades inválidas, o el estudiante puede modificarlas | B | M | Baja | TC-HU11-02, TC-HU11-05 | — |
+| R-21 | HU-12 | Eliminar un equipo con préstamos deja el historial inconsistente | M | A | Alta | TC-HU12-04, TC-HU12-05 | — |
+| R-22 | HU-13 | Sin GPS o sin permiso, la devolución se bloquea; o la ubicación se captura sin que el usuario lo decida | M | M | Media | TC-HU13-01, TC-HU13-05 (`docs/CAPACIDAD_GPS.md`) | — |
+| R-23 | HU-14 | Se aprueba una solicitud ya cancelada, o se rechaza sin motivo | M | M | Media | TC-HU14-03, TC-HU14-04 | — |
+
+## Riesgos de seguridad
+
 Los riesgos R-01 a R-05 se aceptaron durante los Sprints 5 a 8 y se trataron en el **Sprint 9** con
 `docs/supabase/009_seguridad.sql`. La verificación es reproducible con `docs/seguridad/verificar_seguridad.py`
 (resultados en `docs/seguridad/README.md`).
