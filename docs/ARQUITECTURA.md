@@ -7,55 +7,25 @@ muestra las clases reales del código (`app/src/main/java/com/example/prestamola
 
 ```mermaid
 flowchart TB
-    subgraph UI["UI · Jetpack Compose (ui/)"]
-        NAV["AppNavHost + ControlAcceso<br/>rutas protegidas por rol"]
-        SCR["Pantallas: Catálogo, Detalle, Solicitud,<br/>Mis Solicitudes, Devolución, Evidencias,<br/>Gestión, Inventario, Actividades, Login"]
-    end
+    UI["<b>UI · Jetpack Compose</b><br/>Catálogo · Detalle · Solicitud · Mis Solicitudes · Devolución<br/>Evidencias · Gestión · Inventario · Actividades · Login<br/>AppNavHost + ControlAcceso (rutas por rol)"]
+    VM["<b>ViewModel · StateFlow&lt;UiState&gt;</b><br/>PrestamoViewModel · DevolucionViewModel · EvidenciasViewModel<br/>InventarioViewModel · ActividadesViewModel · LoginViewModel · SesionViewModel"]
+    DOM["<b>Dominio</b><br/>ReglasSolicitud · ReglasInventario<br/>RevisionSolicitud · FiltroCatalogo · PlanRecordatorios"]
+    DEV["<b>Dispositivo</b><br/>FusedLocationProvider (GPS)<br/>cámara · notificaciones"]
+    REPO["<b>Repository</b><br/>PrestamoRepository · EvidenciaRepository<br/>ActividadRepository · AuthRepository"]
+    LOCAL[("<b>Local: fuente canónica</b><br/>Room v8 · DataStore (token cifrado con Keystore)<br/>fotos en files/evidencias (FileProvider)")]
+    WM["<b>WorkManager</b><br/>SincronizacionWorker → SincronizadorPrestamos<br/>RecordatorioWorker"]
+    REST["<b>Remoto</b><br/>SupabaseRestClient (OkHttp)<br/>SupabasePrestamosDataSource · SupabaseUsuariosDataSource"]
+    API[("<b>Supabase</b><br/>PostgREST · RPC · Storage · RLS por rol")]
 
-    subgraph VM["ViewModel · StateFlow&lt;UiState&gt;"]
-        VMS["PrestamoViewModel · DevolucionViewModel<br/>EvidenciasViewModel · InventarioViewModel<br/>ActividadesViewModel · LoginViewModel · SesionViewModel"]
-    end
-
-    subgraph DOM["Dominio (model/)"]
-        REG["ReglasSolicitud · ReglasInventario<br/>RevisionSolicitud · FiltroCatalogo · PlanRecordatorios"]
-    end
-
-    subgraph REPO["Repository (data/repository, data/auth)"]
-        PR["PrestamoRepository<br/>(RoomPrestamoRepository)"]
-        ER["EvidenciaRepository"]
-        AR["ActividadRepository"]
-        AUTH["AuthRepository<br/>(UsuariosAuthRepository)"]
-    end
-
-    subgraph LOCAL["Local: fuente canónica"]
-        ROOM[("Room v8<br/>equipments · loans · returns<br/>activities · evidences")]
-        DS[("DataStore<br/>sesión (token cifrado con Keystore)<br/>preferencias del catálogo")]
-        FILES[("Archivos privados<br/>files/evidencias (FileProvider)")]
-    end
-
-    subgraph SYNC["Sincronización en segundo plano"]
-        WM["WorkManager<br/>SincronizacionWorker → SincronizadorPrestamos<br/>RecordatorioWorker"]
-    end
-
-    subgraph REMOTO["Remoto"]
-        REST["SupabaseRestClient (OkHttp)<br/>SupabasePrestamosDataSource<br/>SupabaseUsuariosDataSource"]
-        API[("Supabase<br/>PostgREST · RPC · Storage<br/>RLS por rol")]
-    end
-
-    DEV["Dispositivo<br/>FusedLocationProvider (GPS)<br/>cámara · notificaciones"]
-
-    SCR -- eventos --> VMS
-    VMS -- UiState --> SCR
-    NAV --- SCR
-    VMS --> REG
-    VMS --> PR & ER & AR & AUTH
-    VMS --> DEV
-    PR & ER & AR -- "lee Flow / escribe" --> ROOM
-    ER --> FILES
-    AUTH --> DS
-    AUTH --> REST
-    PR & ER & AR -- "programa" --> WM
-    WM -- "PENDIENTE → envía<br/>remoto → Room" --> ROOM
+    UI -- eventos --> VM
+    VM -- UiState --> UI
+    VM --> DOM
+    VM --> DEV
+    VM --> REPO
+    REPO -- "lee Flow / escribe PENDIENTE" --> LOCAL
+    REPO -- "programa" --> WM
+    REPO -- "login / logout" --> REST
+    WM -- "envía PENDIENTE,<br/>guarda lo remoto" --> LOCAL
     WM --> REST
     REST -- "HTTPS + apikey + x-sesion" --> API
 ```

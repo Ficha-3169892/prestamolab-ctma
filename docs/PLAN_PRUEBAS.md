@@ -65,8 +65,8 @@ CA-HUxx-nn tiene exactamente un caso TC-HUxx-nn.
 
 | Suite | Pruebas | Resultado |
 |---|---|---|
-| Unitarias (`testDebugUnitTest`) | 187 | En verde (también en el CI) |
-| Instrumentadas y de UI (Xiaomi) | 156 | 153 en verde en la suite completa; las 3 que requieren condiciones especiales (TC-HU13-01, TC-HU09-04 y la de punta a punta contra Supabase real) en verde ejecutadas aparte (secciones 7 y 7b) |
+| Unitarias (`testDebugUnitTest`) | 202 | En verde, 2026-09-25 (también en el CI, junto con lint) |
+| Instrumentadas y de UI (Xiaomi) | 160 | 2026-09-25, versión de entrega: 157 en verde en la suite completa, incluida la regresión del flujo crítico (`RegresionFlujoCriticoUiTest`). Las 3 que requieren condiciones especiales (TC-HU13-01, TC-HU09-04 y la de punta a punta contra Supabase real) se omiten en la suite y se ejecutan aparte (secciones 7 y 7b); su última ejecución en verde fue en versiones anteriores de esta semana |
 | Seguridad del servidor (`docs/seguridad/verificar_seguridad.py`) | 26 | En verde contra Supabase real |
 | Criterios automatizados | 74 de 74 (100 %) | Ver matriz |
 
