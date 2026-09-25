@@ -1,10 +1,11 @@
 name: Android CI/CD Pipeline
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ "main", "master", "develop" ]
+    branches: [ "main", "master", "develop", "feat/*", "feat/Sergio" ]
   pull_request:
-    branches: [ "main", "master", "develop" ]
+    branches: [ "main", "master", "develop", "feat/*", "feat/Sergio" ]
 
 jobs:
   build-and-test:
@@ -21,10 +22,12 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Create secrets.properties
+      - name: Ensure secrets.properties exists
         run: |
-          echo "SUPABASE_URL=https://your-project-id.supabase.co" > secrets.properties
-          echo "SUPABASE_ANON_KEY=your-supabase-anon-key" >> secrets.properties
+          if [ ! -f secrets.properties ]; then
+            echo "SUPABASE_URL=https://wlsklpqyrxricwktpcle.supabase.co" > secrets.properties
+            echo "SUPABASE_ANON_KEY=sb_publishable_XVdpV1KZtu80FBJtCk2m6w__IlhPKKH" >> secrets.properties
+          fi
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
