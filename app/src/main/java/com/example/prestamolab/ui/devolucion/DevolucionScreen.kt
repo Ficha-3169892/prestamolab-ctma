@@ -12,7 +12,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.prestamolab.model.CondicionEquipo
 import java.util.Locale
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 private val PERMISOS_UBICACION = arrayOf(
     // Android 12+ exige pedir FINE junto con COARSE; el usuario puede conceder solo la aproximada
@@ -39,7 +39,7 @@ private fun tienePermisoUbicacion(context: Context) = PERMISOS_UBICACION.any {
 /** Conecta la pantalla con el ViewModel y gestiona el permiso de ubicación en tiempo de ejecución. */
 @Composable
 fun DevolucionRoute(viewModel: DevolucionViewModel, onVolver: () -> Unit, onAdjuntarEvidenciaClick: () -> Unit) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // El permiso se pide solo cuando el usuario toca el botón (mínimo privilegio)

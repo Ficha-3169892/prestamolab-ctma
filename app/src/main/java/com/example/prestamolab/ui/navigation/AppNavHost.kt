@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
@@ -55,12 +54,13 @@ import com.example.prestamolab.ui.sesion.EstadoSesion
 import com.example.prestamolab.ui.sesion.SesionViewModel
 import com.example.prestamolab.ui.solicitud.SolicitudScreen
 import com.example.prestamolab.ui.solicitudes.MisSolicitudesScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /** Raíz de la app: login mientras no haya sesión; área autenticada según el rol. */
 @Composable
 fun AppNavHost() {
     val sesionViewModel: SesionViewModel = viewModel(factory = SesionViewModel.Factory)
-    val estado by sesionViewModel.estado.collectAsState()
+    val estado by sesionViewModel.estado.collectAsStateWithLifecycle()
 
     when (val sesion = estado) {
         EstadoSesion.Cargando -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -69,7 +69,7 @@ fun AppNavHost() {
 
         EstadoSesion.SinSesion -> {
             val loginViewModel: LoginViewModel = viewModel(factory = LoginViewModel.Factory)
-            val uiState by loginViewModel.uiState.collectAsState()
+            val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
             LoginScreen(
                 uiState = uiState,
                 onIdentificadorChange = loginViewModel::onIdentificadorChanged,
@@ -132,7 +132,7 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
         key = "prestamos-${usuario.id}",
         factory = PrestamoViewModel.factory(usuario)
     )
-    val uiState by prestamoViewModel.uiState.collectAsState()
+    val uiState by prestamoViewModel.uiState.collectAsStateWithLifecycle()
     val puedeSolicitar = ControlAcceso.puedeSolicitarPrestamo(usuario.rol)
 
     // CA-HU09-02: la notificación de recordatorio abre la pantalla del préstamo
@@ -334,7 +334,7 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
                 composable(Rutas.INVENTARIO) {
                     RutaProtegida(Rutas.INVENTARIO, usuario, onVolver = { navController.popBackStack() }) {
                         val viewModel: InventarioViewModel = viewModel(factory = InventarioViewModel.factory(usuario))
-                        val estado by viewModel.uiState.collectAsState()
+                        val estado by viewModel.uiState.collectAsStateWithLifecycle()
                         InventarioScreen(
                             equipos = estado.equipos,
                             mensajeError = estado.mensajeError,
@@ -348,7 +348,7 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
                 composable(Rutas.ACTIVIDADES) {
                     RutaProtegida(Rutas.ACTIVIDADES, usuario, onVolver = { navController.popBackStack() }) {
                         val viewModel: ActividadesViewModel = viewModel(factory = ActividadesViewModel.factory(usuario))
-                        val estado by viewModel.uiState.collectAsState()
+                        val estado by viewModel.uiState.collectAsStateWithLifecycle()
                         ActividadesScreen(
                             actividades = estado.actividades,
                             puedeGestionar = estado.puedeGestionar,
@@ -396,7 +396,7 @@ private fun AreaAutenticada(usuario: Usuario, onCerrarSesion: () -> Unit) {
 @Composable
 private fun FormularioActividadRuta(usuario: Usuario, actividadId: Int?, onVolver: () -> Unit) {
     val viewModel: ActividadesViewModel = viewModel(factory = ActividadesViewModel.factory(usuario))
-    val estado by viewModel.uiState.collectAsState()
+    val estado by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel) {
         actividadId?.let(viewModel::editarActividad)
         viewModel.eventos.collect { evento ->
@@ -423,7 +423,7 @@ private fun FormularioActividadRuta(usuario: Usuario, actividadId: Int?, onVolve
 @Composable
 private fun FormularioEquipoRuta(usuario: Usuario, equipoId: Int?, onVolver: () -> Unit) {
     val viewModel: InventarioViewModel = viewModel(factory = InventarioViewModel.factory(usuario))
-    val estado by viewModel.uiState.collectAsState()
+    val estado by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel) {
         equipoId?.let(viewModel::editarEquipo)
         viewModel.eventos.collect { evento ->

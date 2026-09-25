@@ -450,9 +450,47 @@ def matriz():
     return "\n".join(lineas)
 
 
+def matriz_trazabilidad():
+    """docs/MATRIZ_TRAZABILIDAD.md: cada criterio con su texto, su caso y la prueba que lo verifica."""
+    total = sum(len(h["criterios"]) for h in HISTORIAS)
+    automat = sum(1 for h in HISTORIAS for cr in h["criterios"] if cr[5])
+    lineas = [
+        "# Matriz de trazabilidad: PréstamoLab CTMA (Parte 2)",
+        "",
+        "Generada por `docs/backlog/generar_issues.py`; no editar a mano. Cada criterio de aceptación",
+        "CA-HUxx-nn tiene exactamente un caso de prueba TC-HUxx-nn (trazabilidad 1:1), y cada caso apunta a",
+        "la prueba automatizada que lo verifica (`Clase.metodo`) o queda como pendiente.",
+        "",
+        f"**Cobertura:** {automat} de {total} criterios automatizados ({automat * 100 // total} %).",
+        "",
+        "## Resumen por historia",
+        "",
+        "| Historia | Título | Sprint | Criterios | Automatizados | Pendientes |",
+        "|---|---|---|---|---|---|",
+    ]
+    for h in sorted(HISTORIAS, key=lambda h: (h["sprint"], h["id"])):
+        c = len(h["criterios"])
+        a = sum(1 for cr in h["criterios"] if cr[5])
+        lineas.append(f"| {h['id'][:2]}-{h['id'][2:]} | {h['titulo']} | {h['sprint']} | {c} | {a} | {c - a} |")
+    for h in HISTORIAS:
+        hu = h["id"]
+        lineas += ["", f"## {hu[:2]}-{hu[2:]}: {h['titulo']}", "",
+                   "| Criterio | Dado / cuando / entonces | Caso | Tipo | Estado | Prueba |",
+                   "|---|---|---|---|---|---|"]
+        for n, (dado, cuando, entonces, tipo, _, auto) in enumerate(h["criterios"], 1):
+            estado = "Automatizada" if auto else "Pendiente"
+            pruebas = "<br>".join(f"`{p.strip()}`" for p in auto.split(";")) if auto else "—"
+            lineas.append(
+                f"| CA-{hu}-{n:02d} | Dado que {dado}, cuando {cuando}, entonces {entonces}. | TC-{hu}-{n:02d} | {tipo} | {estado} | {pruebas} |"
+            )
+    lineas.append("")
+    return "\n".join(lineas)
+
+
 if __name__ == "__main__":
     SALIDA.mkdir(parents=True, exist_ok=True)
     for h in HISTORIAS:
         (SALIDA / f"{h['id']}.md").write_text(render(h), encoding="utf-8", newline="\n")
     (SALIDA / "README.md").write_text(matriz(), encoding="utf-8", newline="\n")
+    (SALIDA.parent.parent / "MATRIZ_TRAZABILIDAD.md").write_text(matriz_trazabilidad(), encoding="utf-8", newline="\n")
     print(f"{len(HISTORIAS)} historias generadas en {SALIDA}")

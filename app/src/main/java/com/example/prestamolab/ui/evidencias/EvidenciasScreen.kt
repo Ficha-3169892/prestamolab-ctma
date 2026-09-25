@@ -32,11 +32,12 @@ import com.example.prestamolab.model.EtapaEvidencia
 import com.example.prestamolab.model.Evidencia
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /** Conecta la pantalla con la cámara: el permiso se pide solo al tocar "Adjuntar evidencia" (CA-HU08-01). */
 @Composable
 fun EvidenciasRoute(viewModel: EvidenciasViewModel, solicitudId: Int, etapa: EtapaEvidencia, onVolver: () -> Unit) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val contexto = LocalContext.current
 
     val camara = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture(), viewModel::onFotoTomada)
