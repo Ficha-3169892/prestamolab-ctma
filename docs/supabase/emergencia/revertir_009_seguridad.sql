@@ -1,3 +1,4 @@
+-- NO FORMA PARTE DE LA SECUENCIA 001 a 009: no ejecutar al preparar la base de datos.
 -- PréstamoLab CTMA: SOLO PARA EMERGENCIAS. Deshace 009_seguridad.sql y vuelve al acceso abierto de 003 a 008
 -- (riesgos R-01 a R-05 otra vez abiertos). Úsalo si hay que volver a una versión de la app sin la cabecera
 -- x-sesion. Es seguro repetirlo.

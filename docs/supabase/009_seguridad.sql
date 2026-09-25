@@ -1,7 +1,8 @@
 -- PréstamoLab CTMA: seguridad en el servidor (Sprint 9; trata R-01 a R-05 de docs/RIESGOS.md).
 -- Ejecutar en Supabase > SQL Editor DESPUÉS de 001 a 008 y ANTES de instalar la versión de la app que envía
 -- la cabecera x-sesion: las versiones anteriores dejan de poder iniciar sesión.
--- Es seguro repetirlo. Para volver atrás en una emergencia: 009_revertir_seguridad.sql.
+-- Es seguro repetirlo. Para volver atrás en una emergencia: emergencia/revertir_009_seguridad.sql (NO se ejecuta
+-- como parte de la secuencia 001 a 009).
 --
 -- Sin Supabase Auth, la identidad se prueba con un token de sesión que emite iniciar_sesion() y que la app
 -- envía en la cabecera x-sesion; las políticas RLS la leen con usuario_actual() y rol_actual().
