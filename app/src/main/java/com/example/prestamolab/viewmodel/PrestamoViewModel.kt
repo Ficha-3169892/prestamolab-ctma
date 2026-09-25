@@ -3,6 +3,10 @@ package com.example.prestamolab.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.prestamolab.data.repository.PrestamoRepository
+import com.example.prestamolab.data.repository.RoomPrestamoRepository
+import com.example.prestamolab.model.CategoriaEquipo
+import com.example.prestamolab.model.Equipo
+import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.SolicitudPrestamo
 import com.example.prestamolab.model.ambienteValido
@@ -35,6 +39,21 @@ class PrestamoViewModel(private val repository: PrestamoRepository) : ViewModel(
         }
     }
 
+    fun sincronizarEquipos() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(guardando = true, mensajeError = null, mensajeExito = null) }
+            try {
+                repository.sincronizarEquipos()
+                if (repository is RoomPrestamoRepository) {
+                    repository.sincronizarSolicitudes()
+                }
+                _uiState.update { it.copy(guardando = false, mensajeExito = "Sincronización completada con éxito.") }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(guardando = false, mensajeError = "Error de sincronización: ${e.localizedMessage}") }
+            }
+        }
+    }
+
     fun seleccionarEquipo(equipoId: Int) {
         viewModelScope.launch {
             repository.obtenerEquipo(equipoId).collect { equipo ->
@@ -51,7 +70,13 @@ class PrestamoViewModel(private val repository: PrestamoRepository) : ViewModel(
         }
     }
 
-    fun guardarSolicitud(equipoId: Int, ambiente: String, proposito: String, duracion: Int) {
+    fun guardarSolicitud(
+        equipoId: Int,
+        ambiente: String,
+        proposito: String,
+        duracion: Int,
+        onSuccess: () -> Unit
+    ) {
         if (_uiState.value.guardando) return
 
         val errores = mutableListOf < String > ()
@@ -71,12 +96,11 @@ class PrestamoViewModel(private val repository: PrestamoRepository) : ViewModel(
             proposito = proposito, duracionHoras = duracion, estado = EstadoSolicitud.SOLICITADA
         )
 
-        // Las operaciones de escritura ahora son asíncronas
         viewModelScope.launch {
             val resultado = repository.crearSolicitud(nuevaSolicitud)
             resultado.onSuccess {
-                // No necesitamos recargar datos, el Flow lo hace solo
                 _uiState.update { it.copy(guardando = false) }
+                onSuccess()
             }.onFailure { err ->
                 _uiState.update { it.copy(guardando = false, mensajeError = err.message) }
             }
@@ -86,13 +110,97 @@ class PrestamoViewModel(private val repository: PrestamoRepository) : ViewModel(
     fun cancelarSolicitud(solicitudId: Int) {
         viewModelScope.launch {
             val resultado = repository.cancelarSolicitud(solicitudId)
-            resultado.onFailure { err ->
+            resultado.onSuccess {
+                _uiState.update { state ->
+                    val actualizadas = state.solicitudes.map { if (it.id == solicitudId) it.copy(estado = EstadoSolicitud.CANCELADA) else it }
+                    val seleccionada = if (state.solicitudSeleccionada?.id == solicitudId) state.solicitudSeleccionada.copy(estado = EstadoSolicitud.CANCELADA) else state.solicitudSeleccionada
+                    state.copy(solicitudes = actualizadas, solicitudSeleccionada = seleccionada)
+                }
+            }.onFailure { err ->
                 _uiState.update { it.copy(mensajeError = err.message) }
             }
         }
     }
 
+    // Funciones Admin CRUD de Equipos
+    fun agregarEquipo(
+        nombre: String,
+        categoria: CategoriaEquipo,
+        estado: EstadoEquipo,
+        userRole: String,
+        onSuccess: () -> Unit
+    ) {
+        if (userRole != "admin") {
+            _uiState.update { it.copy(mensajeError = "Acceso denegado: Requiere rol de Administrador") }
+            return
+        }
+        if (nombre.isBlank()) {
+            _uiState.update { it.copy(mensajeError = "El nombre del equipo es obligatorio.") }
+            return
+        }
+        viewModelScope.launch {
+            val nuevo = Equipo(id = 0, nombre = nombre, categoria = categoria, estado = estado)
+            val res = repository.agregarEquipo(nuevo)
+            res.onSuccess { onSuccess() }
+                .onFailure { err -> _uiState.update { it.copy(mensajeError = err.message) } }
+        }
+    }
+
+    fun editarEquipo(
+        id: Int,
+        nombre: String,
+        categoria: CategoriaEquipo,
+        estado: EstadoEquipo,
+        userRole: String,
+        onSuccess: () -> Unit
+    ) {
+        if (userRole != "admin") {
+            _uiState.update { it.copy(mensajeError = "Acceso denegado: Requiere rol de Administrador") }
+            return
+        }
+        if (nombre.isBlank()) {
+            _uiState.update { it.copy(mensajeError = "El nombre del equipo es obligatorio.") }
+            return
+        }
+        viewModelScope.launch {
+            val editado = Equipo(id = id, nombre = nombre, categoria = categoria, estado = estado)
+            val res = repository.editarEquipo(editado)
+            res.onSuccess { onSuccess() }
+                .onFailure { err -> _uiState.update { it.copy(mensajeError = err.message) } }
+        }
+    }
+
+    fun eliminarEquipo(id: Int, userRole: String, onSuccess: () -> Unit) {
+        if (userRole != "admin") {
+            _uiState.update { it.copy(mensajeError = "Acceso denegado: Requiere rol de Administrador") }
+            return
+        }
+        viewModelScope.launch {
+            val res = repository.eliminarEquipo(id)
+            res.onSuccess { onSuccess() }
+                .onFailure { err -> _uiState.update { it.copy(mensajeError = err.message) } }
+        }
+    }
+
+    fun adjuntarEvidencia(
+        solicitudId: Int,
+        imagenBytes: ByteArray,
+        extension: String,
+        onSuccess: () -> Unit
+    ) {
+        _uiState.update { it.copy(guardando = true, mensajeError = null) }
+        viewModelScope.launch {
+            val res = repository.adjuntarEvidencia(solicitudId, imagenBytes, extension)
+            res.onSuccess {
+                _uiState.update { state -> state.copy(guardando = false) }
+                onSuccess()
+            }.onFailure { err ->
+                _uiState.update { state -> state.copy(guardando = false, mensajeError = err.message) }
+            }
+        }
+    }
+
     fun limpiarMensaje() {
-        _uiState.update { it.copy(mensajeError = null) }
+        _uiState.update { it.copy(mensajeError = null, mensajeExito = null) }
     }
 }

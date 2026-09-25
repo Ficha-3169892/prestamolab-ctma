@@ -8,7 +8,6 @@ import androidx.compose.ui.test.performTextInput
 import org.junit.Rule
 import org.junit.Test
 
-// Pruebas adicionales de la pantalla "Mis Solicitudes".
 class MisPrestamosTest {
 
     @get:Rule

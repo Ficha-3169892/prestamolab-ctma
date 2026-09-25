@@ -3,85 +3,103 @@ package com.example.prestamolab.viewmodel
 import com.example.prestamolab.data.repository.InMemoryPrestamoRepository
 import com.example.prestamolab.model.EstadoEquipo
 import com.example.prestamolab.model.EstadoSolicitud
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class PrestamoViewModelTest {
+
+    // Simulamos el "Main Thread" de Android para que el ViewModel no explote
+    @Before
+    fun setup() {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
 
     // TC-12: Intentar solicitar un equipo no disponible
     @Test
-    fun guardarSolicitudParaEquipoNoDisponibleFalla() {
+    fun guardarSolicitudParaEquipoNoDisponibleFalla() = runBlocking {
         val repository = InMemoryPrestamoRepository()
         val viewModel = PrestamoViewModel(repository)
 
-        val equipo = repository.obtenerEquipos()
-            .first { it.estado != EstadoEquipo.DISPONIBLE }
+        val equipos = repository.obtenerEquipos().first()
+        val equipo = equipos.first { it.estado != EstadoEquipo.DISPONIBLE }
 
-        val resultado = viewModel.guardarSolicitud(
+        var exito = false
+        viewModel.guardarSolicitud(
             equipoId = equipo.id,
             ambiente = "Laboratorio",
             proposito = "Intento de solicitud",
             duracion = 2
-        )
+        ) { exito = true } // Callback de éxito
 
-        assertFalse(resultado)
+        assertFalse(exito)
         assertTrue(viewModel.uiState.value.solicitudes.isEmpty())
         assertNotNull(viewModel.uiState.value.mensajeError)
     }
 
     // TC-13: Doble pulsación de Guardar no genera duplicados
     @Test
-    fun dobleGuardadoNoCreaDosSolicitudes() {
+    fun dobleGuardadoNoCreaDosSolicitudes() = runBlocking {
         val repository = InMemoryPrestamoRepository()
         val viewModel = PrestamoViewModel(repository)
 
-        val equipo = repository.obtenerEquipos()
-            .first { it.estado == EstadoEquipo.DISPONIBLE }
+        val equipos = repository.obtenerEquipos().first()
+        val equipo = equipos.first { it.estado == EstadoEquipo.DISPONIBLE }
 
-        val primeraSolicitud = viewModel.guardarSolicitud(
+        var primeraSolicitud = false
+        viewModel.guardarSolicitud(
             equipoId = equipo.id,
             ambiente = "Laboratorio",
             proposito = "Primera solicitud",
             duracion = 2
-        )
+        ) { primeraSolicitud = true }
 
-        val segundaSolicitud = viewModel.guardarSolicitud(
+        var segundaSolicitud = false
+        viewModel.guardarSolicitud(
             equipoId = equipo.id,
             ambiente = "Laboratorio",
             proposito = "Segunda solicitud",
             duracion = 2
-        )
+        ) { segundaSolicitud = true }
 
         assertTrue(primeraSolicitud)
         assertFalse(segundaSolicitud)
 
-        assertEquals(
-            1,
-            repository.obtenerSolicitudes().size
-        )
+        assertEquals(1, repository.obtenerSolicitudes().first().size)
     }
 
     // TC-14: Crear una solicitud válida
     @Test
-    fun guardarSolicitudValidaActualizaElEstado() {
+    fun guardarSolicitudValidaActualizaElEstado() = runBlocking {
         val repository = InMemoryPrestamoRepository()
         val viewModel = PrestamoViewModel(repository)
 
-        val equipo = repository.obtenerEquipos()
-            .first { it.estado == EstadoEquipo.DISPONIBLE }
+        val equipos = repository.obtenerEquipos().first()
+        val equipo = equipos.first { it.estado == EstadoEquipo.DISPONIBLE }
 
-        val resultado = viewModel.guardarSolicitud(
+        var exito = false
+        viewModel.guardarSolicitud(
             equipoId = equipo.id,
             ambiente = "Laboratorio",
             proposito = "Prueba de solicitud",
             duracion = 2
-        )
+        ) { exito = true }
 
-        assertTrue(resultado)
+        assertTrue(exito)
 
         assertEquals(1, viewModel.uiState.value.solicitudes.size)
         assertEquals(
@@ -91,32 +109,32 @@ class PrestamoViewModelTest {
 
         assertEquals(
             EstadoEquipo.RESERVADO,
-            viewModel.uiState.value.equipos
-                .first { it.id == equipo.id }
-                .estado
+            viewModel.uiState.value.equipos.first { it.id == equipo.id }.estado
         )
     }
 
     // TC-15: Cancelar una solicitud SOLICITADA
     @Test
-    fun cancelarSolicitudActualizaSolicitudYDisponibilidad() {
+    fun cancelarSolicitudActualizaSolicitudYDisponibilidad() = runBlocking {
         val repository = InMemoryPrestamoRepository()
         val viewModel = PrestamoViewModel(repository)
 
-        val equipo = repository.obtenerEquipos()
-            .first { it.estado == EstadoEquipo.DISPONIBLE }
+        val equipos = repository.obtenerEquipos().first()
+        val equipo = equipos.first { it.estado == EstadoEquipo.DISPONIBLE }
 
-        val creada = viewModel.guardarSolicitud(
+        var creada = false
+        viewModel.guardarSolicitud(
             equipoId = equipo.id,
             ambiente = "Laboratorio",
             proposito = "Solicitud para cancelar",
             duracion = 2
-        )
+        ) { creada = true }
 
         assertTrue(creada)
 
         val solicitudId = viewModel.uiState.value.solicitudes.first().id
 
+        viewModel.seleccionarSolicitud(solicitudId)
         viewModel.cancelarSolicitud(solicitudId)
 
         assertEquals(
@@ -126,73 +144,71 @@ class PrestamoViewModelTest {
 
         assertEquals(
             EstadoEquipo.DISPONIBLE,
-            viewModel.uiState.value.equipos
-                .first { it.id == equipo.id }
-                .estado
+            viewModel.uiState.value.equipos.first { it.id == equipo.id }.estado
         )
     }
 
     // Validación: ambiente obligatorio
     @Test
-    fun guardarSolicitudSinAmbienteFalla() {
+    fun guardarSolicitudSinAmbienteFalla() = runBlocking {
         val repository = InMemoryPrestamoRepository()
         val viewModel = PrestamoViewModel(repository)
 
-        val equipo = repository.obtenerEquipos()
-            .first { it.estado == EstadoEquipo.DISPONIBLE }
+        val equipos = repository.obtenerEquipos().first()
+        val equipo = equipos.first { it.estado == EstadoEquipo.DISPONIBLE }
 
-        val resultado = viewModel.guardarSolicitud(
+        var exito = false
+        viewModel.guardarSolicitud(
             equipoId = equipo.id,
             ambiente = "",
             proposito = "Propósito válido",
             duracion = 2
-        )
+        ) { exito = true }
 
-        assertFalse(resultado)
+        assertFalse(exito)
         assertTrue(viewModel.uiState.value.solicitudes.isEmpty())
         assertNotNull(viewModel.uiState.value.mensajeError)
     }
 
     // Validación: datos inválidos no se guardan
     @Test
-    fun datosInvalidosNoCreanSolicitud() {
+    fun datosInvalidosNoCreanSolicitud() = runBlocking {
         val repository = InMemoryPrestamoRepository()
         val viewModel = PrestamoViewModel(repository)
 
-        val equipo = repository.obtenerEquipos()
-            .first { it.estado == EstadoEquipo.DISPONIBLE }
+        val equipos = repository.obtenerEquipos().first()
+        val equipo = equipos.first { it.estado == EstadoEquipo.DISPONIBLE }
 
-        val resultado = viewModel.guardarSolicitud(
+        var exito = false
+        viewModel.guardarSolicitud(
             equipoId = equipo.id,
             ambiente = "Laboratorio",
             proposito = "Corto",
             duracion = 2
-        )
+        ) { exito = true }
 
-        assertFalse(resultado)
+        assertFalse(exito)
         assertTrue(viewModel.uiState.value.solicitudes.isEmpty())
         assertNotNull(viewModel.uiState.value.mensajeError)
     }
 
     // Manejo de ID de equipo inexistente
     @Test
-    fun seleccionarEquipoInexistenteDejaEquipoSeleccionadoEnNull() {
+    fun seleccionarEquipoInexistenteDejaEquipoSeleccionadoEnNull() = runBlocking {
         val repository = InMemoryPrestamoRepository()
         val viewModel = PrestamoViewModel(repository)
 
         viewModel.seleccionarEquipo(-999)
-
         assertNull(viewModel.uiState.value.equipoSeleccionado)
     }
 
     // Manejo de ID de solicitud inexistente
     @Test
-    fun seleccionarSolicitudInexistenteDejaSolicitudSeleccionadaEnNull() {
+    fun seleccionarSolicitudInexistenteDejaSolicitudSeleccionadaEnNull() = runBlocking {
         val repository = InMemoryPrestamoRepository()
         val viewModel = PrestamoViewModel(repository)
 
         viewModel.seleccionarSolicitud(-999)
-
         assertNull(viewModel.uiState.value.solicitudSeleccionada)
     }
 }

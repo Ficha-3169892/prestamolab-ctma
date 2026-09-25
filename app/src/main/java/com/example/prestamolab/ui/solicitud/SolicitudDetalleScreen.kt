@@ -1,11 +1,26 @@
 package com.example.prestamolab.ui.solicitud
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.prestamolab.model.EstadoSolicitud
 import com.example.prestamolab.model.SolicitudPrestamo
 
@@ -15,6 +30,7 @@ fun SolicitudDetalleScreen(
     solicitud: SolicitudPrestamo?,
     mensajeError: String?,
     onCancelar: (Int) -> Unit,
+    onAdjuntarEvidencia: ((Int) -> Unit)? = null,
     onVolver: () -> Unit
 ) {
     Scaffold(
@@ -45,10 +61,39 @@ fun SolicitudDetalleScreen(
                 Text(text = "Propósito: ${solicitud.proposito}")
                 Text(text = "Duración: ${solicitud.duracionHoras} horas")
                 Text(text = "Estado: ${solicitud.estado}", color = colorEstado)
+
+                if (!solicitud.evidenciaUrl.isNull_or_empty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Evidencia Fotográfica:",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color.LightGray
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    AsyncImage(
+                        model = solicitud.evidenciaUrl,
+                        contentDescription = "Evidencia Fotográfica",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                }
+
                 Spacer(modifier = Modifier.weight(1f))
 
                 if (mensajeError != null) {
                     Text(text = mensajeError, color = MaterialTheme.colorScheme.error)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                if (onAdjuntarEvidencia != null) {
+                    Button(
+                        onClick = { onAdjuntarEvidencia(solicitud.id) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Adjuntar Evidencia Fotográfica")
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
@@ -70,3 +115,5 @@ fun SolicitudDetalleScreen(
         }
     }
 }
+
+private fun String?.isNull_or_empty(): Boolean = this == null || this.trim().isEmpty()

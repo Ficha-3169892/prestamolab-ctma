@@ -7,8 +7,10 @@ import androidx.room.PrimaryKey
 data class LoanEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val equipoId: Int,
+    val usuarioId: String = "",
     val ambienteDestino: String,
     val proposito: String,
     val duracionHoras: Int,
-    val estado: String
+    val estado: String,
+    val evidenciaUrl: String? = null
 )

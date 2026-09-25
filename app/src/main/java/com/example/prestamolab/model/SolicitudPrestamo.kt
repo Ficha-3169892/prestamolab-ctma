@@ -3,10 +3,12 @@ package com.example.prestamolab.model
 data class SolicitudPrestamo(
     val id: Int,
     val equipoId: Int,
+    val usuarioId: String = "",
     val ambienteDestino: String,
     val proposito: String,
     val duracionHoras: Int,
-    val estado: EstadoSolicitud
+    val estado: EstadoSolicitud,
+    val evidenciaUrl: String? = null
 )
 
 fun ambienteValido(texto: String): Boolean = texto.trim().isNotBlank()

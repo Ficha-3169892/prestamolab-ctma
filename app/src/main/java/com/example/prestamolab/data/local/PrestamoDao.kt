@@ -1,6 +1,7 @@
 package com.example.prestamolab.data.local
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -23,20 +24,35 @@ interface PrestamoDao {
     @Query("SELECT * FROM solicitudes WHERE id = :id")
     fun obtenerSolicitudPorId(id: Int): Flow < LoanEntity? >
 
+    @Query("UPDATE solicitudes SET usuarioId = :newUserId WHERE usuarioId = 'local_user' OR usuarioId = ''")
+    suspend fun asignarSolicitudesHuerfanas(newUserId: String)
+
+    @Query("DELETE FROM solicitudes")
+    suspend fun limpiarSolicitudesTest()
+
     // Escrituras asíncronas
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertarEquipos(equipos: List < EquipmentEntity >)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertarEquipo(equipo: EquipmentEntity): Long
+
     @Update
     suspend fun actualizarEquipo(equipo: EquipmentEntity)
 
-    @Insert
+    @Delete
+    suspend fun eliminarEquipo(equipo: EquipmentEntity)
+
+    @Query("DELETE FROM equipos WHERE id = :id")
+    suspend fun eliminarEquipoPorId(id: Int)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertarSolicitud(solicitud: LoanEntity): Long
 
     @Update
     suspend fun actualizarSolicitud(solicitud: LoanEntity)
 
-    // Lecturas directas de una sola vez (necesarias para el repositorio)
+    // Lecturas directas de una sola vez
     @Query("SELECT * FROM equipos WHERE id = :id")
     suspend fun obtenerEquipoSync(id: Int): EquipmentEntity?
 
