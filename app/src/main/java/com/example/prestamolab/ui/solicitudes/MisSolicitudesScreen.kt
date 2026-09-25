@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -99,6 +100,7 @@ fun MisSolicitudesScreen(
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Button(
                                     onClick = { onRegistrarDevolucionClick(solicitud.id) },
+                                    modifier = Modifier.testTag("devolver-${solicitud.id}"),
                                     colors = ButtonDefaults.buttonColors(containerColor = blueHeader),
                                     shape = RoundedCornerShape(8.dp)
                                 ) {

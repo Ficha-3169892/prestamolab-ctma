@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -113,7 +114,7 @@ private fun TarjetaSolicitud(
             Text("Duración: ${solicitud.duracionHoras} h", fontFamily = FontFamily.SansSerif)
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onAprobarClick) { Text("Aprobar", fontFamily = FontFamily.SansSerif) }
+                Button(onClick = onAprobarClick, modifier = Modifier.testTag("aprobar-${solicitud.id}")) { Text("Aprobar", fontFamily = FontFamily.SansSerif) }
                 OutlinedButton(onClick = onRechazarClick) { Text("Rechazar", fontFamily = FontFamily.SansSerif) }
             }
         }
